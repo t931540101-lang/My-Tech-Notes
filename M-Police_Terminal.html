@@ -38,6 +38,58 @@
     <div class="menu-item" onclick="showPage('admin', '行政類 - 公司資訊')">行政類</div>
     <div class="menu-item" onclick="showPage('it', '後勤類 - 系統維護')">後勤類</div>
     <div class="menu-item" onclick="showPage('emergency', '勤務指揮 - 緊急通報')">勤務指揮</div>
+    <div id="page-admin" class="page">
+    <div class="section-title">工廠行政管理</div>
+    <div class="form-group">
+        <label>常用通訊錄</label>
+        <select>
+            <option>公司總機: 0X-XXXXXXX</option>
+            <option>廠務主管: 09XX-XXX-XXX</option>
+            <option>配合維修商: Kingston 技術支援</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>公告事項備忘錄</label>
+        <textarea id="adminNote" rows="5" placeholder="輸入今日交接事項..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="saveData('行政')">儲存備忘錄</button>
+</div>
+
+<div id="page-it" class="page">
+    <div class="section-title">技術支援與維修紀錄</div>
+    <div style="background:#fff3cd; padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.8rem; color:#856404;">
+        ⚠️ 任務狀態：HP 15s 240G SSD 計畫已於 2026-02-25 宣告光榮退休。
+    </div>
+    <div class="form-group">
+        <label>維修對象</label>
+        <input type="text" value="HP 15s (240G SSD)" readonly>
+    </div>
+    <div class="form-group">
+        <label>目前的雲端系統</label>
+        <ul>
+            <li>包裹登記系統 (已完成)</li>
+            <li>訪客進出日誌 (已完成)</li>
+            <li>主排班表系統 (已完成)</li>
+        </ul>
+    </div>
+    <button class="btn-submit" onclick="saveData('後勤')">新增技術筆記</button>
+</div>
+
+<div id="page-emergency" class="page">
+    <div class="section-title">緊急應變通報</div>
+    <div class="form-group">
+        <label>事件等級</label>
+        <select id="emLevel">
+            <option style="color:red;">🔴 一級：火警/入侵 (立即報警)</option>
+            <option style="color:orange;">🟠 二級：設備故障/停電</option>
+            <option style="color:blue;">🔵 三級：一般異常/門禁問題</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>即時狀況敘述</label>
+        <textarea id="emDesc" rows="4" placeholder="請簡述現場狀況..."></textarea>
+    </div>
+    <button class="btn-submit" style="background:#d9534f;" onclick="saveData('勤務')">發送緊急通報</button>
 </div>
 
 <div id="page-transport" class="page">
