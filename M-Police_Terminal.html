@@ -96,6 +96,54 @@
 <script>
     const VALID_USER = "盧家慶"; 
     const VALID_PASS = "D01762"; // 預設密碼
+    // 請在 M-Police 的 <script> 區域加入這段
+const GITHUB_TOKEN = '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'; // 貼上剛才產生的 Token
+const REPO_OWNER = 't931540101-lang';
+const REPO_NAME = 'My-Tech-Notes';
+const FILE_PATH = 'handover_data.json';
+
+async function syncToCloud(text, level) {
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    const now = new Date().toLocaleString();
+    
+    try {
+        // 1. 先抓取舊檔案的 SHA (GitHub 修改檔案必須要有 SHA)
+        const getRes = await fetch(url);
+        const fileData = await getRes.json();
+        const sha = fileData.sha;
+
+        // 2. 準備要上傳的新內容
+        const newContent = {
+            text: text,
+            sender: "小黑哥",
+            level: level,
+            time: now
+        };
+
+        // 3. 執行推播 (PUT)
+        const putRes = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: `勤務交接更新: ${now}`,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))), // 轉成 Base64
+                sha: sha
+            })
+        });
+
+        if (putRes.ok) {
+            alert('✅ 雲端看板已同步更新！');
+        } else {
+            alert('❌ 同步失敗，請檢查 Token 權限。');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('連線異常：' + err);
+    }
+}
 
     function checkLogin() {
         if(document.getElementById('loginUser').value === VALID_USER && document.getElementById('loginPass').value === VALID_PASS) {
