@@ -3,109 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Police 勤務終端</title>
+    <title>M-Police 勤務系統</title>
     <style>
-        :root {
-            --police-blue: #1a5c9f;
-            --police-light-blue: #e3f2fd;
-            --police-dark: #333;
-        }
-        body {
-            margin: 0;
-            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-            background-color: #f5f5f5;
-        }
-        /* 頂部標題欄 */
-        .header {
-            background-color: var(--police-blue);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        /* 業務分類區 */
-        .category-title {
-            background-color: var(--police-dark);
-            color: white;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-        /* 清單按鈕式樣 */
-        .menu-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .menu-item {
-            background-color: var(--police-light-blue);
-            border-bottom: 1px solid #ccc;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #333;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-        .menu-item:active {
-            background-color: #bbdefb;
-        }
-        /* 底部導覽列 */
-        .footer-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: var(--police-blue);
-            display: flex;
-            justify-content: space-around;
-        }
-        .nav-btn {
-            color: white;
-            padding: 12px 5px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            flex: 1;
-            text-align: center;
-            border-right: 1px solid rgba(255,255,255,0.2);
-        }
-        .nav-btn:last-child { border-right: none; }
+        :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; }
+        body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 70px; }
+        .header { background: var(--p-blue); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        .section-title { background: var(--p-dark); color: white; padding: 10px 15px; font-size: 0.9rem; }
+        
+        /* 選單樣式 */
+        .menu { display: block; }
+        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 18px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 500; cursor: pointer; }
+        .menu-item:active { background: #bbdefb; }
+
+        /* 子頁面容器 */
+        .page { display: none; padding: 15px; background: white; min-height: 80vh; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--p-blue); }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { background: var(--p-blue); color: white; border: none; width: 100%; padding: 15px; font-size: 1rem; border-radius: 5px; margin-top: 10px; }
+        
+        /* 底部導覽 */
+        .footer { position: fixed; bottom: 0; width: 100%; background: var(--p-blue); display: flex; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+        .nav-item { flex: 1; color: white; padding: 15px 5px; text-align: center; font-size: 0.8rem; border-right: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">警察 SOP 查詢 APP</div>
-    
-    <div class="category-title">業務分類查詢</div>
-    
-    <nav class="menu-list">
-        <a href="#" class="menu-item" onclick="saveLog('行政類')">行政類</a>
-        <a href="#" class="menu-item" onclick="saveLog('保安類')">保安類</a>
-        <a href="#" class="menu-item" onclick="saveLog('防治類')">防治類</a>
-        <a href="#" class="menu-item" onclick="saveLog('國際類')">國際類</a>
-        <a href="#" class="menu-item" onclick="saveLog('交通類')">交通類</a>
-        <a href="#" class="menu-item" onclick="saveLog('後勤類')">後勤類</a>
-        <a href="#" class="menu-item" onclick="saveLog('勤務指揮')">勤務指揮</a>
-    </nav>
+<div class="header" id="pageTitle">警察 SOP 查詢 APP</div>
 
-    <div style="height: 60px;"></div> <nav class="footer-nav">
-        <a href="#" class="nav-btn">業務分類</a>
-        <a href="#" class="nav-btn">查詢</a>
-        <a href="#" class="nav-btn">我的書籤</a>
-        <a href="#" class="nav-btn">資料同步</a>
-    </nav>
+<div id="mainMenu" class="menu">
+    <div class="section-title">業務分類查詢</div>
+    <div class="menu-item" onclick="showPage('transport', '交通類 - 車輛登記')">交通類</div>
+    <div class="menu-item" onclick="showPage('security', '保安類 - 巡邏日誌')">保安類</div>
+    <div class="menu-item" onclick="showPage('admin', '行政類 - 公司資訊')">行政類</div>
+    <div class="menu-item" onclick="showPage('it', '後勤類 - 系統維護')">後勤類</div>
+    <div class="menu-item" onclick="showPage('emergency', '勤務指揮 - 緊急通報')">勤務指揮</div>
+</div>
 
-    <script>
-        // Local Storage 基本功能建議
-        function saveLog(type) {
-            const timestamp = new Date().toLocaleString();
-            localStorage.setItem('LastAction', type + ' - ' + timestamp);
-            alert('已記錄最後操作：' + type + '\n時間：' + timestamp);
-        }
-    </script>
+<div id="page-transport" class="page">
+    <div class="form-group">
+        <label>車牌號碼</label>
+        <input type="text" id="carId" placeholder="請輸入車牌">
+    </div>
+    <div class="form-group">
+        <label>車輛類型</label>
+        <select id="carType">
+            <option>外來大貨車</option>
+            <option>訪客轎車</option>
+            <option>員工車輛</option>
+        </select>
+    </div>
+    <button class="btn-submit" onclick="saveData('交通')">提交登記</button>
+</div>
+
+<div id="page-security" class="page">
+    <div class="form-group">
+        <label>巡邏點位</label>
+        <select id="spot">
+            <option>大門口</option>
+            <option>倉庫區</option>
+            <option>後方停車場</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>狀態說明</label>
+        <textarea id="secNote" rows="3">一切正常</textarea>
+    </div>
+    <button class="btn-submit" onclick="saveData('保安')">提交巡邏紀錄</button>
+</div>
+
+<div class="footer">
+    <div class="nav-item" onclick="goHome()">業務分類</div>
+    <div class="nav-item" onclick="alert('近期功能：查詢系統')">查詢</div>
+    <div class="nav-item" onclick="showLogs()">歷史紀錄</div>
+    <div class="nav-item" onclick="syncData()">資料同步</div>
+</div>
+
+<script>
+    function showPage(pageId, title) {
+        document.querySelectorAll('.page, .menu').forEach(el => el.style.display = 'none');
+        document.getElementById('page-' + pageId).style.display = 'block';
+        document.getElementById('pageTitle').innerText = title;
+    }
+
+    function goHome() {
+        document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+        document.getElementById('mainMenu').style.display = 'block';
+        document.getElementById('pageTitle').innerText = '警察 SOP 查詢 APP';
+    }
+
+    function saveData(type) {
+        const now = new Date().toLocaleString();
+        const data = { type: type, time: now, note: '操作已完成' };
+        let logs = JSON.parse(localStorage.getItem('M-Police-Logs') || '[]');
+        logs.push(data);
+        localStorage.setItem('M-Police-Logs', JSON.stringify(logs));
+        alert('【' + type + '】資料已存入本機空間！\n時間：' + now);
+        goHome();
+    }
+
+    function showLogs() {
+        let logs = JSON.parse(localStorage.getItem('M-Police-Logs') || '[]');
+        if(logs.length === 0) return alert('目前沒有紀錄');
+        alert('最近一筆紀錄：\n' + JSON.stringify(logs[logs.length-1], null, 2));
+    }
+
+    function syncData() {
+        alert('正在與雲端系統同步... (模擬中)');
+    }
+</script>
+
 </body>
 </html>
