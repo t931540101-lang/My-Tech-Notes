@@ -1,53 +1,117 @@
-<div id="page-admin" class="page">
-    <div class="section-title">工廠行政管理</div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Police 勤務系統</title>
+    <style>
+        :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; }
+        body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 70px; }
+        .header { background: var(--p-blue); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        .section-title { background: var(--p-dark); color: white; padding: 10px 15px; font-size: 0.9rem; }
+        
+        /* 選單樣式 */
+        .menu { display: block; }
+        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 18px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 500; cursor: pointer; }
+        .menu-item:active { background: #bbdefb; }
+
+        /* 子頁面容器 */
+        .page { display: none; padding: 15px; background: white; min-height: 80vh; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--p-blue); }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { background: var(--p-blue); color: white; border: none; width: 100%; padding: 15px; font-size: 1rem; border-radius: 5px; margin-top: 10px; }
+        
+        /* 底部導覽 */
+        .footer { position: fixed; bottom: 0; width: 100%; background: var(--p-blue); display: flex; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+        .nav-item { flex: 1; color: white; padding: 15px 5px; text-align: center; font-size: 0.8rem; border-right: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="header" id="pageTitle">警察 SOP 查詢 APP</div>
+
+<div id="mainMenu" class="menu">
+    <div class="section-title">業務分類查詢</div>
+    <div class="menu-item" onclick="showPage('transport', '交通類 - 車輛登記')">交通類</div>
+    <div class="menu-item" onclick="showPage('security', '保安類 - 巡邏日誌')">保安類</div>
+    <div class="menu-item" onclick="showPage('admin', '行政類 - 公司資訊')">行政類</div>
+    <div class="menu-item" onclick="showPage('it', '後勤類 - 系統維護')">後勤類</div>
+    <div class="menu-item" onclick="showPage('emergency', '勤務指揮 - 緊急通報')">勤務指揮</div>
+</div>
+
+<div id="page-transport" class="page">
     <div class="form-group">
-        <label>常用通訊錄</label>
-        <select>
-            <option>公司總機: 0X-XXXXXXX</option>
-            <option>廠務主管: 09XX-XXX-XXX</option>
-            <option>配合維修商: Kingston 技術支援</option>
+        <label>車牌號碼</label>
+        <input type="text" id="carId" placeholder="請輸入車牌">
+    </div>
+    <div class="form-group">
+        <label>車輛類型</label>
+        <select id="carType">
+            <option>外來大貨車</option>
+            <option>訪客轎車</option>
+            <option>員工車輛</option>
+        </select>
+    </div>
+    <button class="btn-submit" onclick="saveData('交通')">提交登記</button>
+</div>
+
+<div id="page-security" class="page">
+    <div class="form-group">
+        <label>巡邏點位</label>
+        <select id="spot">
+            <option>大門口</option>
+            <option>倉庫區</option>
+            <option>後方停車場</option>
         </select>
     </div>
     <div class="form-group">
-        <label>公告事項備忘錄</label>
-        <textarea id="adminNote" rows="5" placeholder="輸入今日交接事項..."></textarea>
+        <label>狀態說明</label>
+        <textarea id="secNote" rows="3">一切正常</textarea>
     </div>
-    <button class="btn-submit" onclick="saveData('行政')">儲存備忘錄</button>
+    <button class="btn-submit" onclick="saveData('保安')">提交巡邏紀錄</button>
 </div>
 
-<div id="page-it" class="page">
-    <div class="section-title">技術支援與維修紀錄</div>
-    <div style="background:#fff3cd; padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.8rem; color:#856404;">
-        ⚠️ 任務狀態：HP 15s 240G SSD 計畫已於 2026-02-25 宣告光榮退休。
-    </div>
-    <div class="form-group">
-        <label>維修對象</label>
-        <input type="text" value="HP 15s (240G SSD)" readonly>
-    </div>
-    <div class="form-group">
-        <label>目前的雲端系統</label>
-        <ul>
-            <li>包裹登記系統 (已完成)</li>
-            <li>訪客進出日誌 (已完成)</li>
-            <li>主排班表系統 (已完成)</li>
-        </ul>
-    </div>
-    <button class="btn-submit" onclick="saveData('後勤')">新增技術筆記</button>
+<div class="footer">
+    <div class="nav-item" onclick="goHome()">業務分類</div>
+    <div class="nav-item" onclick="alert('近期功能：查詢系統')">查詢</div>
+    <div class="nav-item" onclick="showLogs()">歷史紀錄</div>
+    <div class="nav-item" onclick="syncData()">資料同步</div>
 </div>
 
-<div id="page-emergency" class="page">
-    <div class="section-title">緊急應變通報</div>
-    <div class="form-group">
-        <label>事件等級</label>
-        <select id="emLevel">
-            <option style="color:red;">🔴 一級：火警/入侵 (立即報警)</option>
-            <option style="color:orange;">🟠 二級：設備故障/停電</option>
-            <option style="color:blue;">🔵 三級：一般異常/門禁問題</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label>即時狀況敘述</label>
-        <textarea id="emDesc" rows="4" placeholder="請簡述現場狀況..."></textarea>
-    </div>
-    <button class="btn-submit" style="background:#d9534f;" onclick="saveData('勤務')">發送緊急通報</button>
-</div>
+<script>
+    function showPage(pageId, title) {
+        document.querySelectorAll('.page, .menu').forEach(el => el.style.display = 'none');
+        document.getElementById('page-' + pageId).style.display = 'block';
+        document.getElementById('pageTitle').innerText = title;
+    }
+
+    function goHome() {
+        document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+        document.getElementById('mainMenu').style.display = 'block';
+        document.getElementById('pageTitle').innerText = '警察 SOP 查詢 APP';
+    }
+
+    function saveData(type) {
+        const now = new Date().toLocaleString();
+        const data = { type: type, time: now, note: '操作已完成' };
+        let logs = JSON.parse(localStorage.getItem('M-Police-Logs') || '[]');
+        logs.push(data);
+        localStorage.setItem('M-Police-Logs', JSON.stringify(logs));
+        alert('【' + type + '】資料已存入本機空間！\n時間：' + now);
+        goHome();
+    }
+
+    function showLogs() {
+        let logs = JSON.parse(localStorage.getItem('M-Police-Logs') || '[]');
+        if(logs.length === 0) return alert('目前沒有紀錄');
+        alert('最近一筆紀錄：\n' + JSON.stringify(logs[logs.length-1], null, 2));
+    }
+
+    function syncData() {
+        alert('正在與雲端系統同步... (模擬中)');
+    }
+</script>
+
+</body>
+</html>
