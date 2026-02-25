@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勤務交接動態看板</title>
+    <style>
+        :root { --bg: #0a0a0a; --card: #1e1e1e; --text: #ffffff; --warn: #ffcc00; --danger: #ff4444; --info: #00e5ff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; }
+        
+        /* 桌面小工具風格 */
+        .widget-container {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 15px;
+            border-left: 5px solid var(--info);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px; }
+        .title { font-size: 0.9rem; font-weight: bold; color: var(--info); }
+        .time { font-size: 0.7rem; opacity: 0.7; }
+        
+        /* 交接內容區 */
+        .content { font-size: 1.1rem; line-height: 1.4; margin-bottom: 15px; font-weight: 500; }
+        
+        /* 狀態標籤 */
+        .status-bar { display: flex; gap: 10px; font-size: 0.75rem; }
+        .badge { padding: 3px 8px; border-radius: 4px; background: #333; }
+        .badge.important { color: var(--danger); border: 1px solid var(--danger); }
+        
+        /* 歷史紀錄（小字隱藏） */
+        .history { margin-top: 15px; font-size: 0.8rem; color: #888; border-top: 1px dashed #444; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <div class="header">
+        <span class="title">📋 勤務交接看板</span>
+        <span class="time" id="syncTime">更新於 20:20</span>
+    </div>
+    
+    <div class="content" id="handoverText">
+        目前無重大交接事項。
+    </div>
+
+    <div class="status-bar">
+        <div class="badge">交接人：小黑哥</div>
+        <div class="badge important" id="statusLevel">一般</div>
+    </div>
+
+    <div class="history">
+        前次備註：HP 15s SSD 計畫已圓滿存檔。
+    </div>
+</div>
+
+<script>
+    // 之後這裡會加入 fetch 功能，去抓取你的 M-Police 存下來的資料
+    function refreshData() {
+        const now = new Date();
+        document.getElementById('syncTime').innerText = '最後同步：' + now.getHours() + ':' + now.getMinutes();
+        
+        // 模擬從雲端抓取最新的一筆 Local Storage 或 JSON 資料
+        const latest = localStorage.getItem('LastHandover');
+        if(latest) {
+            document.getElementById('handoverText').innerText = latest;
+        }
+    }
+    
+    // 每分鐘自動刷新一次
+    setInterval(refreshData, 60000);
+    refreshData();
+</script>
+
+</body>
+</html>
