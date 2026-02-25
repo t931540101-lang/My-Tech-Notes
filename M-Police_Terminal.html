@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Security 勤務系統</title>
-    <link rel="icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
-    <link rel="apple-touch-icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
+    <title>M-Police 勤務系統</title>
     <style>
         :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; --p-danger: #d9534f; --p-warn: #fff3cd; }
         body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 80px; }
@@ -17,34 +15,27 @@
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
         .btn-submit { background: var(--p-blue); color: white; border: none; width: 100%; padding: 16px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        /* 登入頁面 */
+        /* 登入頁 */
         #loginPage { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: var(--p-blue); color: white; padding: 20px; box-sizing: border-box; }
-        .login-box { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 300px; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 20px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 600; cursor: pointer; }
-        .footer { position: fixed; bottom: 0; width: 100%; background: var(--p-blue); display: none; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
+        .login-box { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 300px; color: #333; }
+        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 20px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 600; }
+        .footer { position: fixed; bottom: 0; width: 100%; background: var(--p-blue); display: none; }
         .nav-item { flex: 1; color: white; padding: 15px 5px; text-align: center; font-size: 0.85rem; cursor: pointer; border-right: 1px solid rgba(255,255,255,0.2); }
-        .status-box { background: var(--p-warn); border: 1px solid #ffeeba; padding: 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.85rem; color: #856404; }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
-    <div style="margin-bottom: 20px; font-size: 1.5rem; font-weight: bold;">M-Security 勤務登入</div>
+    <div style="margin-bottom: 20px; font-size: 1.5rem; font-weight: bold;">M-Police 勤務登入</div>
     <div class="login-box">
-        <div class="form-group">
-            <label>帳號 (姓名)</label>
-            <input type="text" id="loginUser" placeholder="請輸入姓名">
-        </div>
-        <div class="form-group">
-            <label>密碼 (工號)</label>
-            <input type="password" id="loginPass" placeholder="請輸入工號">
-        </div>
+        <div class="form-group"><label>帳號 (姓名)</label><input type="text" id="loginUser" placeholder="小黑哥"></div>
+        <div class="form-group"><label>密碼 (工號)</label><input type="password" id="loginPass" placeholder="1030701"></div>
         <button class="btn-submit" style="width:100%" onclick="checkLogin()">授權登入</button>
     </div>
 </div>
 
 <div id="appContent" style="display:none;">
-    <div class="header" id="pageTitle">警衛 SOP 查詢 APP</div>
+    <div class="header" id="pageTitle">警察 SOP 查詢 APP</div>
 
     <div id="mainMenu">
         <div class="section-title">業務分類查詢</div>
@@ -57,102 +48,59 @@
 
     <div id="page-transport" class="page">
         <div class="form-group"><label>車牌號碼</label><input type="text" id="carId" placeholder="ABC-1234"></div>
-        <div class="form-group"><label>類型</label><select><option>外來大貨車</option><option>訪客車輛</option></select></div>
-        <button class="btn-submit" onclick="saveData('交通')">提交資料</button>
+        <div class="form-group"><label>類型</label><select id="carType"><option>外來大貨車</option><option>訪客車輛</option></select></div>
+        <button class="btn-submit" onclick="saveAndSync('交通', 'carId', 'carType')">同步並儲存</button>
     </div>
 
     <div id="page-security" class="page">
-        <div class="form-group"><label>巡邏區域</label><select><option>工廠大門</option><option>倉庫</option><option>配電室</option></select></div>
-        <div class="form-group"><label>現場描述</label><textarea rows="3">一切正常</textarea></div>
-        <button class="btn-submit" onclick="saveData('保安')">儲存紀錄</button>
+        <div class="form-group"><label>巡邏區域</label><select id="secArea"><option>工廠大門</option><option>倉庫</option><option>配電室</option></select></div>
+        <div class="form-group"><label>描述</label><textarea id="secNote" rows="3">一切正常</textarea></div>
+        <button class="btn-submit" onclick="saveAndSync('保安', 'secNote', 'secArea')">同步並儲存</button>
     </div>
 
     <div id="page-admin" class="page">
-        <div class="form-group"><label>上班時間</label><input type="text" value="07:00 ~ 19:00" readonly></div>
-        <div class="form-group"><label>交接事項</label><textarea id="adminMemo" rows="5" placeholder="輸入今日交代事項..."></textarea></div>
-        <button class="btn-submit" onclick="saveData('行政')">儲存行政筆記</button>
+        <div class="form-group"><label>上班時段</label><input type="text" value="07:00 ~ 19:00" readonly></div>
+        <div class="form-group"><label>交接事項看板內容</label><textarea id="adminMemo" rows="5" placeholder="輸入要顯示在桌面看板的文字..."></textarea></div>
+        <button class="btn-submit" onclick="saveAndSync('行政', 'adminMemo')">同步至雲端看板</button>
     </div>
 
     <div id="page-it" class="page">
-        <div class="status-box"><strong>【任務存檔】HP 15s 240G SSD 計畫</strong><br>狀態：光榮退休 (2026-02-25)</div>
-        <div class="form-group"><label>雲端系統狀態</label><div style="font-size:0.9rem;">✅ 包裹登記 / ✅ 訪客日誌 / ✅ 主排班表</div></div>
-        <div class="form-group"><label>技術心得</label><textarea rows="3"></textarea></div>
-        <button class="btn-submit" onclick="saveData('後勤')">儲存技術資料</button>
+        <div style="background:#fff3cd; padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.8rem;">【任務存檔】HP 15s SSD 計畫已退休。</div>
+        <div class="form-group"><label>技術心得</label><textarea id="itNote" rows="3"></textarea></div>
+        <button class="btn-submit" onclick="saveAndSync('後勤', 'itNote')">儲存技術資料</button>
     </div>
 
     <div id="page-emergency" class="page">
-        <div class="form-group"><label>緊急程度</label><select id="emLvl"><option>🔴 一級緊急</option><option>🔵 一般異常</option></select></div>
-        <div class="form-group"><label>狀況說明</label><textarea rows="4"></textarea></div>
-        <button class="btn-submit" style="background:var(--p-danger);" onclick="saveData('緊急通報')">發送通報</button>
+        <div class="form-group"><label>緊急程度</label><select id="emLvl"><option>🔴 緊急</option><option>🔵 一般</option></select></div>
+        <button class="btn-submit" style="background:var(--p-danger);" onclick="saveAndSync('緊急', 'emLvl')">發送緊急通報</button>
     </div>
 
     <div class="footer" id="mainFooter">
-        <div class="nav-item" onclick="goHome()">業務分類</div>
-        <div class="nav-item" onclick="showLogs()">歷史紀錄</div>
+        <div class="nav-item" onclick="goHome()">回首頁</div>
+        <div class="nav-item" onclick="showLogs()">歷史</div>
         <div class="nav-item" onclick="location.reload()">登出</div>
     </div>
 </div>
 
 <script>
-    const VALID_USER = "盧家慶"; 
-    const VALID_PASS = "D01762"; // 預設密碼
-    // 請在 M-Police 的 <script> 區域加入這段
-const GITHUB_TOKEN = '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'; // 貼上剛才產生的 Token
-const REPO_OWNER = 't931540101-lang';
-const REPO_NAME = 'My-Tech-Notes';
-const FILE_PATH = 'handover_data.json';
+    // --- 雲端設定區 ---
+    const GITHUB_TOKEN = '貼上你的_ghp_密鑰'; 
+    const REPO_OWNER = 't931540101-lang';
+    const REPO_NAME = 'My-Tech-Notes';
+    const FILE_PATH = 'handover_data.json';
 
-async function syncToCloud(text, level) {
-    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-    const now = new Date().toLocaleString();
-    
-    try {
-        // 1. 先抓取舊檔案的 SHA (GitHub 修改檔案必須要有 SHA)
-        const getRes = await fetch(url);
-        const fileData = await getRes.json();
-        const sha = fileData.sha;
-
-        // 2. 準備要上傳的新內容
-        const newContent = {
-            text: text,
-            sender: "小黑哥",
-            level: level,
-            time: now
-        };
-
-        // 3. 執行推播 (PUT)
-        const putRes = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: `勤務交接更新: ${now}`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))), // 轉成 Base64
-                sha: sha
-            })
-        });
-
-        if (putRes.ok) {
-            alert('✅ 雲端看板已同步更新！');
-        } else {
-            alert('❌ 同步失敗，請檢查 Token 權限。');
-        }
-    } catch (err) {
-        console.error(err);
-        alert('連線異常：' + err);
-    }
-}
-
+    // 1. 登入檢查
     function checkLogin() {
-        if(document.getElementById('loginUser').value === VALID_USER && document.getElementById('loginPass').value === VALID_PASS) {
+        const u = document.getElementById('loginUser').value;
+        const p = document.getElementById('loginPass').value;
+        if(u === "小黑哥" && p === "1030701") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             document.getElementById('mainFooter').style.display = 'flex';
-        } else { alert('帳密錯誤！'); }
+        } else { alert('帳密錯誤'); }
     }
 
+    // 2. 頁面切換
     function showPage(pageId, title) {
         document.getElementById('mainMenu').style.display = 'none';
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
@@ -163,22 +111,48 @@ async function syncToCloud(text, level) {
     function goHome() {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('mainMenu').style.display = 'block';
-        document.getElementById('pageTitle').innerText = '警衛 SOP 查詢 APP';
+        document.getElementById('pageTitle').innerText = '警察 SOP 查詢 APP';
     }
 
-    function saveData(category) {
-        const timestamp = new Date().toLocaleString();
-        let history = JSON.parse(localStorage.getItem('PoliceSystemLogs') || '[]');
-        history.push({ cat: category, time: timestamp });
-        localStorage.setItem('PoliceSystemLogs', JSON.stringify(history));
-        alert('【' + category + '】紀錄成功！\n時間：' + timestamp);
+    // 3. 雲端同步 + 本機存檔
+    async function saveAndSync(category, inputId, extraId = null) {
+        const text = document.getElementById(inputId).value;
+        const level = extraId ? document.getElementById(extraId).value : "一般";
+        const now = new Date().toLocaleString();
+
+        // A. 本機存檔 (LocalStorage)
+        let logs = JSON.parse(localStorage.getItem('PoliceLogs') || '[]');
+        logs.push({ cat: category, time: now, content: text });
+        localStorage.setItem('PoliceLogs', JSON.stringify(logs));
+
+        // B. 雲端同步 (GitHub API)
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        try {
+            const getRes = await fetch(url + '?t=' + new Date().getTime());
+            const fileData = await getRes.json();
+            const sha = fileData.sha;
+
+            const newContent = { text: text, sender: "小黑哥", level: level, time: now };
+            const putRes = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `Update ${now}`,
+                    content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
+                    sha: sha
+                })
+            });
+
+            if (putRes.ok) alert('✅ 雲端與本機同步成功！');
+            else alert('❌ 雲端更新失敗，請檢查 Token。');
+        } catch (err) { alert('連線異常：' + err); }
         goHome();
     }
 
     function showLogs() {
-        let history = JSON.parse(localStorage.getItem('PoliceSystemLogs') || '[]');
-        if(history.length === 0) return alert('尚無紀錄');
-        alert('最近紀錄：' + history[history.length-1].cat + ' @ ' + history[history.length-1].time);
+        let logs = JSON.parse(localStorage.getItem('PoliceLogs') || '[]');
+        if(logs.length === 0) return alert('尚無紀錄');
+        alert('最近操作：' + logs[logs.length-1].cat + ' @ ' + logs[logs.length-1].time);
     }
 </script>
 </body>
