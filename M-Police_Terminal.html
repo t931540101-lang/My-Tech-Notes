@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Police 勤務系統</title>
+    <title>M-Security 勤務系統</title>
     <style>
         :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; --p-danger: #d9534f; --p-warn: #fff3cd; }
         body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 80px; }
@@ -42,7 +42,7 @@
 </div>
 
 <div id="appContent" style="display:none;">
-    <div class="header" id="pageTitle">警察 SOP 查詢 APP</div>
+    <div class="header" id="pageTitle">警衛 SOP 查詢 APP</div>
 
     <div id="mainMenu">
         <div class="section-title">業務分類查詢</div>
@@ -92,8 +92,8 @@
 </div>
 
 <script>
-    const VALID_USER = "小黑哥"; 
-    const VALID_PASS = "1030701"; // 預設密碼
+    const VALID_USER = "盧家慶"; 
+    const VALID_PASS = "D01762"; // 預設密碼
 
     function checkLogin() {
         if(document.getElementById('loginUser').value === VALID_USER && document.getElementById('loginPass').value === VALID_PASS) {
@@ -113,7 +113,7 @@
     function goHome() {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('mainMenu').style.display = 'block';
-        document.getElementById('pageTitle').innerText = '警察 SOP 查詢 APP';
+        document.getElementById('pageTitle').innerText = '警衛 SOP 查詢 APP';
     }
 
     function saveData(category) {
