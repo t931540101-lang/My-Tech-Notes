@@ -5,39 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Security 整合查詢</title>
     <link rel="icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
-<link rel="apple-touch-icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
+    <link rel="apple-touch-icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --accent: #27ae60; --dark: #1e293b; --npa-gold: #f39c12; }
-        body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* 經典標題漸層 */
+        /* 登入介面樣式 */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .login-card h2 { color: var(--nav-blue); margin-top: 0; font-style: italic; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        
+        /* 原有樣式 */
         .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 18px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .header h1 { margin: 0; font-style: italic; font-size: 26px; letter-spacing: 1px; }
-
-        /* 經典五分頁標籤 */
         .tabs { display: flex; background: #6089b3; }
         .tab { flex: 1; text-align: center; padding: 14px 0; color: #d1d5db; font-size: 15px; cursor: pointer; border-right: 1px solid #4a76a8; }
         .tab.active { background: #4a76a8; color: white; font-weight: bold; }
-
         .container { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-
-        /* 經典輸入卡片 */
         .card { background: white; border: 2px solid #a5c7f2; border-radius: 6px; padding: 12px; margin-bottom: 15px; }
         textarea, input { width: 100%; border: none; font-size: 20px; outline: none; font-weight: bold; background: transparent; box-sizing: border-box; }
-        
         .btn { border: none; border-radius: 8px; color: white; font-size: 22px; font-weight: bold; padding: 16px; width: 100%; margin-bottom: 12px; cursor: pointer; box-shadow: 0 4px #1a6edb; }
         .btn-query { background: var(--btn-grad); }
         .btn-group { display: flex; gap: 10px; }
         .btn-sm { flex: 1; padding: 12px; font-size: 16px; background: var(--btn-grad); color:white; border:none; border-radius:8px; font-weight:bold; }
-        
-        /* 警政署 RWD 跳轉按鈕 */
         .npa-btn { display: block; text-align: center; background: #1a2a6c; color: white; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; font-size: 18px; border: 2px solid var(--npa-gold); }
-        
-        /* 內容列表樣式 */
         .log-item { background: white; border-left: 8px solid var(--dark); padding: 10px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .confirmed { border-left-color: var(--accent); background: #ecfdf5; }
         .res-box { margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 10px solid #ccc; display: none; }
@@ -46,52 +42,89 @@
 </head>
 <body>
 
-    <div class="header"><h1>M-Security 整合查詢</h1></div>
-
-    <div class="tabs">
-        <div class="tab active" onclick="switchPage(0)">一般</div>
-        <div class="tab" onclick="switchPage(1)">進階</div>
-        <div class="tab" onclick="switchPage(2)">應用</div>
-        <div class="tab" onclick="switchPage(3)">頻道</div>
-        <div class="tab" onclick="switchPage(4)">設定</div>
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h2>M-Security 登入</h2>
+            <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
+            <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
+            <button class="btn btn-query" onclick="handleLogin()" style="font-size: 18px; padding: 12px;">授 權 登 入</button>
+            <p style="font-size: 12px; color: #888;">NPA-FACTOR-NETWORK v2.6</p>
+        </div>
     </div>
 
-    <div class="container">
-        <div id="p0" class="page active">
-            <div style="margin-bottom:10px; font-weight:bold;">查詢模式：<span style="background:#007bff;color:white;padding:2px 8px;border-radius:4px;">線上同步</span></div>
-            <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號"></textarea></div>
-            <button class="btn btn-query" onclick="doQuery()">查 詢</button>
-            <div class="btn-group">
-                <button class="btn-sm" onclick="clearAll()">清 除</button>
-                <button class="btn-sm" onclick="manualSync()">手動同步</button>
+    <div id="mainApp" style="display:none;">
+        <div class="header"><h1>M-Security 整合查詢</h1></div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchPage(0)">一般</div>
+            <div class="tab" onclick="switchPage(1)">進階</div>
+            <div class="tab" onclick="switchPage(2)">應用</div>
+            <div class="tab" onclick="switchPage(3)">頻道</div>
+            <div class="tab" onclick="switchPage(4)">設定</div>
+        </div>
+
+        <div class="container">
+            <div id="p0" class="page active">
+                <div style="margin-bottom:10px; font-weight:bold;">查詢模式：<span style="background:#007bff;color:white;padding:2px 8px;border-radius:4px;">線上同步</span></div>
+                <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號"></textarea></div>
+                <button class="btn btn-query" onclick="doQuery()">查 詢</button>
+                <div class="btn-group">
+                    <button class="btn-sm" onclick="clearAll()">清 除</button>
+                    <button class="btn-sm" onclick="manualSync()">手動同步</button>
+                </div>
+                <div id="result" class="res-box"></div>
             </div>
-            <div id="result" class="res-box"></div>
-        </div>
 
-        <div id="p1" class="page">
-            <div class="card">
-                <h3 style="margin-top:0; color:var(--nav-blue);">訪客入廠登記</h3>
-                <input type="text" id="vName" placeholder="訪客姓名" style="border-bottom: 1px solid #eee;">
-                <input type="text" id="vComp" placeholder="公司/拜訪對象" style="border-bottom: 1px solid #eee;">
-                <button class="btn btn-query" style="font-size:16px; padding:10px; margin-top:10px;" onclick="upVisitor()">確認登記</button>
+            <div id="p1" class="page">
+                <div class="card">
+                    <h3 style="margin-top:0; color:var(--nav-blue);">訪客入廠登記</h3>
+                    <input type="text" id="vName" placeholder="訪客姓名" style="border-bottom: 1px solid #eee;">
+                    <input type="text" id="vComp" placeholder="公司/拜訪對象" style="border-bottom: 1px solid #eee;">
+                    <button class="btn btn-query" style="font-size:16px; padding:10px; margin-top:10px;" onclick="upVisitor()">確認登記</button>
+                </div>
+                <div id="vList"></div>
             </div>
-            <div id="vList"></div>
-        </div>
 
-        <div id="p2" class="page">
-            <h3 style="color:var(--nav-blue);">🐕 K9 戰術醫療監控</h3>
-            <div id="dogList"></div>
-        </div>
+            <div id="p2" class="page">
+                <h3 style="color:var(--nav-blue);">🐕 K9 戰術醫療監控</h3>
+                <div id="dogList"></div>
+            </div>
 
-        <div id="p3" class="page">
-            <button class="btn btn-query" style="background:var(--dark);" onclick="addDuty()">+ 新增交接事項</button>
-            <div id="dutyList"></div>
-        </div>
+            <div id="p3" class="page">
+                <button class="btn btn-query" style="background:var(--dark);" onclick="addDuty()">+ 新增交接事項</button>
+                <div id="dutyList"></div>
+            </div>
 
-        <div class="sys-info">20260225_FINAL_STABLE<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+            <div id="p4" class="page">
+                <div class="card">
+                    <h3 style="margin-top:0; color:var(--nav-blue);">系統資訊</h3>
+                    <p>當前操作員：<span id="opName">---</span></p>
+                    <button class="btn" style="background:#888; font-size: 16px; padding: 10px;" onclick="location.reload()">安全性登出</button>
+                </div>
+            </div>
+
+            <div class="sys-info">20260225_FINAL_STABLE<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+        </div>
     </div>
 
 <script>
+    // 登入驗證設定
+    const VALID_USER = "小黑哥"; 
+    const VALID_PASS = "1030701"; 
+
+    function handleLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        if(u === VALID_USER && p === VALID_PASS) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('opName').innerText = u;
+        } else {
+            alert('登入失敗：授權資料錯誤');
+        }
+    }
+
+    // Firebase 設定
     const firebaseConfig = {
         apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
         databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
@@ -101,6 +134,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // 查詢與功能邏輯
     function doQuery() {
         const v = document.getElementById('valIn').value.trim().toUpperCase();
         if(!v) return;
@@ -171,7 +205,7 @@
     }
 
     function clearAll() { document.getElementById('valIn').value = ''; document.getElementById('result').style.display = 'none'; }
-    function confirmDuty(k) { const n = prompt("姓名：", "小黑哥"); if(n) db.ref('reactLogs/'+k).update({confirmedBy:n}); }
+    function confirmDuty(k) { const n = prompt("姓名：", VALID_USER); if(n) db.ref('reactLogs/'+k).update({confirmedBy:n}); }
     function manualSync() { location.reload(); }
 </script>
 </body>
