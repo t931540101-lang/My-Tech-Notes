@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M-Police 勤務系統</title>
     <style>
-        :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; --p-danger: #d9534f; --p-warn: #fff3cd; }
+        :root { --p-blue: #1a5c9f; --p-dark: #333; --p-light: #e3f2fd; }
         body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 80px; }
         .header { background: var(--p-blue); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 100; }
         .section-title { background: var(--p-dark); color: white; padding: 10px 15px; font-size: 0.9rem; }
         .page { display: none; padding: 15px; background: white; min-height: 85vh; }
         .form-group { margin-bottom: 18px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--p-blue); border-left: 4px solid var(--p-blue); padding-left: 8px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
         .btn-submit { background: var(--p-blue); color: white; border: none; width: 100%; padding: 16px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; font-weight: bold; }
         #loginPage { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: var(--p-blue); color: white; padding: 20px; box-sizing: border-box; }
         .login-box { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 300px; color: #333; }
-        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 20px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 600; cursor: pointer; }
+        .menu-item { background: var(--p-light); border-bottom: 1px solid #ccc; padding: 20px; text-align: center; color: #333; text-decoration: none; display: block; font-weight: 600; }
         .footer { position: fixed; bottom: 0; width: 100%; background: var(--p-blue); display: none; }
         .nav-item { flex: 1; color: white; padding: 15px 5px; text-align: center; font-size: 0.85rem; cursor: pointer; border-right: 1px solid rgba(255,255,255,0.2); }
     </style>
@@ -26,8 +26,8 @@
 <div id="loginPage">
     <div style="margin-bottom: 20px; font-size: 1.5rem; font-weight: bold;">M-Police 勤務登入</div>
     <div class="login-box">
-        <div class="form-group"><label>帳號 (姓名)</label><input type="text" id="loginUser" placeholder="請輸入姓名"></div>
-        <div class="form-group"><label>密碼 (工號)</label><input type="password" id="loginPass" placeholder="請輸入工號"></div>
+        <div class="form-group"><label>帳號 (姓名)</label><input type="text" id="loginUser" placeholder="小黑哥"></div>
+        <div class="form-group"><label>密碼 (工號)</label><input type="password" id="loginPass" placeholder="1030701"></div>
         <button class="btn-submit" style="width:100%" onclick="checkLogin()">授權登入</button>
     </div>
 </div>
@@ -36,59 +36,45 @@
     <div class="header" id="pageTitle">警察 SOP 查詢 APP</div>
     <div id="mainMenu">
         <div class="section-title">業務分類查詢</div>
-        <div class="menu-item" onclick="showPage('transport', '交通類 - 勤務登記')">交通類</div>
-        <div class="menu-item" onclick="showPage('security', '保安類 - 巡邏紀錄')">保安類</div>
-        <div class="menu-item" onclick="showPage('admin', '行政類 - 公務資訊')">行政類</div>
-        <div class="menu-item" onclick="showPage('it', '後勤類 - 技術維護')">後勤類</div>
-        <div class="menu-item" onclick="showPage('emergency', '勤務指揮 - 緊急應變')">勤務指揮</div>
+        <div class="menu-item" onclick="showPage('admin', '行政類 - 公務資訊')">行政類 (交接看板)</div>
+        <div class="menu-item" onclick="showPage('transport', '交通類')">交通類</div>
+        <div class="menu-item" onclick="showPage('security', '保安類')">保安類</div>
     </div>
 
     <div id="page-admin" class="page">
         <div class="form-group"><label>交接事項看板內容</label><textarea id="adminMemo" rows="5" placeholder="輸入要顯示在桌面看板的文字..."></textarea></div>
-        <button class="btn-submit" onclick="saveAndSync('行政', 'adminMemo')">同步至雲端看板</button>
+        <button class="btn-submit" onclick="saveAndSync('行政', 'adminMemo')">同步至 Google 雲端</button>
     </div>
 
     <div id="page-transport" class="page">
-        <label>車牌號碼</label><input type="text" id="carId"><button class="btn-submit" onclick="saveAndSync('交通', 'carId')">同步並儲存</button>
+        <label>車牌號碼</label><input type="text" id="carId"><button class="btn-submit" onclick="saveAndSync('交通', 'carId')">同步存檔</button>
     </div>
+
     <div id="page-security" class="page">
-        <label>巡邏區域</label><textarea id="secNote" rows="3"></textarea><button class="btn-submit" onclick="saveAndSync('保安', 'secNote')">同步並儲存</button>
-    </div>
-    <div id="page-it" class="page">
-        <div style="background:#fff3cd; padding:10px; margin-bottom:15px; font-size:0.8rem;">HP 15s SSD 計畫已退休。</div>
-        <textarea id="itNote" rows="3"></textarea><button class="btn-submit" onclick="saveAndSync('後勤', 'itNote')">儲存資料</button>
-    </div>
-    <div id="page-emergency" class="page">
-        <select id="emLvl"><option>🔴 緊急</option><option>🔵 一般</option></select><button class="btn-submit" style="background:var(--p-danger);" onclick="saveAndSync('緊急', 'emLvl')">發送通報</button>
+        <label>巡邏區域</label><textarea id="secNote" rows="3"></textarea><button class="btn-submit" onclick="saveAndSync('保安', 'secNote')">同步存檔</button>
     </div>
 
     <div class="footer" id="mainFooter">
         <div class="nav-item" onclick="goHome()">回首頁</div>
-        <div class="nav-item" onclick="showLogs()">歷史</div>
         <div class="nav-item" onclick="location.reload()">登出</div>
     </div>
 </div>
 
 <script>
-    const GITHUB_TOKEN = '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';
-    const REPO_OWNER = 't931540101-lang';
-    const REPO_NAME = 'My-Tech-Notes';
-    const FILE_PATH = 'handover_data.json';
+    const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbzu10eToMcxm4AhQbe1GBbaqBtCsuPkz3kaKMY4a4xgHuMr8seei0IIKqL4bRBcwPQ1/exec';
 
     function checkLogin() {
-        const u = document.getElementById('loginUser').value;
-        const p = document.getElementById('loginPass').value;
-        if(u === "小黑哥" && p === "1030701") {
+        if(document.getElementById('loginUser').value === "小黑哥" && document.getElementById('loginPass').value === "1030701") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             document.getElementById('mainFooter').style.display = 'flex';
         } else { alert('帳密錯誤'); }
     }
 
-    function showPage(pageId, title) {
+    function showPage(pId, title) {
         document.getElementById('mainMenu').style.display = 'none';
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.getElementById('page-' + pageId).style.display = 'block';
+        document.getElementById('page-' + pId).style.display = 'block';
         document.getElementById('pageTitle').innerText = title;
     }
 
@@ -98,35 +84,17 @@
         document.getElementById('pageTitle').innerText = '警察 SOP 查詢 APP';
     }
 
-    async function saveAndSync(category, inputId) {
+    async function saveAndSync(cat, inputId) {
         const text = document.getElementById(inputId).value;
         const now = new Date().toLocaleString();
+        const data = { text: text, level: "一般", sender: "小黑哥", time: now };
 
-        // 雲端同步
-        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
         try {
-            const getRes = await fetch(url + '?t=' + new Date().getTime());
-            const fileData = await getRes.json();
-            const newContent = { text: text, sender: "小黑哥", level: "一般", time: now };
-            const putRes = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: `Update ${now}`,
-                    content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
-                    sha: fileData.sha
-                })
-            });
-            if (putRes.ok) alert('✅ 雲端同步成功！');
-            else {
-                const err = await putRes.json();
-                alert('❌ 失敗：' + err.message);
-            }
-        } catch (err) { alert('連線異常'); }
+            await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert('✅ 雲端同步指令已發送！');
+        } catch (err) { console.log(err); }
         goHome();
     }
-
-    function showLogs() { alert('系統正常運作中'); }
 </script>
 </body>
 </html>
