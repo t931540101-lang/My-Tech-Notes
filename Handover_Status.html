@@ -17,25 +17,31 @@
 
 <div class="widget-container">
     <div class="header">📋 勤務交接看板</div>
-    <div class="content" id="handoverText">正在連線至雲端...</div>
+    <div class="content" id="handoverText">正在連線至 Google 雲端...</div>
     <div class="time" id="syncTime">最後同步：--:--</div>
 </div>
 
 <script>
-    const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbycZjDnFOnWsYm0-6zY1KsKRDkaQR_ZpXAjFSLITKCcgnLRpCnbcb1NhTZsBqTy5VbG/exec';
+    // 這是你剛剛產生的 Google 網址
+    const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbzu10eToMcxm4AhQbe1GBbaqBtCsuPkz3kaKMY4a4xgHuMr8seei0IIKqL4bRBcwPQ1/exec';
 
     async function refreshData() {
         try {
-            const response = await fetch(GOOGLE_URL);
+            // 強制加上時間參數防止快取
+            const response = await fetch(GOOGLE_URL + '?t=' + new Date().getTime());
             const data = await response.json();
-            document.getElementById('handoverText').innerText = data.text;
-            document.getElementById('syncTime').innerText = '最後同步：' + data.time;
+            
+            if (data && data.text) {
+                document.getElementById('handoverText').innerText = data.text;
+                document.getElementById('syncTime').innerText = '最後更新：' + data.time;
+            }
         } catch (error) {
-            document.getElementById('handoverText').innerText = '讀取中...';
+            console.log('正在嘗試讀取最新資料...');
         }
     }
     
-    setInterval(refreshData, 60000); // 每分鐘刷新
+    // 設定每 30 秒自動刷新一次
+    setInterval(refreshData, 30000);
     refreshData();
 </script>
 </body>
