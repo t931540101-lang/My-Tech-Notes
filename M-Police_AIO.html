@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-Police 雲端終端</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root { --p-blue: #00e5ff; --p-bg: #0a0a0a; --p-card: #1e1e1e; }
+        body { margin: 0; background: var(--p-bg); color: white; font-family: -apple-system, sans-serif; overflow: hidden; }
+        .container { display: flex; flex-direction: column; height: 100vh; }
+        
+        /* 上半部：即時看板 */
+        .monitor { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; border-bottom: 2px solid #333; }
+        .monitor-label { font-size: 0.8rem; color: var(--p-blue); margin-bottom: 10px; letter-spacing: 2px; }
+        #displayMsg { font-size: 1.8rem; font-weight: bold; margin-bottom: 15px; min-height: 2.4rem; }
+        #displayTime { font-size: 0.8rem; color: #888; }
+
+        /* 下半部：控制台 */
+        .console { padding: 20px; background: var(--p-card); border-radius: 20px 20px 0 0; }
+        textarea { width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 10px; color: white; padding: 15px; font-size: 1.1rem; box-sizing: border-box; outline: none; }
+        .btn { background: var(--p-blue); color: #000; border: none; width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 10px; margin-top: 15px; font-weight: bold; }
+        .btn:active { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="monitor">
+            <div class="monitor-label">🛰️ 雲端即時連線中...</div>
+            <div id="displayMsg">讀取中...</div>
+            <div id="displayTime">最後同步: --:--</div>
+        </div>
+        
+        <div class="console">
+            <textarea id="inputBox" rows="3" placeholder="輸入交接事項..."></textarea>
+            <button class="btn" onclick="send()">🚀 立即更新雲端</button>
+        </div>
+    </div>
+
+    <script>
+        const URL = 'https://factor-security-d1965-default-rtdb.firebaseio.com/dutyLogs.json';
+
+        // 接收端：每 2 秒自動抓一次
+        async function fetchMsg() {
+            try {
+                const res = await fetch(URL);
+                const data = await res.json();
+                if(data) {
+                    document.getElementById('displayMsg').innerText = data.text;
+                    document.getElementById('displayTime').innerText = '最後同步: ' + data.time;
+                }
+            } catch(e) {}
+        }
+
+        // 發射端
+        async function send() {
+            const text = document.getElementById('inputBox').value;
+            if(!text) return;
+            const now = new Date().toLocaleString();
+            try {
+                await fetch(URL, {
+                    method: 'PUT',
+                    body: JSON.stringify({ text: text, time: now, sender: "小黑哥" })
+                });
+                document.getElementById('inputBox').value = '';
+                fetchMsg(); // 傳完立刻重整
+            } catch(e) { alert('傳輸失敗'); }
+        }
+
+        setInterval(fetchMsg, 2000);
+        fetchMsg();
+    </script>
+</body>
+</html>
