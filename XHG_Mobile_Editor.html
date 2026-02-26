@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小黑哥的行動工作站</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --accent-color: #00ff9d;
+            --input-bg: #1e1e1e;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        h2 { color: var(--accent-color); font-size: 1.2rem; margin: 0 0 10px 0; }
+        #editor {
+            flex-grow: 1;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid #333;
+            padding: 10px;
+            width: 100%;
+            font-size: 16px; /* 防止 iOS 自動縮放 */
+            resize: none;
+            box-sizing: border-box;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+        .controls {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button.save { background-color: var(--accent-color); color: #000; }
+        #status { font-size: 0.8rem; margin-top: 5px; text-align: right; color: #888; }
+    </style>
+</head>
+<body>
+
+    <h2>Code Editor (Mobile)</h2>
+    
+    <textarea id="editor" placeholder="在此輸入程式碼或 RP 邏輯..."></textarea>
+
+    <div class="controls">
+        <button onclick="clearEditor()">清空內容</button>
+        <button class="save" onclick="saveContent()">本地存檔</button>
+    </div>
+    <div id="status">尚未存檔</div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+
+        // 載入存檔
+        window.onload = () => {
+            const saved = localStorage.getItem('xhg_code_data');
+            if (saved) {
+                editor.value = saved;
+                status.innerText = '已載入上次存檔';
+            }
+        };
+
+        // 存檔功能
+        function saveContent() {
+            localStorage.setItem('xhg_code_data', editor.value);
+            const now = new Date().toLocaleTimeString();
+            status.innerText = '最後存檔時間：' + now;
+            // 提示音或震動
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // 清空
+        function clearEditor() {
+            if (confirm('確定要清空嗎？')) {
+                editor.value = '';
+                localStorage.removeItem('xhg_code_data');
+                status.innerText = '內容已清空';
+            }
+        }
+    </script>
+</body>
+</html>
