@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Police 專業指揮看板</title>
+    <style>
+        :root { --p-blue: #00e5ff; --p-bg: #0a0a0a; }
+        body { margin: 0; background: var(--p-bg); color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* 版面配置 */
+        .grid-container { display: grid; grid-template-columns: 2fr 1fr; height: 100vh; padding: 20px; gap: 20px; box-sizing: border-box; }
+        
+        /* 左側：大交接內容 */
+        .duty-box { background: #1a1a1a; border-left: 10px solid var(--p-blue); border-radius: 20px; padding: 40px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+        .duty-box::after { content: "DUTY LOG"; position: absolute; top: 20px; right: 30px; font-size: 0.8rem; color: #444; letter-spacing: 5px; }
+        #dutyText { font-size: 4rem; font-weight: 900; line-height: 1.2; }
+        
+        /* 右側：時間與天氣 */
+        .side-bar { display: grid; grid-template-rows: 1fr 1.2fr; gap: 20px; }
+        .card { background: #1a1a1a; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* 時間顯示 */
+        #clock { font-size: 3.5rem; font-weight: bold; color: var(--p-blue); }
+        #date { font-size: 1.2rem; color: #888; margin-top: 10px; }
+        
+        /* 天氣顯示 (範例文字，之後可接 API) */
+        .weather-icon { font-size: 4rem; margin-bottom: 10px; }
+        #weatherText { font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+
+<div class="grid-container">
+    <div class="duty-box">
+        <div id="dutyText">連線中...</div>
+        <div style="margin-top: 30px; color: #666;">最後更新：<span id="updateTime">--</span></div>
+    </div>
+
+    <div class="side-bar">
+        <div class="card">
+            <div id="clock">00:00:00</div>
+            <div id="date">2026-02-26</div>
+        </div>
+        <div class="card">
+            <div class="weather-icon">☀️</div>
+            <div id="weatherText">台中 25°C</div>
+            <div style="color: #666; font-size: 0.8rem; margin-top: 5px;">今日多雲時晴</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. 時間更新功能
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', {hour12: false});
+        document.getElementById('date').innerText = now.toLocaleDateString('zh-TW').replace(/\//g, '-');
+    }
+    setInterval(updateClock, 1000);
+
+    // 2. Firebase 即時連線
+    const URL = 'https://factor-security-d1965-default-rtdb.firebaseio.com/dutyLogs.json';
+    async function syncData() {
+        try {
+            const res = await fetch(URL);
+            const data = await res.json();
+            if(data) {
+                document.getElementById('dutyText').innerText = data.text;
+                document.getElementById('updateTime').innerText = data.time;
+            }
+        } catch(e) {}
+    }
+    setInterval(syncData, 2000);
+</script>
+
+</body>
+</html>
