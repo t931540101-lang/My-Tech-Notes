@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全新雲端看板</title>
+    <style>
+        body { background: #121212; color: #00e5ff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 20px; border: 2px solid #00e5ff; text-align: center; width: 85%; }
+        #msg { font-size: 1.5rem; color: white; margin-bottom: 20px; }
+        #time { font-size: 0.8rem; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div id="msg">正在連接 Google 試算表...</div>
+        <div id="time">等待同步</div>
+    </div>
+
+    <script>
+        // 這是你最後產生的那個「所有人」權限網址
+        const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbycZjDnFOnWsYm0-6zY1KsKRDkaQR_ZpXAjFSLITKCcgnLRpCnbcb1NhTZsBqTy5VbG/exec';
+
+        async function load() {
+            try {
+                const res = await fetch(GOOGLE_URL + '?t=' + Date.now());
+                const data = await res.json();
+                document.getElementById('msg').innerText = data.text;
+                document.getElementById('time').innerText = '最後更新：' + data.time;
+            } catch (e) {
+                document.getElementById('msg').innerText = "連線失敗，請確認 Google 部署權限";
+            }
+        }
+        load();
+        setInterval(load, 30000);
+    </script>
+</body>
+</html>
