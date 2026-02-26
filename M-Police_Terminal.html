@@ -61,15 +61,29 @@
 </div>
 
 <script>
-    const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbycZjDnFOnWsYm0-6zY1KsKRDkaQR_ZpXAjFSLITKCcgnLRpCnbcb1NhTZsBqTy5VbG/exec';
+    // 換成你的 Firebase 網址，記得後面加 /dutyLogs.json
+const FIREBASE_URL = 'https://factor-security-d1965-default-rtdb.firebaseio.com/dutyLogs.json';
 
-    function checkLogin() {
-        if(document.getElementById('loginUser').value === "小黑哥" && document.getElementById('loginPass').value === "1030701") {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            document.getElementById('mainFooter').style.display = 'flex';
-        } else { alert('帳密錯誤'); }
+async function saveAndSync(cat, inputId) {
+    const text = document.getElementById(inputId).value;
+    const now = new Date().toLocaleString();
+    const data = { 
+        text: text, 
+        time: now,
+        sender: "小黑哥"
+    };
+
+    try {
+        // Firebase 用 PUT 或 POST 就能直接寫入，不需要 Google 那樣繁瑣的部署
+        await fetch(FIREBASE_URL, {
+            method: 'PUT', // PUT 會覆蓋舊的，適合只顯示最新一筆的看板
+            body: JSON.stringify(data)
+        });
+        alert('🚀 Firebase 同步成功！');
+    } catch (err) {
+        alert('❌ 同步失敗，請檢查網路');
     }
+}
 
     function showPage(pId, title) {
         document.getElementById('mainMenu').style.display = 'none';
