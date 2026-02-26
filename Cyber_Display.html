@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --neon-blue: #00e5ff;
+            --bg-dark: #020617;
+        }
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: white;
+            font-family: "Courier New", monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 這是 CSS 魔法：打造發光框 */
+        .cyber-card {
+            width: 330px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
+            backdrop-filter: blur(10px); /* 磨砂玻璃感 */
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 數位雨裝飾文字 */
+        .digital-rain {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 10px;
+            color: rgba(0, 229, 255, 0.2);
+            line-height: 1;
+            text-align: right;
+        }
+
+        .status-title {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+        }
+
+        .main-content {
+            font-size: 42px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-card">
+        <div class="digital-rain">10110<br>01101<br>11010</div>
+        
+        <div class="status-title">● System Linked</div>
+        
+        <div class="main-content" id="msg">載入中...</div>
+        
+        <div class="footer-info">
+            <span id="sender">User: ---</span>
+            <span id="time">Time: --:--</span>
+        </div>
+    </div>
+
+    <script>
+        // 串接你的 Firebase 靈魂
+        async function update() {
+            const res = await fetch('https://factor-security-d1965-default-rtdb.firebaseio.com/dutyLogs.json');
+            const data = await res.json();
+            document.getElementById('msg').innerText = data.text || "ONLINE";
+            document.getElementById('sender').innerText = "User: " + (data.sender || "小黑哥");
+            document.getElementById('time').innerText = "Time: " + (data.time ? data.time.split(' ')[1].substring(0, 5) : "--:--");
+        }
+        update();
+        setInterval(update, 5000); // 每 5 秒自動更新一次
+    </script>
+</body>
+</html>
