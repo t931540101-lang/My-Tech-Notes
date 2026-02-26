@@ -143,11 +143,13 @@
                 })
             });
 
-            if (putRes.ok) alert('✅ 雲端與本機同步成功！');
-            else alert('❌ 雲端更新失敗，請檢查 Token。');
-        } catch (err) { alert('連線異常：' + err); }
-        goHome();
-    }
+            // 把 alert 那行改寫成這樣，錯誤訊息會更清楚
+if (putRes.ok) {
+    alert('✅ 雲端看板已及時更新！');
+} else {
+    const errorDetail = await putRes.json();
+    alert('❌ 同步失敗：' + errorDetail.message); // 這裡會告訴你是 Token 過期還是找不到檔案
+}
 
     function showLogs() {
         let logs = JSON.parse(localStorage.getItem('PoliceLogs') || '[]');
