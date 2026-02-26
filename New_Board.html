@@ -3,36 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全新雲端看板</title>
+    <title>Firebase 即時看板</title>
     <style>
-        body { background: #121212; color: #00e5ff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1e1e1e; padding: 30px; border-radius: 20px; border: 2px solid #00e5ff; text-align: center; width: 85%; }
-        #msg { font-size: 1.5rem; color: white; margin-bottom: 20px; }
-        #time { font-size: 0.8rem; color: #888; }
+        body { background: #0a0a0a; color: #00e5ff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 20px; border-left: 8px solid #00e5ff; width: 85%; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        #msg { font-size: 1.6rem; color: white; margin-bottom: 20px; font-weight: bold; }
+        #time { font-size: 0.9rem; color: #888; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div id="msg">正在連接 Google 試算表...</div>
-        <div id="time">等待同步</div>
+        <div style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 10px;">📋 最新勤務指令</div>
+        <div id="msg">連線中...</div>
+        <div id="time">--:--</div>
     </div>
 
     <script>
-        // 這是你最後產生的那個「所有人」權限網址
-        const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbycZjDnFOnWsYm0-6zY1KsKRDkaQR_ZpXAjFSLITKCcgnLRpCnbcb1NhTZsBqTy5VbG/exec';
+        const URL = 'https://factor-security-d1965-default-rtdb.firebaseio.com/dutyLogs.json';
 
-        async function load() {
+        async function listen() {
             try {
-                const res = await fetch(GOOGLE_URL + '?t=' + Date.now());
+                const res = await fetch(URL);
                 const data = await res.json();
-                document.getElementById('msg').innerText = data.text;
-                document.getElementById('time').innerText = '最後更新：' + data.time;
-            } catch (e) {
-                document.getElementById('msg').innerText = "連線失敗，請確認 Google 部署權限";
-            }
+                if(data) {
+                    document.getElementById('msg').innerText = data.text;
+                    document.getElementById('time').innerText = '最後同步：' + data.time;
+                }
+            } catch (e) { console.log("讀取失敗"); }
         }
-        load();
-        setInterval(load, 30000);
+        // 每 2 秒刷一次，達到即時效果
+        setInterval(listen, 2000);
+        listen();
     </script>
 </body>
 </html>
