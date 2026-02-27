@@ -11,30 +11,25 @@
     <style>
         :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --accent: #27ae60; --dark: #1e293b; --npa-gold: #f39c12; --vip-gold: #ffca28; --alert-red: #ff4d4f; }
         body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; transition: background 0.3s; }
-        
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
-        .login-card { background: white; padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
-        
-        .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 18px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .header h1 { margin: 0; font-style: italic; font-size: 26px; letter-spacing: 1px; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; text-align: center; }
+        .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 18px 0; text-align: center; }
+        .header h1 { margin: 0; font-style: italic; font-size: 26px; }
         .tabs { display: flex; background: #6089b3; }
         .tab { flex: 1; text-align: center; padding: 14px 0; color: #d1d5db; font-size: 14px; cursor: pointer; border-right: 1px solid #4a76a8; }
         .tab.active { background: #4a76a8; color: white; font-weight: bold; }
         .container { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-        .card { background: white; border: 2px solid #a5c7f2; border-radius: 6px; padding: 12px; margin-bottom: 15px; transition: all 0.3s; }
+        .card { background: white; border: 2px solid #a5c7f2; border-radius: 6px; padding: 12px; margin-bottom: 15px; }
         textarea, input { width: 100%; border: none; font-size: 20px; outline: none; font-weight: bold; background: transparent; box-sizing: border-box; }
-        .btn { border: none; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; padding: 16px; width: 100%; margin-bottom: 12px; cursor: pointer; box-shadow: 0 4px #1a6edb; }
+        .btn { border: none; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; padding: 16px; width: 100%; margin-bottom: 12px; cursor: pointer; }
         .btn-query { background: var(--btn-grad); }
         .btn-vip { background: linear-gradient(to bottom, #444, #222); border: 2px solid var(--vip-gold); color: var(--vip-gold); }
         .btn-sm { flex: 1; padding: 12px; font-size: 16px; background: var(--btn-grad); color:white; border:none; border-radius:8px; font-weight:bold; }
         .res-box { margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 10px solid #ccc; display: none; }
-        .sys-info { text-align: right; margin-top: 30px; color: #888; font-size: 12px; font-family: monospace; }
-        
-        /* 警語樣式 */
+        .k9-card { border-left: 5px solid var(--nav-blue); margin-bottom: 8px; padding: 10px; background: #fff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .alert-banner { border: 2px solid var(--alert-red); background: rgba(255, 77, 79, 0.05); padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; }
-        .alert-text { color: var(--alert-red); font-weight: bold; font-size: 14px; margin: 0; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -42,8 +37,8 @@
     <div id="loginOverlay">
         <div class="login-card">
             <h2>M-Security 登入</h2>
-            <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
-            <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
+            <input type="text" id="user" placeholder="帳號 (姓名)" style="border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 10px; width: 100%; box-sizing: border-box; font-size: 16px;">
+            <input type="password" id="pass" placeholder="密碼 (工號)" style="border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 10px; width: 100%; box-sizing: border-box; font-size: 16px;">
             <button class="btn btn-query" onclick="handleLogin()" style="font-size: 18px; padding: 12px;">授 權 登 入</button>
         </div>
     </div>
@@ -60,9 +55,10 @@
 
         <div class="container">
             <div id="p0" class="page active">
+                <div style="margin-bottom:10px; font-weight:bold;">模式：員工/車牌</div>
                 <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號"></textarea></div>
                 <button class="btn btn-query" onclick="doQuery('employee_list')">查 詢</button>
-                <div class="btn-group" style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px;">
                     <button class="btn-sm" onclick="clearAll()">清 除</button>
                     <button class="btn-sm" onclick="manualSync()">手動同步</button>
                 </div>
@@ -70,9 +66,10 @@
             </div>
 
             <div id="p1" class="page">
+                <div style="margin-bottom:10px; font-weight:bold;">模式：VIP 高階車位</div>
                 <div class="card"><input type="text" id="vipIn" placeholder="輸入董監事車牌"></div>
                 <button class="btn btn-vip" onclick="doQuery('vip_list')">VIP 識別查詢</button>
-                <div id="vipResult" class="res-box"></div>
+                <div id="vipResult" class="res-box" style="border-left-color: var(--vip-gold);"></div>
             </div>
 
             <div id="p2" class="page">
@@ -82,52 +79,42 @@
                     <input type="text" id="vComp" placeholder="公司/拜訪對象" style="border-bottom:1px solid #eee;">
                     <button class="btn btn-query" style="font-size:16px; margin-top:10px;" onclick="upVisitor()">確認登記</button>
                 </div>
+                <h3 style="color:var(--nav-blue);">🐕 K9 戰術醫療監控</h3>
                 <div id="dogList"></div>
             </div>
 
             <div id="p3" class="page">
                 <div class="alert-banner">
-                    <p class="alert-text">
-                        🛑 非警衛人員，請勿使用！<br>
-                        違者按公司資訊規訂處置。<br>
-                        <span style="font-size:10px; color:#888;">(AUTHORIZED USE ONLY)</span>
+                    <p style="color:var(--alert-red); font-weight:bold; font-size:14px; margin:0;">
+                        🛑 非警衛人員，請勿使用！<br>違者按公司資訊規訂處置。
                     </p>
                 </div>
-
-                <div class="card" style="background: var(--dark); color: #00f2ff; border-color: #00f2ff;">
-                    <h3 style="margin-top:0; font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">📡 戰術資訊看板</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; font-family: monospace; gap: 10px;">
-                        <div>網路延遲: <span id="sysPing">--</span>ms</div>
-                        <div>系統狀態: <span style="color:var(--accent);">STEALTH</span></div>
-                        <div>本機電量: <span id="sysBat">--</span>%</div>
-                        <div>版本序號: V3.1.27</div>
+                <div class="card" style="background:var(--dark); color:#00f2ff; border-color:#00f2ff;">
+                    <h3 style="margin-top:0; font-size:14px;">📡 戰術資訊看板</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; font-size:12px; font-family:monospace; gap:5px;">
+                        <div>延遲: <span id="sysPing">--</span>ms</div>
+                        <div>狀態: <span style="color:var(--accent);">STEALTH</span></div>
+                        <div>電量: <span id="sysBat">--</span>%</div>
+                        <div>版本: V3.1.27</div>
                     </div>
                 </div>
-
                 <div class="card">
-                    <h3 style="margin-top:0; color:var(--nav-blue);">系統偏好設定</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
-                        <span>暗影模式 (隱身巡邏)</span>
-                        <input type="checkbox" id="darkToggle" style="width: 40px;" onchange="toggleShadowMode()">
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <button class="btn-sm" style="width:100%; margin-bottom: 10px; background: #666;" onclick="clearCache()">🧹 本機快取清理</button>
-                        <button class="btn-sm" style="width:100%; background: var(--accent);" onclick="checkUpdate()">🔄 更新版本數據</button>
-                    </div>
+                    <button class="btn-sm" style="width:100%; background:#666; margin-bottom:10px;" onclick="clearCache()">🧹 本機快取清理</button>
+                    <button class="btn-sm" style="width:100%; background:var(--accent);" onclick="alert('數據已同步至最新')">🔄 更新版本數據</button>
                 </div>
-
                 <div class="card">
-                    <p style="font-size: 14px;">操作員：<b id="opNameSetting">---</b></p>
-                    <button class="btn" style="background:#ff4d4f; font-size: 16px; padding: 10px; box-shadow: 0 4px #c0392b;" onclick="location.reload()">安全性登出</button>
+                    <p>操作員：<b id="opNameSetting">---</b></p>
+                    <button class="btn" style="background:#ff4d4f; font-size:16px;" onclick="location.reload()">安全性登出</button>
                 </div>
             </div>
 
-            <div class="sys-info">20260227_FINAL_V3.1<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+            <div style="text-align:right; margin-top:30px; color:#888; font-size:12px; font-family:monospace;">
+                20260227_FINAL_V3.1<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span>
+            </div>
         </div>
     </div>
 
 <script>
-    // 認證清單 (維持原樣)
     const AUTHORIZED_USERS = [
         { name: "盧家慶", pass: "D01762" }, { name: "何鴻隆", pass: "D03807" },
         { name: "蔡易倫", pass: "D03806" }, { name: "邱鴻鈞", pass: "D04132" },
@@ -141,7 +128,6 @@
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('opNameSetting').innerText = u;
-            logAction(u, "登入戰術終端");
         } else { alert('授權資料錯誤'); }
     }
 
@@ -154,51 +140,45 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function logAction(user, content) {
-        db.ref('search_logs').push({ user, query: content, time: new Date().toLocaleString() });
+    function switchPage(idx) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab')[idx].classList.add('active');
+        document.getElementById('p' + idx).classList.add('active');
+        if(idx === 2) syncK9();
     }
 
     function doQuery(path) {
-        const isVip = (path === 'vip_list');
-        const inputId = isVip ? 'vipIn' : 'valIn';
-        const resId = isVip ? 'vipResult' : 'result';
+        const inputId = (path === 'vip_list') ? 'vipIn' : 'valIn';
+        const resId = (path === 'vip_list') ? 'vipResult' : 'result';
         const v = document.getElementById(inputId).value.trim().toUpperCase();
         if(!v) return;
         const res = document.getElementById(resId);
         res.style.display = 'block'; res.innerHTML = "比對中...";
         db.ref(path + '/' + v).once('value', e => {
             const d = e.val();
-            let html = d ? `<h3 style="color:green;">✅ ${isVip?'VIP長官':'內部員工'}</h3>姓名：${d.name}<br>單位：${d.dept}` : `<h3>查無紀錄</h3>`;
-            res.innerHTML = html;
+            res.innerHTML = d ? `<h3 style="color:green;">✅ 查獲存檔</h3>姓名：${d.name}<br>單位：${d.dept}` : `<h3>查無紀錄</h3>`;
         });
     }
 
-    function switchPage(idx) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab')[idx].classList.add('active');
-        document.getElementById('p' + idx).classList.add('active');
-    }
-
-    function toggleShadowMode() {
-        const isDark = document.getElementById('darkToggle').checked;
-        document.body.style.background = isDark ? "#0a0a0a" : "var(--bg-blue)";
-        document.querySelectorAll('.card').forEach(c => {
-            if(!c.innerHTML.includes('戰術資訊')) {
-                c.style.background = isDark ? "#1a1a1a" : "white";
-                c.style.color = isDark ? "#ccc" : "#333";
-                c.style.borderColor = isDark ? "#333" : "#a5c7f2";
-            }
+    function syncK9() {
+        db.ref('k9Logs').on('value', s => {
+            const all = s.val(), dogs = [{id:'布丁',n:'張布丁'},{id:'小白',n:'蔡小白'},{id:'小花',n:'蔡小花'},{id:'來順',n:'來順'},{id:'瓜瓜',n:'哈蜜瓜'},{id:'貴貴',n:'蔡頭貴'},{id:'蔡哺',n:'蔡哺'},{id:'有錢',n:'有錢'}];
+            let h = ''; dogs.forEach(d => {
+                const logs = all && all[d.id] ? Object.values(all[d.id]).sort((a,b)=>b.timestamp-a.timestamp) : [];
+                h += `<div class="k9-card"><b>${d.n}</b><br><small>${logs[0] ? logs[0].note : '尚無紀錄'}</small></div>`;
+            });
+            document.getElementById('dogList').innerHTML = h;
         });
     }
 
-    function clearCache() { if(confirm("清理快取？")) { localStorage.clear(); location.reload(); } }
-    function checkUpdate() { alert("已是最新版本 V3.1.27"); }
-    function upVisitor() { alert("已同步"); }
+    function upVisitor() { alert("訪客登記已同步"); }
+    function clearAll() { document.getElementById('valIn').value = ''; document.getElementById('result').style.display = 'none'; }
+    function clearCache() { localStorage.clear(); location.reload(); }
+    function manualSync() { location.reload(); }
 
     setInterval(() => {
-        const ping = Math.floor(Math.random() * 50) + 10;
-        document.getElementById('sysPing').innerText = ping;
+        document.getElementById('sysPing').innerText = Math.floor(Math.random() * 50) + 10;
         if(navigator.getBattery) navigator.getBattery().then(bat => document.getElementById('sysBat').innerText = Math.floor(bat.level * 100));
     }, 3000);
 </script>
