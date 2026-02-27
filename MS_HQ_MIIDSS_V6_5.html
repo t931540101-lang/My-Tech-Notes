@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <title>M-SECURITY | 指揮及控制中心系統 MIIDSS</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --hk-blue: #003366;
+            --hk-header: #e1e8f0;
+            --hk-border: #99aabb;
+            --hk-bg: #f0f2f5;
+        }
+
+        body {
+            background-color: var(--hk-bg);
+            color: #333;
+            font-family: "PingFang HK", "Microsoft JhengHei", sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+
+        /* 系統頂欄 (模仿圖中藍底) */
+        .top-nav {
+            background: var(--hk-blue);
+            color: white;
+            padding: 5px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px;
+        }
+        .top-nav b { font-size: 16px; letter-spacing: 1px; }
+
+        /* 功能選單列 (圖中白底選單) */
+        .menu-bar {
+            background: #fff;
+            border-bottom: 1px solid var(--hk-border);
+            padding: 8px 15px;
+            display: flex; gap: 20px; font-size: 13px; color: var(--hk-blue);
+        }
+        .menu-item { cursor: pointer; font-weight: bold; }
+        .menu-item:hover { text-decoration: underline; }
+
+        /* 主工作區佈局 */
+        .workspace {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            flex-grow: 1;
+            padding: 15px; gap: 15px;
+            overflow: hidden;
+        }
+
+        /* 模組卡片樣式 */
+        .case-card {
+            background: #fff;
+            border: 1px solid var(--hk-border);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+        }
+        .card-header {
+            background: var(--hk-header);
+            padding: 8px 12px;
+            font-size: 13px; font-weight: bold;
+            border-bottom: 1px solid var(--hk-border);
+            display: flex; justify-content: space-between;
+        }
+
+        /* 表單區域 */
+        .data-form {
+            padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .form-group { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .form-group label { width: 80px; color: #666; font-weight: bold; text-align: right; }
+        .form-group input, .form-group select {
+            flex: 1; border: 1px solid var(--hk-border); padding: 5px; background: #fafafa;
+        }
+
+        /* 照片區域 */
+        .photo-section {
+            width: 150px; height: 180px;
+            border: 1px solid var(--hk-border);
+            background: #e1e1e1;
+            display: flex; align-items: center; justify-content: center;
+            color: #999; font-size: 12px; margin-left: auto;
+        }
+
+        /* 下方即時數據清單 */
+        .list-section {
+            flex-grow: 1; overflow-y: auto; background: #fff; padding: 0;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f8f9fa; position: sticky; top: 0; padding: 10px; border-bottom: 2px solid var(--hk-border); text-align: left; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <div><b>MIIDSS</b> | M-SECURITY 指揮中心 V6.5</div>
+        <div id="clock">00:00:00</div>
+    </div>
+
+    <div class="menu-bar">
+        <div class="menu-item">案件檢索</div>
+        <div class="menu-item">人員資料庫</div>
+        <div class="menu-item">K9 戰術部署</div>
+        <div class="menu-item" style="color:red">黑名單預警</div>
+    </div>
+
+    <div class="workspace">
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div class="case-card">
+                <div class="card-header">
+                    <span>人員詳情檢索 / SUBJECT DETAIL</span>
+                    <span style="color:#003366">ID: <span id="curID">---</span></span>
+                </div>
+                <div style="display: flex; padding: 15px;">
+                    <div class="data-form" style="flex-grow: 1;">
+                        <div class="form-group"><label>工號/ID</label><input type="text" id="eID" placeholder="輸入後回車"></div>
+                        <div class="form-group"><label>姓名/Name</label><input type="text" id="eName"></div>
+                        <div class="form-group"><label>單位/Dept</label><input type="text" id="eDept"></div>
+                        <div class="form-group"><label>車牌/Plate</label><input type="text" id="ePlate"></div>
+                        <div class="form-group"><label>狀態/Stat</label>
+                            <select id="eStat">
+                                <option value="NORMAL">🟢 正常 (Normal)</option>
+                                <option value="SUSP">🟡 列管 (Suspicious)</option>
+                                <option value="BANNED">🔴 禁入 (Banned)</option>
+                            </select>
+                        </div>
+                        <button onclick="upEmp()" style="grid-column: span 2; padding: 10px; background:var(--hk-blue); color:white; border:none; cursor:pointer; font-weight:bold;">同步更新至中央資料庫</button>
+                    </div>
+                    <div class="photo-section" id="photoBox">
+                        NO IMAGE<br>(模擬影像)
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-card" style="flex-grow: 1;">
+                <div class="card-header">實時截查紀錄 / LIVE SEARCH FEED</div>
+                <div class="list-section">
+                    <table>
+                        <thead>
+                            <tr><th>時間</th><th>操作員</th><th>查詢類別</th><th>對象/內容</th></tr>
+                        </thead>
+                        <tbody id="searchLogs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div class="case-card" style="height: 50%;">
+                <div class="card-header">K9 戰術組動態</div>
+                <div class="list-section" id="k9Logs" style="padding: 10px;">
+                    </div>
+            </div>
+            <div class="case-card" style="flex-grow: 1;">
+                <div class="card-header">10-CODES 任務回報</div>
+                <div class="list-section">
+                    <table id="dispatchLogs">
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 監控查詢紀錄
+    db.ref('search_logs').limitToLast(15).on('value', s => {
+        const b = document.getElementById('searchLogs'); b.innerHTML = '';
+        if(s.val()) {
+            Object.values(s.val()).reverse().forEach(log => {
+                const color = log.query.includes('FINGER') ? 'orange' : 'blue';
+                b.innerHTML += `<tr>
+                    <td>${log.time.split(' ')[1]}</td>
+                    <td>${log.user}</td>
+                    <td style="color:${color}; font-weight:bold;">${log.query.includes('FINGER')?'生物辨識':'系統查詢'}</td>
+                    <td>${log.query}</td>
+                </tr>`;
+            });
+        }
+    });
+
+    // 監控 K9
+    const k9Names = ['布丁', '小白', '小花', '有錢'];
+    function updateK9() {
+        const box = document.getElementById('k9Logs'); box.innerHTML = '';
+        k9Names.forEach(name => {
+            db.ref('k9Logs/' + name).limitToLast(1).once('value', s => {
+                if(s.val()){
+                    const d = Object.values(s.val())[0];
+                    box.innerHTML += `<div style="font-size:12px; margin-bottom:8px; padding-bottom:5px; border-bottom:1px dashed #ccc;">
+                        <b>[${name}]</b> <span style="color:#666;">${d.time.split(' ')[1]}</span><br>${d.note}
+                    </div>`;
+                }
+            });
+        });
+    }
+    setInterval(updateK9, 5000);
+
+    // 任務回報
+    db.ref('reactLogs').limitToLast(10).on('value', s => {
+        const b = document.getElementById('dispatchLogs'); b.innerHTML = '';
+        if(s.val()){
+            Object.values(s.val()).reverse().forEach(log => {
+                b.innerHTML += `<tr>
+                    <td style="color:var(--hk-blue); font-weight:bold;">${log.code}</td>
+                    <td>${log.note}</td>
+                    <td style="font-size:10px; color:#999;">${log.time}</td>
+                </tr>`;
+            });
+        }
+    });
+
+    function upEmp() {
+        const id = document.getElementById('eID').value, name = document.getElementById('eName').value;
+        const dept = document.getElementById('eDept').value, plate = document.getElementById('ePlate').value;
+        if(!id) return alert("必須輸入編號");
+        db.ref('employee_list/' + id).set({ id, name, dept, plate });
+        alert("資料已更新至 MIIDSS 系統");
+    }
+
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+</script>
+</body>
+</html>
