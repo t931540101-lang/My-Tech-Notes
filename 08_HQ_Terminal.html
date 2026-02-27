@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-SECURITY | HQ 戰術指揮中心 V6.0</title>
+    <title>M-SECURITY | HQ 戰術指揮中心 V6.5</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -12,7 +12,7 @@
         .section { background: #111; padding: 15px; border-radius: 5px; border: 1px solid #333; margin-bottom: 20px; position: relative; }
         h2 { color: #4da1ff; font-size: 16px; margin-top: 0; border-left: 5px solid #00f2ff; padding-left: 10px; }
         
-        /* 統計看板樣式 */
+        /* 統計看板 */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-card { background: #1a1a1a; padding: 10px; text-align: center; border-radius: 4px; border: 1px solid #444; }
         .stat-val { font-size: 18px; font-weight: bold; color: #ffca28; }
@@ -21,17 +21,19 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
         input, select { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; }
         .btn { background: #00f2ff; color: #000; border: none; padding: 12px; font-weight: bold; width: 100%; border-radius: 3px; cursor: pointer; }
+        .btn-vip { background: #ffca28; color: #000; }
         .btn-red { background: #ff4d4f; color: #fff; }
         
-        .scroll-box { max-height: 200px; overflow-y: auto; font-size: 13px; }
+        .scroll-box { max-height: 250px; overflow-y: auto; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: #4da1ff; border-bottom: 1px solid #333; padding: 8px; font-size: 12px; position: sticky; top: 0; background: #111; }
         td { padding: 10px 8px; border-bottom: 1px solid #222; color: #ccc; }
         
-        /* 警示效果 */
+        /* 特殊樣式 */
+        .vip-row { background: rgba(255, 202, 40, 0.1); border-left: 4px solid #ffca28; }
         .alert-row { background: rgba(255, 77, 79, 0.15); border-left: 4px solid #ff4d4f; }
         .k9-warn { color: #ffca28; font-weight: bold; }
-        .confirmed { color: #10b981; }
+        button.del-btn { background: #333; color: #ff4d4f; border: 1px solid #444; padding: 3px 8px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -39,22 +41,22 @@
     <div class="header">
         <div>
             <h1 style="margin:0; font-size: 18px;">M-SECURITY HQ</h1>
-            <div id="statusInfo" style="color: #888; font-size: 10px;">V6.0 | SYSTEM SECURED</div>
+            <div id="statusInfo" style="color: #888; font-size: 10px;">V6.5 | TACTICAL REINFORCED</div>
         </div>
         <div id="clock" style="font-family: monospace; font-size: 12px;"></div>
     </div>
 
     <div class="stat-grid">
         <div class="stat-card"><div class="stat-val" id="countLogs">0</div><div class="stat-label">今日查詢</div></div>
-        <div class="stat-card"><div class="stat-val" id="countBlack">0</div><div class="stat-label">列管名單</div></div>
+        <div class="stat-card"><div class="stat-val" id="countVip">0</div><div class="stat-label">VIP 長官</div></div>
         <div class="stat-card"><div class="stat-val" id="countK9">8</div><div class="stat-label">K9 總量</div></div>
     </div>
 
     <div class="section" style="border-color: #ffca28;">
-        <h2 style="color: #ffca28; border-left-color: #ffca28;">🔍 全域查詢日誌 (攔截監控)</h2>
+        <h2 style="color: #ffca28; border-left-color: #ffca28;">🔍 全域查詢軌跡 (含 VIP 攔截監控)</h2>
         <div class="scroll-box">
             <table>
-                <thead><tr><th width="20%">操作員</th><th width="45%">對象</th><th width="35%">時間</th></tr></thead>
+                <thead><tr><th width="20%">操作員</th><th width="45%">對象/內容</th><th width="35%">時間</th></tr></thead>
                 <tbody id="searchLogs"></tbody>
             </table>
         </div>
@@ -75,18 +77,26 @@
     </div>
 
     <div class="section">
-        <h2>👥 人員管理中心</h2>
+        <h2>👥 人員管理中心 (員工 / 董監事)</h2>
         <div class="grid">
-            <input type="text" id="eID" placeholder="工號">
+            <input type="text" id="eID" placeholder="工號 (VIP 可填車牌)">
             <input type="text" id="eName" placeholder="姓名">
         </div>
         <div class="grid">
-            <input type="text" id="eDept" placeholder="單位/黑單原因">
-            <input type="text" id="ePlate" placeholder="車牌 (選填)">
+            <input type="text" id="eDept" placeholder="單位 / 職稱 / 黑單原因">
+            <input type="text" id="ePlate" placeholder="車牌">
         </div>
         <div class="grid">
-            <button class="btn" onclick="upEmp()">同步員工</button>
-            <button class="btn btn-red" onclick="upBlack()">列入黑名單</button>
+            <button class="btn" onclick="upPerson('employee_list')">同步一般員工</button>
+            <button class="btn btn-vip" onclick="upPerson('vip_list')">部署 VIP 董監事</button>
+        </div>
+        <button class="btn btn-red" style="margin-top:8px;" onclick="upBlack()">列入管制黑名單</button>
+        
+        <div class="scroll-box" style="margin-top:15px; border-top:1px solid #333;">
+            <table id="masterListTable">
+                <thead><tr><th>類別</th><th>對象</th><th>詳情</th><th>操作</th></tr></thead>
+                <tbody id="masterList"></tbody>
+            </table>
         </div>
     </div>
 
@@ -103,22 +113,22 @@
     // 時鐘
     setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
 
-    // --- 功能 1: 數據統計分析 ---
+    // --- 功能 1: 數據統計 ---
     function updateStats() {
         db.ref('search_logs').once('value', s => {
-            const logs = s.val() ? Object.values(s.val()).filter(l => l.time.includes(new Date().toLocaleDateString())).length : 0;
+            const today = new Date().toLocaleDateString();
+            const logs = s.val() ? Object.values(s.val()).filter(l => l.time.includes(today)).length : 0;
             document.getElementById('countLogs').innerText = logs;
         });
-        db.ref('blacklist_data').on('value', s => {
-            document.getElementById('countBlack').innerText = s.val() ? Object.keys(s.val()).length : 0;
+        db.ref('vip_list').on('value', s => {
+            document.getElementById('countVip').innerText = s.val() ? Object.keys(s.val()).length : 0;
         });
     }
 
-    // --- 功能 2: 日誌監控 (含黑名單警示) ---
+    // --- 功能 2: 日誌監控 (含 VIP 與 黑名單識別) ---
     let blacklistNames = [];
     db.ref('blacklist_data').on('value', s => {
-        const val = s.val();
-        blacklistNames = val ? Object.values(val).map(b => b.name) : [];
+        blacklistNames = s.val() ? Object.values(s.val()).map(b => b.name) : [];
     });
 
     db.ref('search_logs').limitToLast(15).on('value', s => {
@@ -126,16 +136,18 @@
         if(l) {
             Object.values(l).reverse().forEach(x => {
                 const isBlack = blacklistNames.some(name => x.query.includes(name));
-                const rowClass = isBlack ? 'class="alert-row"' : '';
-                b.innerHTML += `<tr ${rowClass}><td>${x.user}</td><td>${x.query}${isBlack?' 🛑':''}</td><td>${x.time}</td></tr>`;
+                const isVip = x.query.includes("VIP查詢");
+                let rowClass = isBlack ? 'class="alert-row"' : (isVip ? 'class="vip-row"' : '');
+                let icon = isBlack ? ' 🛑' : (isVip ? ' 💎' : '');
+                
+                b.innerHTML += `<tr ${rowClass}><td>${x.user}</td><td>${x.query}${icon}</td><td>${x.time}</td></tr>`;
             });
         }
         updateStats();
     });
 
-    // --- 功能 3: K9 狀態與逾時邏輯 ---
+    // --- 功能 3: K9 狀態監控 ---
     const K9_LIST = [{id:'布丁',n:'張布丁'},{id:'小白',n:'蔡小白'},{id:'小花',n:'蔡小花'},{id:'來順',n:'來順'},{id:'瓜瓜',n:'哈蜜瓜'},{id:'貴貴',n:'蔡頭貴'},{id:'蔡哺',n:'蔡哺'},{id:'有錢',n:'有錢'}];
-    
     function syncK9Health() {
         db.ref('k9Logs').on('value', s => {
             const data = s.val(), board = document.getElementById('k9Dashboard');
@@ -143,19 +155,13 @@
             K9_LIST.forEach(k => {
                 const logs = data && data[k.id] ? Object.values(data[k.id]).sort((a,b)=>b.timestamp-a.timestamp) : [];
                 const lastLog = logs[0];
-                let timeDiffStr = "尚無紀錄";
-                let warnStyle = "";
-
+                let timeDiffStr = "尚無紀錄", warnStyle = "";
                 if(lastLog) {
                     const diffHours = (Date.now() - lastLog.timestamp) / (1000 * 60 * 60);
                     timeDiffStr = diffHours < 1 ? "剛剛更新" : Math.floor(diffHours) + " 小時前";
                     if(diffHours > 24) warnStyle = "class='k9-warn'"; 
                 }
-
-                board.innerHTML += `<div style="background:#222; padding:8px; border-radius:3px;">
-                    <b>${k.n}</b><br>
-                    <small ${warnStyle}>⏳ ${timeDiffStr}</small>
-                </div>`;
+                board.innerHTML += `<div style="background:#222; padding:8px; border-radius:3px;"><b>${k.n}</b><br><small ${warnStyle}>⏳ ${timeDiffStr}</small></div>`;
             });
         });
     }
@@ -164,32 +170,45 @@
         const dog = document.getElementById('k9Name').value, note = document.getElementById('k9Note').value;
         if(!note) return alert("紀錄不可空白");
         db.ref('k9Logs/' + dog).push({ note, timestamp: Date.now(), time: new Date().toLocaleString() });
-        logAction("HQ-ADMIN", `K9更新: ${dog} 狀態`);
+        logAction("HQ-ADMIN", `K9更新: ${dog}`);
         document.getElementById('k9Note').value = '';
     }
 
-    // --- 核心寫入功能 ---
-    function logAction(user, content) {
-        db.ref('search_logs').push({ user, query: content, time: new Date().toLocaleString('zh-TW', {hour12: false}) });
-    }
+    // --- 功能 4: 人員管理 (雙軌制) ---
+    function upPerson(path) {
+        const id = document.getElementById('eID').value.trim();
+        const name = document.getElementById('eName').value.trim();
+        const plate = document.getElementById('ePlate').value.trim().toUpperCase();
+        if(!name || (!id && !plate)) return alert("姓名與識別碼(工號/車牌)必填");
 
-    function upEmp() {
-        const id = document.getElementById('eID').value, name = document.getElementById('eName').value;
-        if(!id || !name) return alert("工號姓名必填");
-        db.ref('employee_list/' + id).set({ id, name, dept: document.getElementById('eDept').value, plate: document.getElementById('ePlate').value });
-        logAction("HQ-ADMIN", `同步員工: ${name}`);
-        localStorage.setItem('last_up_id', id); // 基本 Local Storage 存檔
+        const data = { id: id || plate, name, dept: document.getElementById('eDept').value, plate };
+        db.ref(path + '/' + (id || plate)).set(data);
+        if(plate && path === 'employee_list') db.ref(path + '/' + plate).set(data); // 員工額外存一份車牌索引
+
+        const label = path === 'vip_list' ? "💎 VIP長官" : "員工";
+        logAction("HQ-ADMIN", `同步${label}: ${name}`);
+        alert(`${label} 部署成功！`);
     }
 
     function upBlack() {
-        const name = document.getElementById('eName').value, reason = document.getElementById('eDept').value;
+        const name = document.getElementById('eName').value.trim();
         if(!name) return alert("請輸入姓名");
-        db.ref('blacklist_data').push({ name, reason, time: new Date().toLocaleDateString() });
+        db.ref('blacklist_data').push({ name, reason: document.getElementById('eDept').value, time: new Date().toLocaleDateString() });
         logAction("HQ-ADMIN", `🛑 列管黑名單: ${name}`);
         alert("已發布紅色警戒");
     }
 
-    // 初始化
+    // 核心寫入與監聽
+    function logAction(user, content) {
+        db.ref('search_logs').push({ user, query: content, time: new Date().toLocaleString('zh-TW', {hour12: false}) });
+    }
+
+    // 顯示名單 (預覽用)
+    db.ref('employee_list').on('value', s => {
+        const l = s.val(), b = document.getElementById('masterList'); b.innerHTML = '';
+        for(let k in l) if(k === l[k].id) b.innerHTML += `<tr><td>員工</td><td>${l[k].name}</td><td>${l[k].plate||'--'}</td><td><button class="del-btn" onclick="db.ref('employee_list/${l[k].id}').remove()">刪除</button></td></tr>`;
+    });
+
     syncK9Health();
     updateStats();
 </script>
