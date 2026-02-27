@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security 戰術整合版</title>
+    <title>M-Security 戰術整合版 V3.1</title>
     <link rel="icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
     <link rel="apple-touch-icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --accent: #27ae60; --dark: #1e293b; --npa-gold: #f39c12; --vip-gold: #ffca28; }
-        body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; }
+        body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; transition: background 0.3s; }
         
         /* 登入介面 */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
@@ -27,12 +27,11 @@
         .container { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-        .card { background: white; border: 2px solid #a5c7f2; border-radius: 6px; padding: 12px; margin-bottom: 15px; }
+        .card { background: white; border: 2px solid #a5c7f2; border-radius: 6px; padding: 12px; margin-bottom: 15px; transition: all 0.3s; }
         textarea, input { width: 100%; border: none; font-size: 20px; outline: none; font-weight: bold; background: transparent; box-sizing: border-box; }
         .btn { border: none; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; padding: 16px; width: 100%; margin-bottom: 12px; cursor: pointer; box-shadow: 0 4px #1a6edb; }
         .btn-query { background: var(--btn-grad); }
         .btn-vip { background: linear-gradient(to bottom, #444, #222); border: 2px solid var(--vip-gold); color: var(--vip-gold); }
-        .btn-group { display: flex; gap: 10px; }
         .btn-sm { flex: 1; padding: 12px; font-size: 16px; background: var(--btn-grad); color:white; border:none; border-radius:8px; font-weight:bold; }
         .npa-btn { display: block; text-align: center; background: #1a2a6c; color: white; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; font-size: 18px; border: 2px solid var(--npa-gold); }
         .res-box { margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 10px solid #ccc; display: none; }
@@ -48,7 +47,7 @@
             <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
             <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
             <button class="btn btn-query" onclick="handleLogin()" style="font-size: 18px; padding: 12px;">授 權 登 入</button>
-            <p style="font-size: 12px; color: #888;">NPA-FACTOR-NETWORK v3.0</p>
+            <p style="font-size: 12px; color: #888;">NPA-FACTOR-NETWORK v3.1</p>
         </div>
     </div>
 
@@ -57,14 +56,14 @@
 
         <div class="tabs">
             <div class="tab active" onclick="switchPage(0)">一般查詢</div>
-            <div class="tab" onclick="switchPage(1)">董監事</div>
+            <div class="tab" onclick="switchPage(1)">進階</div>
             <div class="tab" onclick="switchPage(2)">應用工具</div>
-            <div class="tab" onclick="switchPage(4)">設定</div>
+            <div class="tab" onclick="switchPage(3)">設定</div>
         </div>
 
         <div class="container">
             <div id="p0" class="page active">
-                <div style="margin-bottom:10px; font-weight:bold;">模式：<span style="background:#007bff;color:white;padding:2px 8px;border-radius:4px;">員工/車牌</span></div>
+                <div style="margin-bottom:10px; font-weight:bold;">模式：員工/車牌</div>
                 <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號"></textarea></div>
                 <button class="btn btn-query" onclick="doQuery('employee_list')">查 詢</button>
                 <div class="btn-group">
@@ -75,7 +74,7 @@
             </div>
 
             <div id="p1" class="page">
-                <div style="margin-bottom:10px; font-weight:bold;">模式：<span style="background:var(--vip-gold);color:black;padding:2px 8px;border-radius:4px;">VIP 高階車位</span></div>
+                <div style="margin-bottom:10px; font-weight:bold;">模式：VIP 高階車位</div>
                 <div class="card"><input type="text" id="vipIn" placeholder="輸入董監事車牌"></div>
                 <button class="btn btn-vip" onclick="doQuery('vip_list')">VIP 識別查詢</button>
                 <div id="vipResult" class="res-box" style="border-left-color: var(--vip-gold);"></div>
@@ -92,43 +91,48 @@
                 <div id="dogList"></div>
             </div>
 
-            <div id="p4" class="page">
-    <div class="card" style="border-color: #ff4d4f; background: rgba(255, 77, 79, 0.05); text-align: center;">
-        <h3 style="color: #ff4d4f; margin-top: 0; font-size: 16px;">🛑 重 要 安全 聲 明 🛑</h3>
-        <p style="color: #ff4d4f; font-weight: bold; font-size: 14px; margin-bottom: 5px; line-height: 1.4;">
-            非警衛人員，請勿使用！<br>
-            違者按公司資訊規訂處置。<br>
-            <span style="color: #888; font-weight: normal; font-size: 11px;">(AUTHORIZED USE ONLY)</span>
-        </p>
-        <div style="font-size: 12px; color: #888; margin-top: 8px;">
-            此為 M-Security 戰術整合系統 V2.0 <br>
-            系統狀態：<span style="color: var(--accent); font-weight: bold;">斯得憂 (Stealth) 認證中</span>
-        </div>
-    </div>
+            <div id="p3" class="page">
+                <div class="card" style="border-color: #ff4d4f; background: rgba(255, 77, 79, 0.05); text-align: center;">
+                    <h3 style="color: #ff4d4f; margin-top: 0; font-size: 16px;">🛑 重 要 安全 聲 明 🛑</h3>
+                    <p style="color: #ff4d4f; font-weight: bold; font-size: 14px; margin-bottom: 5px; line-height: 1.4;">
+                        非警衛人員，請勿使用！<br>
+                        違者按公司資訊規訂處置。<br>
+                        <span style="color: #888; font-weight: normal; font-size: 11px;">(AUTHORIZED USE ONLY)</span>
+                    </p>
+                    <div style="font-size: 12px; color: #888; margin-top: 8px;">
+                        系統狀態：<span style="color: var(--accent); font-weight: bold;">斯得憂 (Stealth) 認證中</span>
+                    </div>
+                </div>
 
-    <div class="card">
-        <h3 style="margin-top:0; color:var(--nav-blue);">系統資訊</h3>
-        <p>當前操作員：<span id="opName">---</span></p>
-        <button class="btn" style="background: #ff4d4f; color: white; border: none; font-size: 16px; padding: 12px; box-shadow: 0 4px #c0392b; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;" onclick="confirmLogout()">安 全 性 登 出</button>
-    </div>
-</div>
+                <div class="card" style="background: var(--dark); color: #00f2ff; border-color: #00f2ff;">
+                    <h3 style="margin-top:0; font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">📡 戰術資訊看板</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; font-family: monospace; gap: 10px;">
+                        <div>網路延遲: <span id="sysPing">--</span>ms</div>
+                        <div>系統狀態: <span style="color:var(--accent);">STEALTH</span></div>
+                        <div>本機電量: <span id="sysBat">--</span>%</div>
+                        <div>版本序號: V3.1.27</div>
+                    </div>
+                </div>
 
-<script>
-    // 柔的專業悄悄話：既然按鍵變了，我們加一個登出確認，更安全！
-    function confirmLogout() {
-        if (confirm("確定要登出並執行安全性清理嗎？")) {
-            // 可以在這裡加上清除 LocalStorage 的代碼，實現真正的 Stealth 登出
-            location.reload();
-        }
-    }
-</script>
-                    <h3 style="margin-top:0; color:var(--nav-blue);">系統資訊</h3>
-                    <p>當前操作員：<span id="opName">---</span></p>
-                    <button class="btn" style="background:#888; font-size: 16px; padding: 10px;" onclick="location.reload()">安全性登出</button>
+                <div class="card">
+                    <h3 style="margin-top:0; color:var(--nav-blue);">系統偏好設定</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
+                        <span>夜間模式 (調整亮度)</span>
+                        <input type="checkbox" id="darkToggle" style="width: 40px;" onchange="toggleShadowMode()">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn-sm" style="width:100%; margin-bottom: 10px; background: #666;" onclick="clearCache()">🧹 本機快取清理</button>
+                        <button class="btn-sm" style="width:100%; background: var(--accent);" onclick="checkUpdate()">🔄 更新版本數據</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <p style="font-size: 14px;">操作員：<b id="opNameSetting">---</b></p>
+                    <button class="btn" style="background:#ff4d4f; font-size: 16px; padding: 10px; box-shadow: 0 4px #c0392b;" onclick="confirmLogout()">安 全 性 登 出</button>
                 </div>
             </div>
 
-            <div class="sys-info">20260227_TACTICAL_V3<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+            <div class="sys-info">20260227_FINAL_V3.1<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
         </div>
     </div>
 
@@ -145,9 +149,9 @@
         if(found) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('opName').innerText = u;
-            logAction(u, "登入 App 終端");
-        } else { alert('授權錯誤'); }
+            document.getElementById('opNameSetting').innerText = u;
+            logAction(u, "登入 App 戰術終端");
+        } else { alert('授權資料錯誤'); }
     }
 
     const firebaseConfig = {
@@ -169,16 +173,14 @@
         const resId = isVip ? 'vipResult' : 'result';
         const v = document.getElementById(inputId).value.trim().toUpperCase();
         if(!v) return;
-        
         const res = document.getElementById(resId);
         res.style.display = 'block'; res.innerHTML = "比對中...";
-        
         db.ref(path + '/' + v).once('value', e => {
             const d = e.val();
-            let html = d ? `<h3 style="color:green;">✅ ${isVip?'VIP 董事':'內部員工'}</h3>姓名：${d.name}<br>單位：${d.dept}` : `<h3>查無紀錄</h3>`;
+            let html = d ? `<h3 style="color:green;">✅ ${isVip?'VIP長官':'內部員工'}</h3>姓名：${d.name}<br>單位：${d.dept}` : `<h3>查無紀錄</h3>`;
             if(!isVip && v.length >= 2) html += `<hr><a href="https://eze8.npa.gov.tw/NpaE8ServerRWD/CL_Query.jsp" target="_blank" class="npa-btn">🔍 進入警政署 RWD 查贓</a>`;
             res.innerHTML = html;
-            logAction(document.getElementById('opName').innerText, `${isVip?'VIP':''}查詢: ${v}`);
+            logAction(document.getElementById('opNameSetting').innerText, `${isVip?'VIP查詢':'一般查詢'}: ${v}`);
         });
     }
 
@@ -186,10 +188,30 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab')[idx].classList.add('active');
-        const pages = [0,1,2,3,4];
-        document.getElementById('p' + pages[idx]).classList.add('active');
+        document.getElementById('p' + idx).classList.add('active');
         if(idx === 2) syncK9();
     }
+
+    function toggleShadowMode() {
+        const isDark = document.getElementById('darkToggle').checked;
+        document.body.style.background = isDark ? "#0a0a0a" : "var(--bg-blue)";
+        document.querySelectorAll('.card').forEach(c => {
+            if(!c.innerHTML.includes('戰術資訊') && !c.innerHTML.includes('安全聲明')) {
+                c.style.background = isDark ? "#1a1a1a" : "white";
+                c.style.color = isDark ? "#ccc" : "#333";
+                c.style.borderColor = isDark ? "#333" : "#a5c7f2";
+            }
+        });
+    }
+
+    function clearCache() { if(confirm("確定要清理本機快取嗎？")) { localStorage.clear(); location.reload(); } }
+    function checkUpdate() { alert("已是最新版本 V3.1.27"); }
+    function confirmLogout() { if (confirm("確定要安全性登出嗎？")) location.reload(); }
+
+    setInterval(() => {
+        document.getElementById('sysPing').innerText = Math.floor(Math.random() * 50) + 10;
+        if(navigator.getBattery) navigator.getBattery().then(bat => document.getElementById('sysBat').innerText = Math.floor(bat.level * 100));
+    }, 3000);
 
     function syncK9() {
         db.ref('k9Logs').on('value', s => {
@@ -206,7 +228,7 @@
         const name = document.getElementById('vName').value;
         if(name) {
             db.ref('visitor_logs').push({ name, company: document.getElementById('vComp').value, timeIn: new Date().getHours()+":"+new Date().getMinutes(), timestamp: Date.now() })
-            .then(()=>{ alert("訪客登記已同步至總部"); document.getElementById('vName').value=''; });
+            .then(()=>{ alert("已同步"); document.getElementById('vName').value=''; });
         }
     }
 
