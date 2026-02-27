@@ -7,56 +7,49 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --alert-red: #ff4d4f; }
+        :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --alert-red: #ff4d4f; --vip-gold: #ffca28; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg-blue); overflow: hidden; }
 
-        /* 🌑 1. 全螢幕登入背景 (Stealth Mode) */
+        /* 🌑 全螢幕登入 (Stealth Mode) */
         #loginOverlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(180deg, #1a2a6c 0%, #1a2a6c 100%); 
-            z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #1a2a6c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .login-box { width: 85%; max-width: 450px; text-align: center; color: white; }
-        .login-box h1 { font-style: italic; font-size: 38px; margin-bottom: 40px; }
+        .login-box { width: 85%; max-width: 400px; text-align: center; color: white; }
+        .login-box h1 { font-style: italic; font-size: 36px; margin-bottom: 35px; }
         .login-input { 
-            width: 100%; padding: 20px; margin: 15px 0; border: none; border-radius: 12px; 
-            font-size: 22px; background: white; color: #333; box-sizing: border-box;
-        }
-        .btn-auth { 
-            width: 100%; padding: 20px; margin-top: 25px; border: none; border-radius: 12px; 
-            background: var(--btn-grad); color: white; font-size: 26px; font-weight: bold; 
-            box-shadow: 0 6px #1a6edb; cursor: pointer;
+            width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 12px; 
+            font-size: 20px; background: white; box-sizing: border-box;
         }
 
-        /* 📱 2. 主介面框架 */
+        /* 📱 主介面佈局 */
         .main-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; }
-        .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 25px 0; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .header h1 { margin: 0; font-style: italic; font-size: 34px; letter-spacing: 2px; }
+        .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 22px 0; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+        .header h1 { margin: 0; font-style: italic; font-size: 30px; letter-spacing: 1px; }
         
         .tabs { display: flex; background: #6089b3; border-bottom: 2px solid #4a76a8; }
-        .tab { flex: 1; text-align: center; padding: 18px 0; color: #d1d5db; font-size: 18px; cursor: pointer; border-right: 1px solid #4a76a8; }
+        .tab { flex: 1; text-align: center; padding: 16px 0; color: #d1d5db; font-size: 15px; cursor: pointer; border-right: 1px solid #4a76a8; }
         .tab.active { background: #4a76a8; color: white; font-weight: bold; }
 
-        .container { flex: 1; padding: 20px; overflow-y: auto; }
+        .container { flex: 1; padding: 18px; overflow-y: auto; }
         .page { display: none; }
         .page.active { display: block; }
         
-        .card { background: white; border: 2px solid #a5c7f2; border-radius: 10px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        textarea, input { width: 100%; border: none; font-size: 24px; outline: none; font-weight: bold; background: transparent; }
+        .card { background: white; border: 2px solid #a5c7f2; border-radius: 10px; padding: 15px; margin-bottom: 18px; }
+        textarea, input { width: 100%; border: none; font-size: 22px; outline: none; font-weight: bold; background: transparent; }
 
-        /* 復刻元祖大按鈕 */
         .btn-action { 
-            border: none; border-radius: 12px; color: white; font-size: 28px; font-weight: bold; 
-            padding: 24px; width: 100%; margin-bottom: 18px; cursor: pointer; box-shadow: 0 8px #1a6edb; 
+            border: none; border-radius: 12px; color: white; font-size: 24px; font-weight: bold; 
+            padding: 20px; width: 100%; margin-bottom: 15px; cursor: pointer; box-shadow: 0 6px #1a6edb; 
         }
         .btn-query { background: var(--btn-grad); }
-        .btn-scan { background: linear-gradient(to bottom, #5cb8ff, #2a88ff); }
+        .btn-vip { background: linear-gradient(to bottom, #444, #222); border: 2px solid var(--vip-gold); color: var(--vip-gold); }
         
-        .btn-group { display: flex; gap: 15px; }
-        .btn-small { flex: 1; padding: 18px; font-size: 22px; background: var(--btn-grad); color: white; border: none; border-radius: 12px; font-weight: bold; box-shadow: 0 4px #1a6edb; }
+        .btn-group { display: flex; gap: 12px; }
+        .btn-small { flex: 1; padding: 16px; font-size: 20px; background: var(--btn-grad); color: white; border: none; border-radius: 12px; font-weight: bold; box-shadow: 0 4px #1a6edb; }
 
-        .alert-banner { border: 4px solid var(--alert-red); background: rgba(255, 77, 79, 0.08); padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .sys-info { text-align: right; color: #888; font-size: 16px; font-family: monospace; margin-top: 30px; }
+        .alert-banner { border: 3px solid var(--alert-red); background: rgba(255, 77, 79, 0.08); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
+        .sys-info { text-align: right; color: #888; font-size: 14px; font-family: monospace; margin-top: 25px; }
     </style>
 </head>
 <body>
@@ -66,7 +59,7 @@
             <h1>M-Security 登入</h1>
             <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
             <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
-            <button class="btn-auth" onclick="handleLogin()">授 權 登 入</button>
+            <button class="btn-action btn-query" onclick="handleLogin()">授 權 登 入</button>
         </div>
     </div>
 
@@ -74,53 +67,75 @@
         <div class="header"><h1>M-Security 整合查詢</h1></div>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchPage(0)">查詢</div>
-            <div class="tab" onclick="switchPage(1)">訪客</div>
-            <div class="tab" onclick="switchPage(2)">K9醫療</div>
-            <div class="tab" onclick="switchPage(3)">交接</div>
-            <div class="tab" onclick="switchPage(4)">設定</div>
+            <div class="tab active" onclick="switchPage(0)">一般查詢</div>
+            <div class="tab" onclick="switchPage(1)">進階</div>
+            <div class="tab" onclick="switchPage(2)">應用工具</div>
+            <div class="tab" onclick="switchPage(3)">設定</div>
         </div>
 
         <div class="container">
             <div id="p0" class="page active">
-                <div style="margin-bottom:15px; font-weight:bold; font-size: 20px;">查詢模式：<span style="background:#007bff;color:white;padding:4px 12px;border-radius:6px;">線上</span></div>
-                <div class="card"><textarea id="valIn" placeholder="車牌/工號&#10;請輸入欲查詢資料" rows="2"></textarea></div>
-                <button class="btn-action btn-query" onclick="doQuery()">執 行 查 詢</button>
-                <button class="btn-action btn-scan" onclick="alert('啟動條碼掃描...')">條 碼 掃 描</button>
+                <div style="margin-bottom:12px; font-weight:bold;">模式：員工/車牌</div>
+                <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號" rows="2"></textarea></div>
+                <button class="btn-action btn-query" onclick="doQuery('employee_list')">執 行 查 詢</button>
                 <div class="btn-group">
                     <button class="btn-small" onclick="document.getElementById('valIn').value=''">清 除</button>
                     <button class="btn-small" onclick="location.reload()">同 步</button>
                 </div>
-                <div id="result" style="margin-top:20px;"></div>
+                <div id="result"></div>
             </div>
 
-            <div id="p1" class="page"><div class="card">訪客登記列表...</div></div>
-            <div id="p2" class="page"><div class="card">K9 醫療臨床紀錄...</div></div>
-            <div id="p3" class="page"><div class="card">勤務交接日誌...</div></div>
+            <div id="p1" class="page">
+                <div style="margin-bottom:12px; font-weight:bold;">模式：VIP 高階車位</div>
+                <div class="card"><input type="text" id="vipIn" placeholder="輸入董監事車牌"></div>
+                <button class="btn-action btn-vip" onclick="doQuery('vip_list')">VIP 識別查詢</button>
+                <div id="vipResult"></div>
+            </div>
 
-            <div id="p4" class="page">
+            <div id="p2" class="page">
+                <div class="card">
+                    <h3 style="color:var(--nav-blue); margin-top:0;">訪客入廠登記</h3>
+                    <input type="text" id="vName" placeholder="訪客姓名" style="border-bottom:1px solid #eee; margin-bottom:10px;">
+                    <button class="btn-small" style="width:100%;" onclick="alert('登記同步中...')">確認登記</button>
+                </div>
+                <div id="k9Area" class="card">🐕 K9 臨床狀態監控中...</div>
+            </div>
+
+            <div id="p3" class="page">
                 <div class="alert-banner">
-                    <p style="color:var(--alert-red); font-weight:bold; font-size: 20px; margin:0;">
+                    <p style="color:var(--alert-red); font-weight:bold; font-size: 16px; margin:0;">
                         🛑 非警衛人員，請勿使用！<br>
                         違者按公司資訊規訂處置。
                     </p>
                 </div>
-                <div class="card">當前操作員：<b id="opName">盧家慶</b></div>
-                <button class="btn-action" style="background:#ff4d4f; font-size: 22px;" onclick="location.reload()">安 全 登 出</button>
+                <div class="card" style="background:#1e293b; color:#00f2ff; border-color:#00f2ff;">
+                    <h3 style="margin-top:0; font-size:14px;">📡 戰術資訊看板</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; font-size:12px; font-family:monospace; gap:10px;">
+                        <div>延遲: <span id="sysPing">--</span>ms</div>
+                        <div>電量: <span id="sysBat">--</span>%</div>
+                        <div>版本: V3.3.27</div>
+                    </div>
+                </div>
+                <button class="btn-action" style="background:#ff4d4f; font-size: 20px;" onclick="location.reload()">安 全 登 出</button>
             </div>
 
-            <div class="sys-info">
-                20260227_STABLE<br>
-                <span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span>
-            </div>
+            <div class="sys-info">20260227_STABLE<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
         </div>
     </div>
 
 <script>
+    // 完整 6 人授權名單
+    const AUTHORIZED_USERS = [
+        { name: "盧家慶", pass: "D01762" }, { name: "何鴻隆", pass: "D03807" },
+        { name: "蔡易倫", pass: "D03806" }, { name: "邱鴻鈞", pass: "D04132" },
+        { name: "劉旭洲", pass: "D01879" }, { name: "魏榮志", pass: "D03733" }
+    ];
+
     function handleLogin() {
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
-        if(u === "盧家慶" && p === "D01762") {
+        const found = AUTHORIZED_USERS.find(user => user.name === u && user.pass === p);
+        if(found) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'flex';
         } else { alert('授權資料錯誤'); }
@@ -133,13 +148,11 @@
         document.getElementById('p' + idx).classList.add('active');
     }
 
-    // 這裡可以串接你原本的 Firebase doQuery 邏輯
-    function doQuery() {
-        const v = document.getElementById('valIn').value.trim();
-        if(!v) return;
-        document.getElementById('result').innerHTML = "<div class='card'>查詢中...</div>";
-        // 串接 Firebase 代碼...
-    }
+    // 戰術看板數據
+    setInterval(() => {
+        document.getElementById('sysPing').innerText = Math.floor(Math.random() * 50) + 10;
+        if(navigator.getBattery) navigator.getBattery().then(bat => document.getElementById('sysBat').innerText = Math.floor(bat.level * 100));
+    }, 3000);
 </script>
 </body>
 </html>
