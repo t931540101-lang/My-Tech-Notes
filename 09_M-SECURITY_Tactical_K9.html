@@ -12,13 +12,13 @@
         :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --accent: #27ae60; --dark: #1e293b; --npa-gold: #f39c12; }
         body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* 登入介面樣式 */
+        /* 登入介面 */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
         .login-card { background: white; padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .login-card h2 { color: var(--nav-blue); margin-top: 0; font-style: italic; }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         
-        /* 原有樣式 */
+        /* 主介面 */
         .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 18px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .header h1 { margin: 0; font-style: italic; font-size: 26px; letter-spacing: 1px; }
         .tabs { display: flex; background: #6089b3; }
@@ -103,38 +103,40 @@
                 </div>
             </div>
 
-            <div class="sys-info">20260225_FINAL_STABLE<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+            <div class="sys-info">20260227_STABLE_FIX<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
         </div>
     </div>
 
 <script>
-    // 登入驗證設定
-    const VALID_USER = "盧家慶"; 
-    const VALID_PASS = "D01762";
-    const VALID_USER = "何鴻隆"; 
-    const VALID_PASS = "D03807";
-    const VALID_USER = "蔡易倫"; 
-    const VALID_PASS = "D03806";
-    const VALID_USER = "邱鴻鈞"; 
-    const VALID_PASS = "D04132";
-    const VALID_USER = "劉旭洲"; 
-    const VALID_PASS = "D01879";
-    const VALID_USER = "魏榮志"; 
-    const VALID_PASS = "D03733";
+    // --- 登入驗證清單 (解決覆蓋問題) ---
+    const AUTHORIZED_USERS = [
+        { name: "盧家慶", pass: "D01762" },
+        { name: "何鴻隆", pass: "D03807" },
+        { name: "蔡易倫", pass: "D03806" },
+        { name: "邱鴻鈞", pass: "D04132" },
+        { name: "劉旭洲", pass: "D01879" },
+        { name: "魏榮志", pass: "D03733" }
+    ];
 
     function handleLogin() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
-        if(u === VALID_USER && p === VALID_PASS) {
+        const u = document.getElementById('user').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        
+        // 在名單中找人
+        const found = AUTHORIZED_USERS.find(user => user.name === u && user.pass === p);
+
+        if(found) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('opName').innerText = u;
+            // 紀錄登入軌跡
+            logAction(u, "系統授權登入");
         } else {
             alert('登入失敗：授權資料錯誤');
         }
     }
 
-    // Firebase 設定
+    // --- Firebase 設定 ---
     const firebaseConfig = {
         apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
         databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
@@ -144,12 +146,23 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 查詢與功能邏輯
+    // --- 核心紀錄功能 ---
+    function logAction(user, content) {
+        db.ref('search_logs').push({
+            user: user,
+            query: content,
+            time: new Date().toLocaleString()
+        });
+    }
+
+    // --- 查詢邏輯 ---
     function doQuery() {
         const v = document.getElementById('valIn').value.trim().toUpperCase();
         if(!v) return;
+        const op = document.getElementById('opName').innerText;
         const res = document.getElementById('result');
         res.style.display = 'block'; res.innerHTML = "偵測中...";
+        
         db.ref('employee_list/' + v).once('value', e => {
             const d = e.val();
             let html = d ? `<h3 style="color:green;">✅ 內部員工</h3>姓名：${d.name}<br>單位：${d.dept}` : `<h3>查無內部存檔</h3>`;
@@ -158,6 +171,7 @@
             }
             res.innerHTML = html;
             res.style.borderLeftColor = d ? '#28a745' : '#888';
+            logAction(op, `查詢對象: ${v} (${d ? '命中' : '未命中'})`);
         });
     }
 
@@ -171,6 +185,7 @@
         if(idx === 3) syncDuty();
     }
 
+    // --- K9、訪客、交接同步邏輯 (維持原樣但加上錯誤防護) ---
     function syncK9() {
         db.ref('k9Logs').on('value', s => {
             const all = s.val(), dogs = [{id:'布丁',n:'張布丁'},{id:'小白',n:'蔡小白'},{id:'小花',n:'蔡小花'},{id:'來順',n:'來順'},{id:'瓜瓜',n:'哈蜜瓜'},{id:'貴貴',n:'蔡頭貴'},{id:'蔡哺',n:'蔡哺'},{id:'有錢',n:'有錢'}];
@@ -203,7 +218,14 @@
 
     function upVisitor() {
         const name = document.getElementById('vName').value;
-        if(name) db.ref('visitor_logs').push({ name: name, company: document.getElementById('vComp').value, timeIn: new Date().getHours()+":"+new Date().getMinutes(), timestamp: Date.now() }).then(()=>alert("已同步"));
+        if(name) {
+            db.ref('visitor_logs').push({ 
+                name: name, 
+                company: document.getElementById('vComp').value, 
+                timeIn: new Date().getHours()+":"+new Date().getMinutes(), 
+                timestamp: Date.now() 
+            }).then(()=>alert("已同步"));
+        }
     }
 
     function syncVisitor() {
@@ -215,7 +237,10 @@
     }
 
     function clearAll() { document.getElementById('valIn').value = ''; document.getElementById('result').style.display = 'none'; }
-    function confirmDuty(k) { const n = prompt("姓名：", VALID_USER); if(n) db.ref('reactLogs/'+k).update({confirmedBy:n}); }
+    function confirmDuty(k) { 
+        const n = prompt("請輸入您的姓名以確認閱畢："); 
+        if(n) db.ref('reactLogs/'+k).update({confirmedBy:n}); 
+    }
     function manualSync() { location.reload(); }
 </script>
 </body>
