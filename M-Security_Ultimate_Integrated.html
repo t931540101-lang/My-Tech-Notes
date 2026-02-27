@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-SECURITY | 終極戰術版</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --mp-bg: #e3f2fd;
+            --mp-blue: #3273b5;
+            --mp-btn-grad: linear-gradient(to bottom, #74b9ff, #0984e3);
+            --alert-red: #ff0000;
+            --warn-gold: #fbbc04;
+        }
+
+        body { margin: 0; background-color: #b0bec5; font-family: Arial, "Microsoft JhengHei", sans-serif; }
+
+        /* 警示跑馬燈 */
+        .alert-bar { background: #000; color: var(--alert-red); padding: 8px; text-align: center; font-size: 13px; font-weight: bold; }
+
+        /* 登入畫面 (第一張圖質感) */
+        #login-page { display: flex; flex-direction: column; align-items: center; height: 100vh; background-color: var(--mp-bg); }
+        .login-box { width: 90%; max-width: 400px; background: white; border: 1px solid #90caf9; padding: 15px; margin-top: 20px; }
+
+        /* 主面板 (第二張圖斜體標題) */
+        #main-terminal { display: none; }
+        .header-banner { background: linear-gradient(to bottom, #74b9ff, #3273b5); padding: 25px 0; text-align: center; color: white; }
+        .header-banner h1 { margin: 0; font-size: 32px; font-style: italic; font-weight: 900; }
+
+        /* 頁籤功能 */
+        .tabs { display: flex; background: #546e7a; }
+        .tab { flex: 1; text-align: center; padding: 15px 0; color: white; cursor: pointer; font-weight: bold; border-right: 1px solid #455a64; }
+        .tab.active { background: var(--mp-blue); }
+
+        /* 內容區 */
+        .content { padding: 12px; background: #cfd8dc; }
+        .search-container { background: #fff; border: 1px solid #999; padding: 15px; }
+        input { width: 100%; height: 50px; border: 1px solid #ccc; margin-bottom: 10px; padding: 0 12px; font-size: 20px; box-sizing: border-box; }
+        
+        .btn-mp { width: 100%; height: 60px; color: white; font-weight: bold; font-size: 20px; background: var(--mp-btn-grad); border: 1px solid #1565c0; border-radius: 4px; cursor: pointer; margin-bottom: 5px; }
+        .btn-row { display: flex; gap: 5px; }
+        
+        /* 掃描中動畫 */
+        @keyframes warn-flash { 0% { background: #fff; } 50% { background: #ffcccc; } 100% { background: #fff; } }
+        .danger-alert { animation: warn-flash 0.5s infinite; border: 3px solid red !important; }
+    </style>
+</head>
+<body>
+
+    <div id="login-page">
+        <div style="color:#0d47a1; font-size:26px; font-weight:bold; font-style:italic; margin:40px 0;">M-Police 整合查詢</div>
+        <div class="login-box">
+            <input type="text" id="login_code" placeholder="登錄碼 (請輸入任何字)">
+            <button class="btn-mp" onclick="performLogin()">登 入</button>
+        </div>
+    </div>
+
+    <div id="main-terminal">
+        <div class="alert-bar" id="top-alert">[通報] 廠區系統連線成功，請保持警戒</div>
+        <div class="header-banner"><h1>M-Security 整合查詢</h1></div>
+        <div class="tabs">
+            <div class="tab active">一般</div>
+            <div class="tab">進階</div>
+            <div class="tab">其他</div>
+        </div>
+        <div class="content">
+            <div class="search-container" id="search-box">
+                <input type="text" id="searchInput" placeholder="輸入 車號 或 工號">
+                <div class="btn-row">
+                    <button class="btn-mp" onclick="startSearch()">查 詢</button>
+                    <button class="btn-mp" onclick="alert('啟動鏡頭掃描 (需HTTPS支援)...')">條碼掃描</button>
+                </div>
+                <button class="btn-mp" style="background:#607d8b; border:1px solid #444;" onclick="resetSearch()">清 除</button>
+            </div>
+            
+            <div id="result-display" style="margin-top:15px; display:none;">
+                <div class="search-container" id="res-card">
+                    <div id="res-title" style="font-weight:bold; color:var(--mp-blue);">查詢結果</div>
+                    <div id="res-body" style="font-size:24px; font-weight:900; margin-top:10px;">查無資料</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Firebase 配置 (請填入小黑哥你的專屬金鑰)
+        const firebaseConfig = {
+            databaseURL: "https://factor-security-d196f-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function performLogin() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-terminal').style.display = 'block';
+        }
+
+        async function startSearch() {
+            const val = document.getElementById('searchInput').value.trim().toUpperCase();
+            if(!val) return;
+            
+            document.getElementById('result-display').style.display = 'block';
+            document.getElementById('res-body').innerText = "掃描中...";
+            document.getElementById('search-box').classList.remove('danger-alert');
+
+            // 戰術動作成組：先查黑名單
+            const blackRef = db.ref('blacklist_data');
+            const empRef = db.ref('employee_list');
+
+            // 模擬戰術檢索過程
+            blackRef.orderByChild('carNumber').equalTo(val).once('value', snapshot => {
+                if(snapshot.exists()) {
+                    // 🚨 發現黑名單！啟動紅光閃爍
+                    document.getElementById('res-body').innerHTML = "<span style='color:red;'>⚠️ 警戒對象：" + val + "</span>";
+                    document.getElementById('search-box').classList.add('danger-alert');
+                    document.getElementById('top-alert').innerText = "!!! 警告：偵測到黑名單車輛 !!!";
+                } else {
+                    // 查員工名單
+                    empRef.orderByChild('carNumber').equalTo(val).once('value', empSnap => {
+                        if(empSnap.exists()){
+                             const data = Object.values(empSnap.val())[0];
+                             document.getElementById('res-body').innerText = "員工：" + data.name + " (" + data.department + ")";
+                             document.getElementById('top-alert').innerText = "[正常] 內部員工識別通過";
+                        } else {
+                             document.getElementById('res-body').innerText = "查無此車輛紀錄";
+                        }
+                    });
+                }
+            });
+        }
+
+        function resetSearch() {
+            document.getElementById('searchInput').value = "";
+            document.getElementById('result-display').style.display = 'none';
+            document.getElementById('search-box').classList.remove('danger-alert');
+        }
+    </script>
+</body>
+</html>
