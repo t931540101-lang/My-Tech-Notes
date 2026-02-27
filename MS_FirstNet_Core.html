@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FIRSTNET | M-SECURITY CORE</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --fn-blue: #002d72; /* FirstNet 標準藍 */
+            --fn-light-blue: #00a9e0;
+            --fn-dark: #041221;
+            --fn-gray: #f2f2f2;
+            --fn-danger: #d50032;
+            --fn-success: #28a745;
+        }
+
+        body {
+            background-color: var(--fn-dark);
+            color: white;
+            font-family: 'Roboto', 'Helvetica', sans-serif;
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* FirstNet 頂部狀態列 */
+        .fn-navbar {
+            background: var(--fn-blue);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 3px solid var(--fn-light-blue);
+            justify-content: space-between;
+        }
+        .fn-logo { font-weight: 900; letter-spacing: 1px; font-size: 18px; }
+        .unit-id { font-size: 12px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; }
+
+        /* 勤務狀態切換 */
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: #000;
+        }
+        .status-btn {
+            background: #1a2634;
+            color: #8899a6;
+            padding: 12px 0;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+        }
+        .status-btn.active { background: var(--fn-success); color: white; }
+        .status-btn.enroute { background: var(--fn-light-blue); color: white; }
+
+        /* 主要任務區 */
+        .container { padding: 15px; }
+        .card {
+            background: #fff;
+            color: #333;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .card-header {
+            background: #e1e8ed;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--fn-blue);
+            border-bottom: 1px solid #ccc;
+        }
+
+        /* 查緝輸入 */
+        .query-box { display: flex; padding: 10px; gap: 5px; }
+        .query-box input {
+            flex: 1; border: 2px solid #ddd; padding: 12px;
+            font-size: 16px; border-radius: 4px;
+        }
+        .btn-fn-blue {
+            background: var(--fn-blue); color: white;
+            border: none; padding: 0 20px; font-weight: bold; border-radius: 4px;
+        }
+
+        /* 警報顯示 (FirstNet 風格) */
+        #alertPanel {
+            display: none;
+            padding: 15px;
+            background: var(--fn-danger);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            animation: flash 1s infinite;
+        }
+
+        /* 任務列表 */
+        .log-list { list-style: none; margin: 0; padding: 0; }
+        .log-item {
+            padding: 12px; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .log-code { font-weight: bold; color: var(--fn-blue); font-size: 14px; }
+        .log-time { color: #888; font-size: 11px; }
+
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    </style>
+</head>
+<body>
+
+    <div class="fn-navbar">
+        <div class="fn-logo">FIRSTNET <span style="font-weight:100">| M-SEC</span></div>
+        <div class="unit-id" id="clock">00:00:00</div>
+    </div>
+
+    <div class="status-bar">
+        <button class="status-btn active" id="btn-on">ON DUTY</button>
+        <button class="status-btn" id="btn-en">EN ROUTE</button>
+        <button class="status-btn" id="btn-off">OFF DUTY</button>
+    </div>
+
+    <div id="alertPanel">🚨 BLACKLIST MATCHED - SECURE AREA 🚨</div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">NCIC / DATA QUERY</div>
+            <div class="query-box">
+                <input type="text" id="scanID" placeholder="Enter License or ID..." autocomplete="off">
+                <button class="btn-fn-blue" onclick="runQuery()">SCAN</button>
+            </div>
+            <div id="resBox" style="padding: 0 10px 10px; font-size: 14px; display: none;"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">INCIDENT REPORTING</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px;">
+                <button onclick="report('10-4','Message Received')" style="padding:15px; background:#f8f9fa; border:1px solid #ddd; font-weight:bold;">10-4 (收到)</button>
+                <button onclick="report('10-8','In Service')" style="padding:15px; background:#f8f9fa; border:1px solid #ddd; font-weight:bold;">10-8 (執勤)</button>
+                <button onclick="report('10-20','Location Request')" style="padding:15px; background:#f8f9fa; border:1px solid #ddd; font-weight:bold;">10-20 (回報位置)</button>
+                <button onclick="report('10-99','Emergency')" style="padding:15px; background:var(--fn-danger); color:white; border:none; font-weight:bold;">10-99 (緊急)</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">CAD DISPATCH FEED</div>
+            <div class="log-list" id="logFeed">
+                </div>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function runQuery() {
+        const val = document.getElementById('scanID').value.trim().toUpperCase();
+        const res = document.getElementById('resBox');
+        const alertP = document.getElementById('alertPanel');
+        if(!val) return;
+
+        res.style.display = 'block';
+        res.innerHTML = "Querying NCIC Database...";
+        alertP.style.display = 'none';
+
+        // 紀錄查詢軌跡
+        db.ref('search_logs').push({
+            user: "PATROL-OFFICER-HEI",
+            query: val,
+            time: new Date().toLocaleString()
+        });
+
+        db.ref('employee_list/' + val).once('value', s => {
+            const data = s.val();
+            if(data) {
+                res.innerHTML = `<b style="color:var(--fn-success)">[CLEARED]</b><br>SUBJECT: ${data.name}<br>DEPT: ${data.dept}`;
+            } else {
+                db.ref('blacklist_data').once('value', bs => {
+                    let found = false;
+                    bs.forEach(b => {
+                        if(b.val().name === val) {
+                            alertP.style.display = 'block';
+                            res.innerHTML = `<b style="color:var(--fn-danger)">[WANTED]</b><br>REASON: ${b.val().reason}`;
+                            found = true;
+                        }
+                    });
+                    if(!found) res.innerHTML = "NO RECORD FOUND.";
+                });
+            }
+        });
+    }
+
+    function report(code, msg) {
+        db.ref('reactLogs').push({
+            code: code,
+            note: msg,
+            time: new Date().toLocaleTimeString('zh-TW', {hour12:false})
+        });
+    }
+
+    db.ref('reactLogs').limitToLast(5).on('value', s => {
+        const feed = document.getElementById('logFeed'); feed.innerHTML = '';
+        if(s.val()) {
+            Object.values(s.val()).reverse().forEach(log => {
+                feed.innerHTML += `
+                <div class="log-item">
+                    <div><span class="log-code">${log.code}</span> <span style="margin-left:10px">${log.note}</span></div>
+                    <div class="log-time">${log.time}</div>
+                </div>`;
+            });
+        }
+    });
+
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('zh-TW', {hour12:false});
+    }, 1000);
+
+    // 狀態鈕切換邏輯
+    document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active', 'enroute'));
+            if(this.id === 'btn-en') this.classList.add('enroute');
+            else this.classList.add('active');
+            report('STATUS', this.innerText);
+        });
+    });
+</script>
+</body>
+</html>
