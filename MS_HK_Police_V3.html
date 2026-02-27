@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-SECURITY | HK-MET V3.0</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --hkp-navy: #001f3f; /* 港警深藍 */
+            --hkp-yellow: #ffcc00; /* 警示黃 */
+            --hkp-green: #28a745;
+            --hkp-red: #dc3545;
+            --bg-gray: #f4f4f4;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: "PingFang HK", "Microsoft JhengHei", sans-serif;
+            margin: 0; padding: 0;
+        }
+
+        /* 頂部導航列 - 港警特有雙語標誌 */
+        .navbar {
+            background-color: var(--hkp-navy);
+            padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--hkp-yellow);
+        }
+        .logo-box { font-size: 14px; font-weight: bold; line-height: 1.2; }
+        .logo-en { color: #fff; }
+        .logo-ch { color: var(--hkp-yellow); font-size: 16px; }
+
+        /* 勤務狀態區 (大方塊設計) */
+        .status-panel {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            background: #222; border-bottom: 1px solid #444;
+        }
+        .status-item {
+            padding: 10px 0; text-align: center; font-size: 10px;
+            border-right: 1px solid #333; color: #888;
+        }
+        .status-item.active { background: var(--hkp-green); color: #fff; }
+
+        .container { padding: 12px; }
+
+        /* 功能卡片區 */
+        .hk-card {
+            background: #1a1a1a; border-radius: 4px; margin-bottom: 15px;
+            border: 1px solid #333; overflow: hidden;
+        }
+        .hk-card-header {
+            background: #333; padding: 6px 10px; font-size: 12px;
+            color: var(--hkp-yellow); font-weight: bold;
+            display: flex; justify-content: space-between;
+        }
+
+        /* 輸入框組 */
+        .search-group { padding: 12px; display: flex; gap: 5px; }
+        .search-group input {
+            flex: 1; background: #000; border: 1px solid #555;
+            color: #fff; padding: 12px; font-size: 16px;
+        }
+        .btn-hk {
+            background: var(--hkp-navy); color: #fff; border: 1px solid var(--hkp-yellow);
+            padding: 0 15px; font-weight: bold; font-size: 12px;
+        }
+
+        /* 查詢結果 */
+        .res-display { padding: 0 12px 12px; font-size: 14px; line-height: 1.6; display: none; }
+        .warning-text { color: var(--hkp-red); font-weight: bold; animation: blink 1s infinite; }
+
+        /* 戰術回報按鈕 (港警常用代碼) */
+        .report-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px;
+        }
+        .report-btn {
+            background: #2c3e50; border: none; color: #fff; padding: 15px 5px;
+            text-align: center; font-size: 13px; border-radius: 2px;
+        }
+        .report-btn:active { background: var(--hkp-yellow); color: #000; }
+        .report-btn b { display: block; font-size: 10px; color: var(--hkp-yellow); }
+
+        /* 數據流 */
+        .dispatch-box { max-height: 120px; overflow-y: auto; padding: 0 12px; font-family: monospace; font-size: 11px; }
+        .dispatch-item { padding: 8px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="logo-box">
+            <span class="logo-en">M-SECURITY</span><br>
+            <span class="logo-ch">香港行動終端</span>
+        </div>
+        <div style="text-align:right; font-size: 12px;">
+            <div id="clock">00:00:00</div>
+            <div style="color:var(--hkp-green)">● ONLINE</div>
+        </div>
+    </div>
+
+    <div class="status-panel">
+        <div class="status-item active">報到 / ON</div>
+        <div class="status-item">巡邏 / PATROL</div>
+        <div class="status-item">處理中 / AT SCENE</div>
+        <div class="status-item">用餐 / MEAL</div>
+    </div>
+
+    <div class="container">
+        <div class="hk-card">
+            <div class="hk-card-header"><span>截查及車輛查核 (QUERY)</span> <span>V.30</span></div>
+            <div class="search-group">
+                <input type="text" id="hkQuery" placeholder="輸入 ID / 車牌號碼..." autocomplete="off">
+                <button class="btn-hk" onclick="doHKQuery()">檢索</button>
+            </div>
+            <div id="hkResult" class="res-display"></div>
+        </div>
+
+        <div class="hk-card">
+            <div class="hk-card-header">快速報訊 (SPEEDY REPORT)</div>
+            <div class="report-grid">
+                <button class="report-btn" onclick="hkReport('RT-1','收到指令')"><b>10-4</b> 收到 / ROGER</button>
+                <button class="report-btn" onclick="hkReport('RT-2','到達現場')"><b>10-20</b> 現場 / AT SCENE</button>
+                <button class="report-btn" onclick="hkReport('RT-3','要求支援')"><b>10-33</b> 支援 / BACKUP</button>
+                <button class="report-btn" onclick="hkReport('RT-9','緊急警報')" style="background:var(--hkp-red)"><b>10-99</b> 緊急 / URGENT</button>
+            </div>
+        </div>
+
+        <div class="hk-card">
+            <div class="hk-card-header">指揮及控制系統動態 (CAD FEED)</div>
+            <div class="dispatch-box" id="hkDispatch">
+                </div>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function doHKQuery() {
+        const val = document.getElementById('hkQuery').value.trim().toUpperCase();
+        const res = document.getElementById('hkResult');
+        if(!val) return;
+
+        res.style.display = 'block';
+        res.innerHTML = "正在連線中央資料庫檢索中...";
+
+        db.ref('search_logs').push({ user: "HKP-UNIT-HEI", query: val, time: new Date().toLocaleString() });
+
+        db.ref('employee_list/' + val).once('value', s => {
+            const d = s.val();
+            if(d) {
+                res.innerHTML = `<span style="color:var(--hkp-green)">[資料命中]</span><br>姓名：${d.name}<br>身份：核准進入人員`;
+            } else {
+                db.ref('blacklist_data').once('value', bs => {
+                    let f = false;
+                    bs.forEach(b => {
+                        if(b.val().name === val) {
+                            res.innerHTML = `<span class="warning-text">[警報：黑名單對象]</span><br>原因：${b.val().reason}<br>建議措施：立即截停並通知 HQ`;
+                            f = true;
+                        }
+                    });
+                    if(!f) res.innerHTML = "查無紀錄 / No Record Found";
+                });
+            }
+        });
+    }
+
+    function hkReport(code, msg) {
+        db.ref('reactLogs').push({ code, note: msg, time: new Date().toLocaleTimeString('zh-HK', {hour12:false}) });
+    }
+
+    db.ref('reactLogs').limitToLast(5).on('value', s => {
+        const d = document.getElementById('hkDispatch'); d.innerHTML = '';
+        if(s.val()) {
+            Object.values(s.val()).reverse().forEach(log => {
+                d.innerHTML += `<div class="dispatch-item"><span><b>[${log.code}]</b> ${log.note}</span><span>${log.time}</span></div>`;
+            });
+        }
+    });
+
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('zh-HK', {hour12:false}); }, 1000);
+</script>
+</body>
+</html>
