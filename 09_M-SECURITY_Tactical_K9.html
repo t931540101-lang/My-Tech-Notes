@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security 戰術整合版 V3.1</title>
+    <title>M-Security 戰術整合版 V3.2</title>
     <link rel="icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
     <link rel="apple-touch-icon" href="db847d77-81c1-438b-ba94-3eb06c1a4040.jpg">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -12,9 +12,9 @@
         :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --accent: #27ae60; --dark: #1e293b; --npa-gold: #f39c12; --vip-gold: #ffca28; }
         body { font-family: sans-serif; background: var(--bg-blue); margin: 0; padding: 0; overflow-x: hidden; transition: background 0.3s; }
         
-        /* 登入介面 */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
-        .login-card { background: white; padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        /* 🌑 修正：登入介面背景 (從藍色改為深碳黑漸層) */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #2c3e50 0%, #000000 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
+        .login-card { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 12px; width: 85%; max-width: 320px; color: #333; box-shadow: 0 15px 35px rgba(0,0,0,0.8); text-align: center; }
         .login-card h2 { color: var(--nav-blue); margin-top: 0; font-style: italic; }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         
@@ -37,6 +37,8 @@
         .res-box { margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 10px solid #ccc; display: none; }
         .sys-info { text-align: right; margin-top: 30px; color: #888; font-size: 12px; font-family: monospace; }
         .k9-card { border-left: 5px solid var(--nav-blue); margin-bottom: 8px; padding: 10px; background: #fff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* 🛑 警語樣式 */
+        .alert-card { border: 2px solid #ff4d4f; background: rgba(255, 77, 79, 0.05); color: #ff4d4f; text-align: center; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
             <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
             <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
             <button class="btn btn-query" onclick="handleLogin()" style="font-size: 18px; padding: 12px;">授 權 登 入</button>
-            <p style="font-size: 12px; color: #888;">NPA-FACTOR-NETWORK v3.1</p>
+            <p style="font-size: 11px; color: #888;">NPA-FACTOR-NETWORK v3.2</p>
         </div>
     </div>
 
@@ -92,13 +94,18 @@
             </div>
 
             <div id="p3" class="page">
+                <div class="alert-card">
+                    <p style="font-weight:bold; margin:0;">🛑 非警衛人員，請勿使用！</p>
+                    <p style="font-size: 12px; margin: 5px 0 0 0;">違者按公司資訊規訂處置。</p>
+                </div>
+
                 <div class="card" style="background: var(--dark); color: #00f2ff; border-color: #00f2ff;">
                     <h3 style="margin-top:0; font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">📡 戰術資訊看板</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; font-family: monospace; gap: 10px;">
                         <div>網路延遲: <span id="sysPing">--</span>ms</div>
                         <div>系統狀態: <span style="color:var(--accent);">STEALTH</span></div>
                         <div>本機電量: <span id="sysBat">--</span>%</div>
-                        <div>版本序號: V3.1.27</div>
+                        <div>版本序號: V3.2.27</div>
                     </div>
                 </div>
 
@@ -120,7 +127,7 @@
                 </div>
             </div>
 
-            <div class="sys-info">20260227_FINAL_V3.1<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
+            <div class="sys-info">20260227_FINAL_V3.2<br><span style="color:red; font-weight:bold;">K9-UNIT-ACTIVE</span></div>
         </div>
     </div>
 
@@ -180,7 +187,6 @@
         if(idx === 2) syncK9();
     }
 
-    // --- 系統設定功能 ---
     function toggleShadowMode() {
         const isDark = document.getElementById('darkToggle').checked;
         document.body.style.background = isDark ? "#0a0a0a" : "var(--bg-blue)";
@@ -199,7 +205,7 @@
 
     function checkUpdate() {
         const btn = event.target; btn.innerText = "檢查中...";
-        setTimeout(() => { alert("已是最新版本 V3.1.27"); btn.innerText = "🔄 更新版本數據"; }, 1000);
+        setTimeout(() => { alert("已是最新版本 V3.2.27"); btn.innerText = "🔄 更新版本數據"; }, 1000);
     }
 
     setInterval(() => {
@@ -208,7 +214,6 @@
         if(navigator.getBattery) navigator.getBattery().then(bat => document.getElementById('sysBat').innerText = Math.floor(bat.level * 100));
     }, 3000);
 
-    // --- K9 與 訪客 ---
     function syncK9() {
         db.ref('k9Logs').on('value', s => {
             const all = s.val(), dogs = [{id:'布丁',n:'張布丁'},{id:'小白',n:'蔡小白'},{id:'小花',n:'蔡小花'},{id:'來順',n:'來順'},{id:'瓜瓜',n:'哈蜜瓜'},{id:'貴貴',n:'蔡頭貴'},{id:'蔡哺',n:'蔡哺'},{id:'有錢',n:'有錢'}];
