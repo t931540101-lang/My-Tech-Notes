@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-SECURITY MET V1.0</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root { --police-blue: #1a2a3a; --alert-red: #ff3b30; --gold: #d4af37; --text-gray: #cfd8dc; }
+        body { background: #0a0e14; color: var(--text-gray); font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; margin: 0; padding: 10px; }
+        
+        /* 系統頂欄 */
+        .sys-header { border-left: 4px solid var(--gold); background: #151b23; padding: 10px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .sys-title { font-size: 18px; font-weight: bold; color: #fff; letter-spacing: 1px; }
+        .sys-status { font-size: 11px; color: #00ff00; margin-top: 4px; }
+
+        /* 快捷查緝區 */
+        .search-sector { background: #1c252e; padding: 15px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #30363d; }
+        .input-group { display: flex; gap: 8px; margin-top: 10px; }
+        input { background: #0d1117; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 4px; flex-grow: 1; font-size: 16px; }
+        .btn-query { background: var(--gold); color: #000; border: none; padding: 0 15px; font-weight: bold; border-radius: 4px; }
+
+        /* 案件回報區 (大按鈕) */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .action-btn { background: #21262d; border: 1px solid #30363d; color: #fff; padding: 15px; border-radius: 4px; text-align: center; font-size: 14px; cursor: pointer; }
+        .action-btn:active { background: #30363d; }
+        .action-btn.emergency { border-color: var(--alert-red); color: var(--alert-red); font-weight: bold; }
+
+        /* 查緝顯示區 */
+        #resultDisplay { min-height: 50px; padding: 10px; margin-top: 10px; background: #0d1117; border-radius: 4px; font-size: 14px; display: none; }
+        .match-found { border-left: 4px solid #00ff00; color: #fff; }
+        .match-blacklist { border-left: 4px solid var(--alert-red); color: var(--alert-red); animation: blink 1s infinite; }
+
+        /* 歷史紀錄表 */
+        .log-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .log-table th { background: #161b22; color: var(--gold); text-align: left; padding: 8px; border-bottom: 1px solid #30363d; }
+        .log-table td { padding: 8px; border-bottom: 1px solid #21262d; }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div class="sys-header">
+        <div class="sys-title">警衛執法終端 (MET-V1)</div>
+        <div class="sys-status">● 系統連線中 | 操作員: 小黑哥</div>
+    </div>
+
+    <div class="search-sector">
+        <div style="font-size: 12px; color: var(--gold);">Quick Query / 快速查緝</div>
+        <div class="input-group">
+            <input type="text" id="targetID" placeholder="輸入工號或車牌碼..." autocomplete="off">
+            <button class="btn-query" onclick="doInquiry()">查詢</button>
+        </div>
+        <div id="resultDisplay"></div>
+    </div>
+
+    <div class="action-grid">
+        <div class="action-btn" onclick="sendReport('E01','例行巡邏完畢')">巡邏完成</div>
+        <div class="action-btn" onclick="sendReport('E02','設施檢查正常')">設施檢核</div>
+        <div class="action-btn" onclick="sendReport('E03','人員訪客登記')">訪客登錄</div>
+        <div class="action-btn emergency" onclick="sendReport('E99','緊急狀況通報')">⚠ 緊急求援</div>
+    </div>
+
+    <div class="search-sector">
+        <div style="font-size: 12px; color: var(--gold);">Live Dispatch / 即時勤務動態</div>
+        <table class="log-table">
+            <thead><tr><th>代碼</th><th>內容</th><th>時間</th></tr></thead>
+            <tbody id="dispatchList"></tbody>
+        </table>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 警政查緝邏輯
+    function doInquiry() {
+        const val = document.getElementById('targetID').value.trim().toUpperCase();
+        const display = document.getElementById('resultDisplay');
+        if(!val) return;
+
+        display.style.display = 'block';
+        display.innerHTML = "正在檢索資料庫...";
+
+        // 寫入查詢紀錄到後台 (讓 HQ 看到誰查過什麼)
+        db.ref('search_logs').push({
+            user: "Mobile-Unit-01",
+            query: val,
+            time: new Date().toLocaleString()
+        });
+
+        // 檢索員工/車牌
+        db.ref('employee_list/' + val).once('value', s => {
+            const data = s.val();
+            if(data) {
+                display.className = 'match-found';
+                display.innerHTML = `[命中] 姓名：${data.name} | 單位：${data.dept} <br> 權限：✅ 已授權`;
+            } else {
+                // 檢查黑名單
+                db.ref('blacklist_data').once('value', bs => {
+                    let blackfound = false;
+                    bs.forEach(item => {
+                        if(item.val().name === val) {
+                            display.className = 'match-blacklist';
+                            display.innerHTML = `[警報] 對象：${val} <br> 原因：🛑 黑名單列管人員！`;
+                            blackfound = true;
+                        }
+                    });
+                    if(!blackfound) {
+                        display.className = '';
+                        display.innerHTML = "查無資料 / 非列管對象";
+                    }
+                });
+            }
+        });
+    }
+
+    // 勤務回報
+    function sendReport(code, msg) {
+        const timestamp = new Date().toLocaleTimeString('zh-TW', {hour12:false});
+        db.ref('reactLogs').push({
+            code: code,
+            note: msg,
+            time: timestamp,
+            status: "UNREAD"
+        });
+        alert(`代碼 ${code} 已回報至 HQ`);
+    }
+
+    // 監聽勤務動態
+    db.ref('reactLogs').limitToLast(5).on('value', s => {
+        const b = document.getElementById('dispatchList'); b.innerHTML = '';
+        if(s.val()) {
+            Object.values(s.val()).reverse().forEach(log => {
+                b.innerHTML += `<tr><td>${log.code}</td><td>${log.note}</td><td>${log.time}</td></tr>`;
+            });
+        }
+    });
+
+    // Local Storage 備份最後查詢
+    document.getElementById('targetID').value = localStorage.getItem('lastQuery') || '';
+    document.getElementById('targetID').addEventListener('input', (e) => {
+        localStorage.setItem('lastQuery', e.target.value);
+    });
+</script>
+</body>
+</html>
