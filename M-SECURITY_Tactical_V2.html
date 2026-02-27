@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-SECURITY | ENFORCEMENT TERMINAL</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --bg-dark: #05080a;
+            --panel-bg: #0c1218;
+            --accent-gold: #ffb400;
+            --accent-blue: #00e5ff;
+            --danger: #ff3333;
+            --safe: #00ff88;
+            --border: #1e2d3d;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: #b0bec5;
+            font-family: 'Segoe UI', 'Roboto', 'PingFang TC', sans-serif;
+            margin: 0; padding: 12px;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(32, 45, 58, .05) 25%, rgba(32, 45, 58, .05) 26%, transparent 27%, transparent 74%, rgba(32, 45, 58, .05) 75%, rgba(32, 45, 58, .05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(32, 45, 58, .05) 25%, rgba(32, 45, 58, .05) 26%, transparent 27%, transparent 74%, rgba(32, 45, 58, .05) 75%, rgba(32, 45, 58, .05) 76%, transparent 77%, transparent);
+            background-size: 30px 30px;
+        }
+
+        /* 頂部戰術列 */
+        .header {
+            border-bottom: 2px solid var(--accent-blue);
+            padding: 8px 0; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .title-box .main-title { font-size: 16px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+        .title-box .sub-title { font-size: 10px; color: var(--accent-blue); }
+
+        .heartbeat { width: 8px; height: 8px; background: var(--safe); border-radius: 50%; box-shadow: 0 0 8px var(--safe); animation: pulse 1.5s infinite; }
+
+        /* 模組容器 */
+        .module {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        .module::before { content: ""; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--border); }
+        .module-header { background: rgba(30, 45, 61, 0.5); padding: 6px 10px; font-size: 11px; font-weight: bold; color: var(--accent-blue); display: flex; justify-content: space-between; }
+
+        /* 查緝輸入區 */
+        .search-inner { padding: 15px; }
+        .input-wrapper { display: flex; gap: 5px; background: #000; border: 1px solid var(--border); padding: 2px; }
+        input { background: transparent; border: none; color: #fff; padding: 12px; flex: 1; font-size: 16px; outline: none; }
+        .btn-scan { background: var(--accent-blue); color: #000; border: none; padding: 0 20px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+
+        /* 狀態卡片 */
+        #resultDisplay { margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px dashed var(--border); font-size: 14px; line-height: 1.6; display: none; }
+        .alert-black { color: var(--danger); border: 1px solid var(--danger) !important; background: rgba(255,51,51,0.1) !important; }
+
+        /* 戰術按鈕 */
+        .tactical-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+        .tac-btn {
+            background: #16212a; border: 1px solid var(--border); color: #fff; padding: 15px 5px;
+            font-size: 13px; text-align: center; position: relative;
+        }
+        .tac-btn span { color: var(--accent-gold); font-size: 10px; display: block; margin-bottom: 4px; }
+        .tac-btn:active { background: var(--accent-blue); color: #000; }
+        .tac-btn.emergency { border-color: var(--danger); color: var(--danger); }
+
+        /* 資料流 */
+        .data-stream { height: 120px; overflow-y: auto; padding: 0 10px; font-family: monospace; font-size: 11px; }
+        .stream-item { padding: 6px 0; border-bottom: 1px solid #151b23; display: flex; justify-content: space-between; }
+        .time { color: #546e7a; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title-box">
+            <div class="main-title">M-SECURITY TERMINAL</div>
+            <div class="sub-title">VERSION 2.0 | TACTICAL INTERFACE</div>
+        </div>
+        <div class="heartbeat"></div>
+    </div>
+
+    <div class="module">
+        <div class="module-header"><span>QUERY SYSTEM / 檢索系統</span> <span id="clock">00:00:00</span></div>
+        <div class="search-inner">
+            <div class="input-wrapper">
+                <input type="text" id="targetID" placeholder="INPUT ID/PLATE..." autocomplete="off">
+                <button class="btn-scan" onclick="doInquiry()">Scan</button>
+            </div>
+            <div id="resultDisplay"></div>
+        </div>
+    </div>
+
+    <div class="module">
+        <div class="module-header"><span>QUICK REPORT / 勤務代碼</span></div>
+        <div class="tactical-grid">
+            <div class="tac-btn" onclick="sendReport('R-01','巡邏清場完成')"><span>#CODE_01</span>巡邏完畢</div>
+            <div class="tac-btn" onclick="sendReport('R-02','監控設備正常')"><span>#CODE_02</span>設備點檢</div>
+            <div class="tac-btn" onclick="sendReport('R-03','訪客車輛進場')"><span>#CODE_03</span>訪客進場</div>
+            <div class="tac-btn emergency" onclick="sendReport('E-99','最高等級警報')"><span>#EMERGENCY</span>緊急通報</div>
+        </div>
+    </div>
+
+    <div class="module">
+        <div class="module-header"><span>LIVE DATA STREAM / 數據流</span></div>
+        <div class="data-stream" id="dispatchList">
+            </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function doInquiry() {
+        const val = document.getElementById('targetID').value.trim().toUpperCase();
+        const display = document.getElementById('resultDisplay');
+        if(!val) return;
+
+        display.style.display = 'block';
+        display.style.border = '1px dashed var(--border)';
+        display.style.background = 'rgba(0,0,0,0.3)';
+        display.innerHTML = "SEARCHING DATABASE...";
+
+        db.ref('search_logs').push({
+            user: "OP-BLACK-BRO",
+            query: val,
+            time: new Date().toLocaleString()
+        });
+
+        db.ref('employee_list/' + val).once('value', s => {
+            const data = s.val();
+            if(data) {
+                display.innerHTML = `<span style="color:var(--safe)">[MATCH FOUND]</span><br>NAME: ${data.name}<br>UNIT: ${data.dept}<br>STATUS: AUTHORIZED`;
+            } else {
+                db.ref('blacklist_data').once('value', bs => {
+                    let blackfound = false;
+                    bs.forEach(item => {
+                        if(item.val().name === val) {
+                            display.className = 'alert-black';
+                            display.innerHTML = `[ALARM] TARGET: ${val}<br>REASON: BLACKLISTED<br>ACTION: DETAIN IMMEDIATELY`;
+                            blackfound = true;
+                        }
+                    });
+                    if(!blackfound) {
+                        display.innerHTML = "[NO RECORD] <br>TARGET NOT IN DATABASE";
+                    }
+                });
+            }
+        });
+    }
+
+    function sendReport(code, msg) {
+        const timestamp = new Date().toLocaleTimeString('zh-TW', {hour12:false});
+        db.ref('reactLogs').push({
+            code: code,
+            note: msg,
+            time: timestamp
+        });
+    }
+
+    db.ref('reactLogs').limitToLast(10).on('value', s => {
+        const b = document.getElementById('dispatchList'); b.innerHTML = '';
+        if(s.val()) {
+            Object.values(s.val()).reverse().forEach(log => {
+                b.innerHTML += `
+                <div class="stream-item">
+                    <span><b style="color:var(--accent-gold)">[${log.code}]</b> ${log.note}</span>
+                    <span class="time">${log.time}</span>
+                </div>`;
+            });
+        }
+    });
+
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0') + ":" + now.getSeconds().toString().padStart(2,'0');
+    }, 1000);
+</script>
+</body>
+</html>
