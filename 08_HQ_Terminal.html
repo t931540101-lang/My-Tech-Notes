@@ -132,3 +132,61 @@
 </script>
 </body>
 </html>
+<div class="section">
+        <h2>🔍 全域查詢與登入軌跡 (即時監控)</h2>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table id="logTab">
+                <thead>
+                    <tr>
+                        <th width="20%">操作員</th>
+                        <th width="50%">查詢內容 / 動作</th>
+                        <th width="30%">執行時間</th>
+                    </tr>
+                </thead>
+                <tbody id="logList">
+                    <tr><td colspan="3" style="text-align:center;">監控系統啟動中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // --- 這裡接續你原本的 Firebase script ---
+    
+    // 新增：監聽 search_logs 並即時渲染
+    db.ref('search_logs').limitToLast(15).on('value', s => {
+        const logs = s.val();
+        const b = document.getElementById('logList');
+        b.innerHTML = '';
+        
+        if (logs) {
+            // 將紀錄反轉，最新動作排在最上面
+            Object.values(logs).reverse().forEach(log => {
+                const isVip = log.query.includes("VIP");
+                const rowStyle = isVip ? 'style="background: rgba(255, 202, 40, 0.1);"' : '';
+                const textStyle = isVip ? 'style="color: #ffca28; font-weight: bold;"' : '';
+                
+                b.innerHTML += `
+                <tr ${rowStyle}>
+                    <td><b>${log.user}</b></td>
+                    <td ${textStyle}>${log.query} ${isVip ? '💎' : ''}</td>
+                    <td style="font-size: 12px; color: #888;">${log.time}</td>
+                </tr>`;
+            });
+        } else {
+            b.innerHTML = '<tr><td colspan="3" style="text-align:center;">目前無查詢紀錄</td></tr>';
+        }
+    });
+
+    // 柔的專業提醒：確保你的「同步員工」功能也有紀錄
+    const originalUpEmp = upEmp;
+    upEmp = function() {
+        originalUpEmp();
+        const name = document.getElementById('eName').value.trim();
+        db.ref('search_logs').push({
+            user: "HQ-ADMIN",
+            query: "同步員工資料: " + name,
+            time: new Date().toLocaleString()
+        });
+    };
+</script>
