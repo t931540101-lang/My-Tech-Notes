@@ -93,7 +93,35 @@
             </div>
 
             <div id="p4" class="page">
-                <div class="card">
+    <div class="card" style="border-color: #ff4d4f; background: rgba(255, 77, 79, 0.05); text-align: center;">
+        <h3 style="color: #ff4d4f; margin-top: 0; font-size: 16px;">🛑 重 要 安全 聲 明 🛑</h3>
+        <p style="color: #ff4d4f; font-weight: bold; font-size: 14px; margin-bottom: 5px; line-height: 1.4;">
+            非警衛人員，請勿使用！<br>
+            違者按公司資訊規訂處置。<br>
+            <span style="color: #888; font-weight: normal; font-size: 11px;">(AUTHORIZED USE ONLY)</span>
+        </p>
+        <div style="font-size: 12px; color: #888; margin-top: 8px;">
+            此為 M-Security 戰術整合系統 V2.0 <br>
+            系統狀態：<span style="color: var(--accent); font-weight: bold;">斯得憂 (Stealth) 認證中</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0; color:var(--nav-blue);">系統資訊</h3>
+        <p>當前操作員：<span id="opName">---</span></p>
+        <button class="btn" style="background: #ff4d4f; color: white; border: none; font-size: 16px; padding: 12px; box-shadow: 0 4px #c0392b; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;" onclick="confirmLogout()">安 全 性 登 出</button>
+    </div>
+</div>
+
+<script>
+    // 柔的專業悄悄話：既然按鍵變了，我們加一個登出確認，更安全！
+    function confirmLogout() {
+        if (confirm("確定要登出並執行安全性清理嗎？")) {
+            // 可以在這裡加上清除 LocalStorage 的代碼，實現真正的 Stealth 登出
+            location.reload();
+        }
+    }
+</script>
                     <h3 style="margin-top:0; color:var(--nav-blue);">系統資訊</h3>
                     <p>當前操作員：<span id="opName">---</span></p>
                     <button class="btn" style="background:#888; font-size: 16px; padding: 10px;" onclick="location.reload()">安全性登出</button>
