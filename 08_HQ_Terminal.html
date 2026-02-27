@@ -2,153 +2,133 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security 整合查詢</title>
+    <title>M-SECURITY | HQ 總部終端 V5.5</title>
+    <link rel="icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
+<link rel="apple-touch-icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --nav-blue: #4a76a8; --bg-blue: #e6f0fa; --btn-grad: linear-gradient(to bottom, #4da1ff, #2188ff); --alert-red: #ff4d4f; --vip-gold: #ffca28; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg-blue); overflow: hidden; }
-
-        /* 全螢幕登入 */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a2a6c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
-        .login-box { width: 85%; max-width: 400px; text-align: center; }
-        .login-input { width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 12px; font-size: 20px; box-sizing: border-box; }
-
-        /* 主介面佈局 */
-        .main-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; }
-        .header { background: linear-gradient(to bottom, #7ba6d9, #4a76a8); color: white; padding: 22px 0; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
-        .header h1 { margin: 0; font-style: italic; font-size: 30px; }
-        .tabs { display: flex; background: #6089b3; }
-        .tab { flex: 1; text-align: center; padding: 16px 0; color: #d1d5db; font-size: 15px; cursor: pointer; border-right: 1px solid #4a76a8; }
-        .tab.active { background: #4a76a8; color: white; font-weight: bold; }
-        .container { flex: 1; padding: 18px; overflow-y: auto; }
-        .page { display: none; }
-        .page.active { display: block; }
-
-        /* 卡片與按鈕 */
-        .card { background: white; border: 2px solid #a5c7f2; border-radius: 10px; padding: 15px; margin-bottom: 18px; }
-        textarea, input { width: 100%; border: none; font-size: 22px; outline: none; font-weight: bold; background: transparent; }
-        .btn-action { border: none; border-radius: 12px; color: white; font-size: 24px; font-weight: bold; padding: 20px; width: 100%; margin-bottom: 15px; box-shadow: 0 6px #1a6edb; }
-        .btn-query { background: var(--btn-grad); }
-        .btn-small { flex: 1; padding: 16px; font-size: 20px; background: var(--btn-grad); color: white; border-radius: 12px; font-weight: bold; box-shadow: 0 4px #1a6edb; border:none; }
-
-        /* 日誌軌跡專屬樣式 */
-        .log-item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; font-size: 12px; }
-        .vip-log { color: #d4af37; font-weight: bold; }
+        body { background-color: #000; color: #00f2ff; font-family: "Microsoft JhengHei", sans-serif; padding: 20px; }
+        .header { border-bottom: 2px solid #00f2ff; padding-bottom: 10px; margin-bottom: 20px; }
+        .section { background: #111; padding: 20px; border-radius: 5px; border: 1px solid #333; margin-bottom: 30px; }
+        h2 { color: #4da1ff; font-size: 18px; margin-top: 0; border-left: 5px solid #00f2ff; padding-left: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
+        input, select { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; box-sizing: border-box; }
+        .btn { background: #00f2ff; color: #000; border: none; padding: 12px 25px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+        .btn-red { background: #ff4d4f; color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #4da1ff; border-bottom: 1px solid #333; padding: 10px; font-size: 14px; }
+        td { padding: 12px 10px; border-bottom: 1px solid #222; color: #ccc; font-size: 14px; }
+        .confirmed { color: #10b981; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h1>M-Security 登入</h1>
-            <input type="text" id="user" class="login-input" placeholder="帳號 (姓名)">
-            <input type="password" id="pass" class="login-input" placeholder="密碼 (工號)">
-            <button class="btn-action btn-query" onclick="handleLogin()">授 權 登 入</button>
+    <div class="header">
+        <h1>M-SECURITY 資料庫管理後台</h1>
+        <div style="color: #888; font-size: 12px;">UNIT: HQ-COMMANDER | STATUS: ONLINE</div>
+    </div>
+
+    <div class="section">
+        <h2>👥 員工資料部署 / 🛑 管制黑名單</h2>
+        <div class="grid">
+            <input type="text" id="eID" placeholder="工號">
+            <input type="text" id="eName" placeholder="姓名">
+            <input type="text" id="eDept" placeholder="單位">
+            <input type="text" id="ePlate" placeholder="車牌">
+        </div>
+        <button class="btn" onclick="upEmp()">同步員工</button>
+        <button class="btn btn-red" onclick="upBlack()">發布黑名單</button>
+        <div id="dataDisp" style="margin-top:20px; max-height: 200px; overflow-y: auto;">
+            <table id="eTab"><thead><tr><th>類別</th><th>對象</th><th>詳情</th><th>操作</th></tr></thead><tbody id="masterList"></tbody></table>
         </div>
     </div>
 
-    <div id="mainApp" class="main-wrapper" style="display:none;">
-        <div class="header"><h1>M-Security 整合查詢</h1></div>
-
-        <div class="tabs">
-            <div class="tab active" onclick="switchPage(0)">一般查詢</div>
-            <div class="tab" onclick="switchPage(1)">董監事</div>
-            <div class="tab" onclick="switchPage(2)">應用工具</div>
-            <div class="tab" onclick="switchPage(3)">設定</div>
+    <div class="section">
+        <h2>🐕 K9 臨床紀錄更新</h2>
+        <div class="grid">
+            <select id="k9Name">
+                <option value="布丁">張布丁</option><option value="小白">蔡小白</option><option value="小花">蔡小花</option>
+                <option value="來順">來順</option><option value="瓜瓜">哈蜜瓜</option><option value="貴貴">蔡頭貴</option>
+                <option value="蔡哺">蔡哺</option><option value="有錢">有錢</option>
+            </select>
+            <input type="text" id="k9Note" placeholder="輸入當前醫療或狀況紀錄">
         </div>
+        <button class="btn" onclick="upK9()">更新 K9 狀態</button>
+    </div>
 
-        <div class="container">
-            <div id="p0" class="page active">
-                <div class="card"><textarea id="valIn" placeholder="輸入車牌或工號" rows="2"></textarea></div>
-                <button class="btn-action btn-query" onclick="doQuery('employee_list')">執 行 查 詢</button>
-                <div style="display:flex; gap:12px; margin-bottom: 25px;">
-                    <button class="btn-small" onclick="document.getElementById('valIn').value=''">清 除</button>
-                    <button class="btn-small" onclick="location.reload()">同 步</button>
-                </div>
-                <div id="result"></div>
-
-                <div class="card" style="background: #fafafa; border-style: dashed;">
-                    <h3 style="margin-top:0; color:var(--nav-blue); font-size: 14px;">🔍 最近查詢與登入軌跡</h3>
-                    <div id="liveLogs">監控數據載入中...</div>
-                </div>
+    <div class="section">
+        <h2>📡 前線即時狀態監控 (訪客 & 交接)</h2>
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 style="font-size:14px; color:#4da1ff;">最近訪客登記</h3>
+                <table id="vTab"><thead><tr><th>姓名</th><th>時間</th></tr></thead><tbody id="vList"></tbody></table>
             </div>
-
-            <div id="p1" class="page">
-                <div class="card"><input type="text" id="vipIn" placeholder="輸入董監事車牌"></div>
-                <button class="btn-action" style="background:#222; color:var(--vip-gold); border:2px solid var(--vip-gold);" onclick="doQuery('vip_list')">VIP 識別查詢</button>
-                <div id="vipResult"></div>
-            </div>
-
-            <div id="p2" class="page">
-                <div class="card">
-                    <h3 style="color:var(--nav-blue); margin-top:0;">訪客登記</h3>
-                    <input type="text" id="vName" placeholder="姓名" style="border-bottom:1px solid #eee;">
-                    <button class="btn-small" style="width:100%; margin-top:10px;" onclick="alert('同步成功')">確認登記</button>
-                </div>
-                <div id="dogList"></div>
-            </div>
-
-            <div id="p3" class="page">
-                <div class="card" style="border-color:var(--alert-red); background:rgba(255,77,79,0.05); text-align:center;">
-                    <p style="color:var(--alert-red); font-weight:bold; margin:0;">🛑 非警衛人員，請勿使用！</p>
-                </div>
-                <button class="btn-action" style="background:var(--alert-red);" onclick="location.reload()">安全登出</button>
+            <div>
+                <h3 style="font-size:14px; color:#4da1ff;">最新勤務交接</h3>
+                <table id="dTab"><thead><tr><th>事項</th><th>簽署</th></tr></thead><tbody id="dList"></tbody></table>
             </div>
         </div>
     </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965", appId: "1:864846943143:web:4cfa18cd20d2f712225c82" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function handleLogin() {
-        const u = document.getElementById('user').value.trim(), p = document.getElementById('pass').value.trim();
-        if(u && p) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'flex';
-            logAction(u, "登入系統");
-            syncLiveLogs(); // 啟動監控軌跡
-        }
+    // --- 員工與黑名單邏輯 ---
+    function upEmp() {
+        const id = document.getElementById('eID').value.trim(), name = document.getElementById('eName').value.trim();
+        const dept = document.getElementById('eDept').value.trim(), plate = document.getElementById('ePlate').value.trim().toUpperCase();
+        if(!id) return alert("請輸入工號");
+        const d = { id, name, dept, plate };
+        db.ref('employee_list/' + id).set(d);
+        if(plate) db.ref('employee_list/' + plate).set(d);
+        alert("員工同步成功");
     }
 
-    function logAction(user, content) {
-        db.ref('search_logs').push({ user, query: content, time: new Date().toLocaleString() });
+    function upBlack() {
+        const name = document.getElementById('eName').value.trim();
+        const reason = document.getElementById('eDept').value.trim(); // 借用單位欄位當原因
+        if(!name) return alert("請在姓名欄輸入黑名單對象");
+        db.ref('blacklist_data').push({ name, reason, time: new Date().toLocaleDateString() });
+        alert("黑名單發布成功");
     }
 
-    function syncLiveLogs() {
-        db.ref('search_logs').limitToLast(10).on('value', s => {
-            const data = s.val(), target = document.getElementById('liveLogs');
-            if(!data) return;
-            let html = '';
-            Object.values(data).reverse().forEach(log => {
-                const isVip = log.query.includes("VIP");
-                html += `<div class="log-item ${isVip?'vip-log':''}"><span><b>${log.user}</b></span><span>${log.query}</span></div>`;
-            });
-            target.innerHTML = html;
+    // --- K9 醫療邏輯 ---
+    function upK9() {
+        const dog = document.getElementById('k9Name').value;
+        const note = document.getElementById('k9Note').value;
+        if(!note) return alert("內容不可空白");
+        db.ref('k9Logs/' + dog).push({ note, timestamp: Date.now(), time: new Date().toLocaleString() });
+        alert(dog + " 紀錄已更新");
+        document.getElementById('k9Note').value = '';
+    }
+
+    // --- 即時數據監控 ---
+    db.ref('employee_list').on('value', s => {
+        const l = s.val(), b = document.getElementById('masterList'); b.innerHTML = '';
+        for(let k in l) if(k === l[k].id) b.innerHTML += `<tr><td>員工</td><td>${l[k].name}</td><td>${l[k].plate}</td><td><button onclick="db.ref('employee_list/${l[k].id}').remove()">刪除</button></td></tr>`;
+    });
+
+    db.ref('visitor_logs').limitToLast(5).on('value', s => {
+        const l = s.val(), b = document.getElementById('vList'); b.innerHTML = '';
+        if(l) Object.values(l).reverse().forEach(v => { b.innerHTML += `<tr><td>${v.name}</td><td>${v.timeIn}</td></tr>`; });
+    });
+
+    db.ref('reactLogs').limitToLast(5).on('value', s => {
+        const l = s.val(), b = document.getElementById('dList'); b.innerHTML = '';
+        if(l) Object.keys(l).reverse().forEach(k => {
+            const d = l[k];
+            b.innerHTML += `<tr><td>${d.note.substring(0,10)}..</td><td class="${d.confirmedBy?'confirmed':''}">${d.confirmedBy || '未閱'}</td></tr>`;
         });
-    }
-
-    function doQuery(path) {
-        const inputId = (path === 'vip_list') ? 'vipIn' : 'valIn';
-        const resId = (path === 'vip_list') ? 'vipResult' : 'result';
-        const v = document.getElementById(inputId).value.trim().toUpperCase();
-        if(!v) return;
-        db.ref(path + '/' + v).once('value', e => {
-            const d = e.val();
-            document.getElementById(resId).innerHTML = `<div class="card">${d ? '✅ '+d.name : '❌ 無資料'}</div>`;
-            logAction(document.getElementById('user').value, (path==='vip_list'?'VIP查詢:':'查詢:') + v);
-        });
-    }
-
-    function switchPage(idx) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab')[idx].classList.add('active');
-        document.getElementById('p' + idx).classList.add('active');
-    }
+    });
 </script>
 </body>
 </html>
