@@ -2,6 +2,174 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-SECURITY | HQ 總部終端 V5.6</title>
+    <link rel="icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
+    <link rel="apple-touch-icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background-color: #000; color: #00f2ff; font-family: "Microsoft JhengHei", sans-serif; padding: 15px; margin: 0; }
+        .header { border-bottom: 2px solid #00f2ff; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .section { background: #111; padding: 15px; border-radius: 5px; border: 1px solid #333; margin-bottom: 20px; }
+        h2 { color: #4da1ff; font-size: 16px; margin-top: 0; border-left: 5px solid #00f2ff; padding-left: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 10px; }
+        input, select { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        .btn { background: #00f2ff; color: #000; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 3px; width: 100%; margin-top: 5px; }
+        .btn-red { background: #ff4d4f; color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th { text-align: left; color: #4da1ff; border-bottom: 1px solid #333; padding: 8px; }
+        td { padding: 8px; border-bottom: 1px solid #222; color: #ccc; }
+        .log-user { color: #ffca28; font-weight: bold; } /* 查詢者顏色 */
+        .log-query { color: #fff; font-style: italic; } /* 查詢內容顏色 */
+        .scroll-box { max-height: 250px; overflow-y: auto; border: 1px solid #222; background: #0a0a0a; }
+        .confirmed { color: #10b981; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1 style="margin:0; font-size: 20px;">M-SECURITY 管理後台</h1>
+            <div style="color: #888; font-size: 11px;">UNIT: HQ-COMMANDER | STATUS: ONLINE</div>
+        </div>
+        <div id="clock" style="font-family: monospace; font-size: 14px;"></div>
+    </div>
+
+    <div class="section" style="border-color: #ffca28;">
+        <h2 style="color: #ffca28; border-left-color: #ffca28;">🔍 全域查詢軌跡 (誰查過什麼?)</h2>
+        <div class="scroll-box">
+            <table id="sTab">
+                <thead>
+                    <tr>
+                        <th width="25%">查詢者</th>
+                        <th width="45%">對象/內容</th>
+                        <th width="30%">時間</th>
+                    </tr>
+                </thead>
+                <tbody id="searchLogs">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>👥 員工部署 / 🛑 黑名單</h2>
+        <div class="grid">
+            <input type="text" id="eID" placeholder="工號">
+            <input type="text" id="eName" placeholder="姓名">
+            <input type="text" id="eDept" placeholder="單位/原因">
+            <input type="text" id="ePlate" placeholder="車牌">
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn" onclick="upEmp()">同步員工</button>
+            <button class="btn btn-red" onclick="upBlack()">發布黑名單</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🐕 K9 紀錄更新</h2>
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <select id="k9Name">
+                <option value="布丁">張布丁</option><option value="小白">蔡小白</option><option value="小花">蔡小花</option>
+                <option value="來順">來順</option><option value="瓜瓜">哈蜜瓜</option><option value="貴貴">蔡頭貴</option>
+                <option value="蔡哺">蔡哺</option><option value="有錢">有錢</option>
+            </select>
+            <input type="text" id="k9Note" placeholder="輸入紀錄...">
+        </div>
+        <button class="btn" onclick="upK9()">更新 K9 狀態</button>
+    </div>
+
+    <div class="section">
+        <h2>📡 即時狀態 (訪客 & 交接)</h2>
+        <div class="grid">
+            <div class="scroll-box">
+                <table><thead><tr><th>訪客</th><th>時間</th></tr></thead><tbody id="vList"></tbody></table>
+            </div>
+            <div class="scroll-box">
+                <table><thead><tr><th>事項</th><th>簽署</th></tr></thead><tbody id="dList"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 監控查詢紀錄 (核心新增功能)
+    db.ref('search_logs').limitToLast(15).on('value', s => {
+        const l = s.val(), b = document.getElementById('searchLogs'); 
+        b.innerHTML = '';
+        if(l) {
+            Object.values(l).reverse().forEach(log => {
+                const time = log.time ? log.time.split(' ')[1] : '--:--'; // 只顯示時間部分
+                b.innerHTML += `
+                    <tr>
+                        <td class="log-user">${log.user || '未知設備'}</td>
+                        <td class="log-query">${log.query || '未紀錄'}</td>
+                        <td>${time}</td>
+                    </tr>`;
+            });
+        } else {
+            b.innerHTML = '<tr><td colspan="3" style="text-align:center;">暫無查詢紀錄</td></tr>';
+        }
+    });
+
+    // 員工同步
+    function upEmp() {
+        const id = document.getElementById('eID').value.trim(), name = document.getElementById('eName').value.trim();
+        const dept = document.getElementById('eDept').value.trim(), plate = document.getElementById('ePlate').value.trim().toUpperCase();
+        if(!id) return alert("請輸入工號");
+        db.ref('employee_list/' + id).set({ id, name, dept, plate });
+        if(plate) db.ref('employee_list/' + plate).set({ id, name, dept, plate });
+        alert("員工同步成功");
+    }
+
+    // 黑名單發布
+    function upBlack() {
+        const name = document.getElementById('eName').value.trim();
+        const reason = document.getElementById('eDept').value.trim();
+        if(!name) return alert("請在姓名欄輸入黑名單對象");
+        db.ref('blacklist_data').push({ name, reason, time: new Date().toLocaleDateString() });
+        alert("黑名單發布成功");
+    }
+
+    // K9 更新
+    function upK9() {
+        const dog = document.getElementById('k9Name').value, note = document.getElementById('k9Note').value;
+        if(!note) return alert("內容不可空白");
+        db.ref('k9Logs/' + dog).push({ note, time: new Date().toLocaleString() });
+        document.getElementById('k9Note').value = '';
+    }
+
+    // 訪客與交接監控
+    db.ref('visitor_logs').limitToLast(5).on('value', s => {
+        const l = s.val(), b = document.getElementById('vList'); b.innerHTML = '';
+        if(l) Object.values(l).reverse().forEach(v => { b.innerHTML += `<tr><td>${v.name}</td><td>${v.timeIn}</td></tr>`; });
+    });
+
+    db.ref('reactLogs').limitToLast(5).on('value', s => {
+        const l = s.val(), b = document.getElementById('dList'); b.innerHTML = '';
+        if(l) Object.keys(l).reverse().forEach(k => {
+            const d = l[k];
+            b.innerHTML += `<tr><td>${d.note.substring(0,8)}..</td><td class="${d.confirmedBy?'confirmed':''}">${d.confirmedBy || '未閱'}</td></tr>`;
+        });
+    });
+
+    // 時鐘
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
     <title>M-SECURITY | HQ 總部終端 V5.5</title>
     <link rel="icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
 <link rel="apple-touch-icon" href="cd0a14ac-ca91-4f78-bba1-bf7e4104f5bb.jpg">
