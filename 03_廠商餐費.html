@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>廠商餐費 | 雙結點精準版</title>
+    <title>廠商餐費 | 雙結點穩定版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -19,6 +19,9 @@
         .period-subtotal { background-color: #f8fafc; color: #64748b; font-size: 14px; font-style: italic; }
         .nav-btn { touch-action: manipulation; transition: transform 0.1s; }
         .nav-btn:active { transform: scale(0.8); }
+        /* 新增寫入成功的動畫 */
+        .success-flash { animation: flashGreen 0.5s ease-out; }
+        @keyframes flashGreen { 0% { background-color: #10b981; transform: scale(0.95); } 100% { background-color: #059669; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -50,7 +53,7 @@
                 </div>
             </div>
             <input type="text" id="customVendor" placeholder="請輸入廠商名稱" class="hidden">
-            <button onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95 transition-transform">
+            <button id="submitBtn" onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-200">
                 寫入帳單 ✍️
             </button>
         </div>
@@ -92,8 +95,12 @@
 
         window.onload = () => { updateView(); };
 
+        // 🌟 修復點 1：用字串切割來判斷日期，避免瀏覽器相容性問題
         function updatePeriodHint() {
-            const d = new Date(document.getElementById('entryDate').value).getDate();
+            const dateStr = document.getElementById('entryDate').value; // e.g., "2026-03-15"
+            if (!dateStr) return;
+            const d = parseInt(dateStr.split('-')[2]); // 直接抓出日期數字
+            
             const hint = document.getElementById('periodHint');
             if (d <= 20) {
                 hint.innerText = "前期 (1-20)";
@@ -139,18 +146,42 @@
 
         function checkVendor(val) { document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM'); }
 
+        // 🌟 修復點 2：加入 Promise 和防呆機制
         function addEntry() {
             const date = document.getElementById('entryDate').value;
             const select = document.getElementById('vendorSelect');
             let vendor = select.value === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : select.value;
+            
             if (!vendor) return alert("請輸入廠商！");
+            if (!date) return alert("日期錯誤，請重新選擇！");
+            
             const qty = parseInt(document.getElementById('quantity').value) || 0;
             if (qty > 0) {
                 const entryMonth = date.slice(0, 7);
-                const day = new Date(date).getDate();
-                const period = day <= 20 ? "A" : "B"; // A: 前期, B: 後期
-                db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * 65, period });
-                document.getElementById('quantity').value = "1";
+                const day = parseInt(date.split('-')[2]); // 同樣用字串切割抓日期
+                const period = day <= 20 ? "A" : "B"; 
+                
+                const btn = document.getElementById('submitBtn');
+                btn.innerText = "寫入中...";
+                btn.disabled = true;
+
+                // 🌟 使用 .then() 確保資料真的寫入 Firebase
+                db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * 65, period })
+                  .then(() => {
+                      // 寫入成功，恢復按鈕狀態並加入閃爍特效
+                      document.getElementById('quantity').value = "1";
+                      btn.innerText = "寫入帳單 ✍️";
+                      btn.disabled = false;
+                      btn.classList.add('success-flash');
+                      setTimeout(() => btn.classList.remove('success-flash'), 500);
+                  })
+                  .catch((error) => {
+                      alert("寫入失敗，請檢查網路或 Firebase 權限！\n錯誤碼：" + error.message);
+                      btn.innerText = "寫入帳單 ✍️";
+                      btn.disabled = false;
+                  });
+            } else {
+                alert("份數必須大於 0");
             }
         }
 
