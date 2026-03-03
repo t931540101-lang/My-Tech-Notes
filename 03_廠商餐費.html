@@ -19,12 +19,17 @@
         th { background-color: #e2e8f0; }
         .weekend { background-color: #fff9c4; }
         .vendor-summary { background-color: #f0fdf4; color: #166534; font-size: 16px; }
+        .month-picker { background-color: #1e293b; color: white; border: none; padding: 10px; border-radius: 8px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2 class="text-2xl font-black text-center mb-4 border-b-4 border-slate-800 pb-2">廠商餐費登記 (雲端)</h2>
+        <div class="flex justify-between items-center mb-4 border-b-4 border-slate-800 pb-2">
+            <h2 class="text-2xl font-black text-slate-800">廠商餐費</h2>
+            <input type="month" id="monthSelector" class="month-picker w-auto text-lg font-bold" onchange="changeMonth()">
+        </div>
+        
         <div class="space-y-4">
             <input type="date" id="entryDate">
             <div class="flex gap-2">
@@ -55,13 +60,13 @@
             <tbody id="tableBody"></tbody>
             <tfoot id="tableFoot"></tfoot>
         </table>
-        <button onclick="clearAll()" class="w-full mt-4 py-2 text-slate-400 text-xs font-bold border border-slate-200 rounded">
-            ⚠️ 月底對完帳清空全部紀錄
+        <button onclick="clearCurrentMonth()" class="w-full mt-4 py-2 text-red-500 bg-red-50 text-sm font-bold border border-red-200 rounded">
+            ⚠️ 月底對完帳清空【本月】紀錄
         </button>
     </div>
 
     <script>
-        // Firebase 配置 (沿用小黑哥的設定)
+        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
             authDomain: "factor-security-d1965.firebaseapp.com",
@@ -74,7 +79,39 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        document.getElementById('entryDate').valueAsDate = new Date();
+        let currentListenerRef = null; // 用來記錄目前監聽的雲端節點
+
+        // 🚀 系統初始化
+        window.onload = () => {
+            const today = new Date();
+            document.getElementById('entryDate').valueAsDate = today;
+            
+            // 設定月份選擇器為當月 (例如 "2026-03")
+            const yyyyMm = today.toISOString().slice(0, 7);
+            document.getElementById('monthSelector').value = yyyyMm;
+            
+            // 啟動監聽當月資料
+            listenToMonth(yyyyMm);
+        };
+
+        function changeMonth() {
+            const selectedMonth = document.getElementById('monthSelector').value;
+            listenToMonth(selectedMonth);
+        }
+
+        // 📡 監聽特定月份的資料
+        function listenToMonth(monthStr) {
+            // 如果之前有監聽別的月份，先斷開連線，節省效能
+            if (currentListenerRef) currentListenerRef.off();
+            
+            currentListenerRef = db.ref(`cashierData/${monthStr}`);
+            currentListenerRef.on('value', (snapshot) => {
+                const dataObj = snapshot.val();
+                const list = dataObj ? Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] })) : [];
+                list.sort((a, b) => new Date(a.date) - new Date(b.date));
+                renderTable(list);
+            });
+        }
 
         function checkVendor(val) {
             document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
@@ -89,10 +126,20 @@
             const qty = parseInt(document.getElementById('quantity').value) || 0;
             
             if (qty > 0) {
+                // 自動判斷這筆紀錄屬於哪個月份
+                const entryMonth = date.slice(0, 7); 
                 const newRecord = { date, vendor, qty, price: qty * 65, timestamp: firebase.database.ServerValue.TIMESTAMP };
-                db.ref('cashierData').push(newRecord);
                 
-                // 重置
+                // 寫入對應月份的資料夾
+                db.ref(`cashierData/${entryMonth}`).push(newRecord);
+                
+                // 如果寫入的日期不是目前正在看的月份，自動幫你切換過去
+                if (entryMonth !== document.getElementById('monthSelector').value) {
+                    document.getElementById('monthSelector').value = entryMonth;
+                    changeMonth();
+                }
+
+                // 寫入後重置介面
                 document.getElementById('quantity').value = "1";
                 document.getElementById('customVendor').value = "";
                 document.getElementById('customVendor').classList.add('hidden');
@@ -100,20 +147,18 @@
             }
         }
 
-        // 監聽雲端資料變動
-        db.ref('cashierData').on('value', (snapshot) => {
-            const dataObj = snapshot.val();
-            const list = dataObj ? Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] })) : [];
-            list.sort((a, b) => new Date(a.date) - new Date(b.date));
-            renderTable(list);
-        });
-
         function renderTable(data) {
             const body = document.getElementById('tableBody');
             const foot = document.getElementById('tableFoot');
             let totalSum = 0;
             let vendorTotals = {};
             body.innerHTML = "";
+
+            if (data.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="text-slate-400 py-4">這個月目前沒有紀錄喔！</td></tr>`;
+                foot.innerHTML = "";
+                return;
+            }
 
             data.forEach((item) => {
                 totalSum += item.price;
@@ -127,7 +172,9 @@
                 row.insertCell(1).innerText = item.vendor;
                 row.insertCell(2).innerText = "$" + item.price;
                 const delCell = row.insertCell(3);
-                delCell.innerHTML = `<button onclick="deleteItem('${item.id}')" class="text-red-500 text-xl">❌</button>`;
+                // 刪除時，也要指定從哪個月份刪除
+                const currentMonth = document.getElementById('monthSelector').value;
+                delCell.innerHTML = `<button onclick="deleteItem('${currentMonth}', '${item.id}')" class="text-red-500 text-xl">❌</button>`;
             });
 
             let footHtml = "";
@@ -138,12 +185,15 @@
             foot.innerHTML = footHtml;
         }
 
-        function deleteItem(id) {
-            if(confirm("確定刪除這筆紀錄？")) db.ref(`cashierData/${id}`).remove();
+        function deleteItem(month, id) {
+            if(confirm("確定刪除這筆紀錄？")) db.ref(`cashierData/${month}/${id}`).remove();
         }
 
-        function clearAll() {
-            if(confirm("⚠️ 注意！這會清空雲端所有餐費紀錄，確定嗎？")) db.ref('cashierData').remove();
+        function clearCurrentMonth() {
+            const currentMonth = document.getElementById('monthSelector').value;
+            if(confirm(`⚠️ 注意！這會清空【${currentMonth}】所有的餐費紀錄，確定嗎？\n(其他月份的紀錄不會受到影響)`)) {
+                db.ref(`cashierData/${currentMonth}`).remove();
+            }
         }
     </script>
 </body>
