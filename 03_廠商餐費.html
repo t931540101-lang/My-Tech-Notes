@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>廠商餐費 | 黑曜石核心版</title>
-    <link rel="icon" href="IMG_0177.jpeg">
-    <link rel="apple-touch-icon" href="IMG_0177.jpeg">
+    <title>廠商餐費 | 雙結點精準版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -15,11 +13,10 @@
         .card { background: white; border: 2px solid #1e293b; border-radius: 12px; box-shadow: 4px 4px 0px #cbd5e1; margin-bottom: 20px; }
         input, select { border: 2px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 18px; font-weight: bold; width: 100%; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 2px solid #1e293b; padding: 12px 8px; text-align: center; font-size: 18px; font-weight: bold; }
+        th, td { border: 2px solid #1e293b; padding: 12px 8px; text-align: center; font-size: 16px; font-weight: bold; }
         th { background-color: #e2e8f0; }
-        .weekend { background-color: #fff9c4; }
-        .vendor-summary { background-color: #f0fdf4; color: #166534; font-size: 16px; }
-        /* 翻頁按鈕特效 */
+        .period-header { background-color: #1e293b; color: #f8fafc; font-size: 14px; padding: 4px; }
+        .period-subtotal { background-color: #f8fafc; color: #64748b; font-size: 14px; font-style: italic; }
         .nav-btn { touch-action: manipulation; transition: transform 0.1s; }
         .nav-btn:active { transform: scale(0.8); }
     </style>
@@ -30,38 +27,42 @@
         <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
             <button onclick="changeMonth(-1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">◀</button>
             <div class="text-center">
-                <div class="text-xs text-slate-400 font-bold tracking-widest mb-1">OBSIDIAN LEDGER</div>
+                <div class="text-xs text-slate-400 font-bold tracking-widest mb-1">PRECISION LEDGER</div>
                 <h2 id="monthDisplay" class="text-3xl font-black tracking-wider">2026 / 03</h2>
             </div>
             <button onclick="changeMonth(1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">▶</button>
         </div>
         
         <div class="p-5 space-y-4">
-            <input type="date" id="entryDate">
+            <div class="flex items-center gap-2">
+                <input type="date" id="entryDate" onchange="updatePeriodHint()">
+                <span id="periodHint" class="whitespace-nowrap px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">前期</span>
+            </div>
             <div class="flex gap-2">
                 <select id="vendorSelect" onchange="checkVendor(this.value)">
                     <option value="俊丰">俊丰</option>
                     <option value="祥箐">祥箐</option>
                     <option value="CUSTOM">➕ 自定義</option>
                 </select>
-                <input type="number" id="quantity" value="1" class="w-24 text-center">
+                <div class="flex items-center border-2 border-slate-200 rounded-lg px-2">
+                    <span class="text-slate-400 font-bold mr-1">份</span>
+                    <input type="number" id="quantity" value="1" class="w-16 border-none p-2 text-center">
+                </div>
             </div>
             <input type="text" id="customVendor" placeholder="請輸入廠商名稱" class="hidden">
             <button onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95 transition-transform">
-                寫入本月帳單 ✍️
+                寫入帳單 ✍️
             </button>
         </div>
     </div>
 
     <div class="card overflow-hidden">
-        <div class="bg-slate-100 p-2 text-center border-b-2 border-slate-800 font-bold text-slate-600" id="tableHeader">
-            載入中...
-        </div>
-        <div style="padding: 5px;">
+        <div class="bg-slate-100 p-2 text-center border-b-2 border-slate-800 font-bold text-slate-600" id="tableHeader">載入中...</div>
+        <div class="overflow-x-auto">
             <table id="mainTable">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">日期</th>
+                        <th style="width: 20%;">日期</th>
                         <th>廠商</th>
                         <th style="width: 25%;">金額</th>
                         <th style="width: 15%;">🗑️</th>
@@ -70,14 +71,10 @@
                 <tbody id="tableBody"></tbody>
                 <tfoot id="tableFoot"></tfoot>
             </table>
-            <button onclick="clearCurrentMonth()" class="w-full mt-4 py-3 text-red-500 bg-red-50 text-sm font-bold border-2 border-red-200 rounded-lg active:scale-95 transition-transform">
-                ⚠️ 清空目前顯示月份的所有紀錄
-            </button>
         </div>
     </div>
 
     <script>
-        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
             authDomain: "factor-security-d1965.firebaseapp.com",
@@ -89,18 +86,24 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         let currentListenerRef = null; 
-        
-        // 記錄目前正在觀看的年月
         let viewYear = new Date().getFullYear();
         let viewMonth = new Date().getMonth() + 1;
 
-        window.onload = () => {
-            updateView();
-        };
+        window.onload = () => { updateView(); };
 
-        // 🌟 翻頁核心邏輯
+        function updatePeriodHint() {
+            const d = new Date(document.getElementById('entryDate').value).getDate();
+            const hint = document.getElementById('periodHint');
+            if (d <= 20) {
+                hint.innerText = "前期 (1-20)";
+                hint.className = "whitespace-nowrap px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold";
+            } else {
+                hint.innerText = "後期 (21-末)";
+                hint.className = "whitespace-nowrap px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold";
+            }
+        }
+
         function changeMonth(offset) {
             viewMonth += offset;
             if (viewMonth > 12) { viewMonth = 1; viewYear++; }
@@ -108,33 +111,23 @@
             updateView();
         }
 
-        // 更新整個畫面的狀態
         function updateView() {
             const mm = String(viewMonth).padStart(2, '0');
-            const yyyyMm = `${viewYear}-${mm}`;
-            
-            // 1. 更新上方大標題
             document.getElementById('monthDisplay').innerText = `${viewYear} / ${mm}`;
-            document.getElementById('tableHeader').innerText = `▼ ${viewYear}年 ${viewMonth}月 帳目明細 ▼`;
-
-            // 2. 智慧調整輸入框日期
-            const today = new Date();
+            document.getElementById('tableHeader').innerText = `▼ ${viewYear}年 ${viewMonth}月 明細 ▼`;
             const dateInput = document.getElementById('entryDate');
+            const today = new Date();
             if (today.getFullYear() === viewYear && (today.getMonth() + 1) === viewMonth) {
-                // 如果翻到當月，預設帶入今天
                 dateInput.valueAsDate = today;
             } else {
-                // 如果翻到其他月份，預設帶入該月1號
-                dateInput.value = `${yyyyMm}-01`;
+                dateInput.value = `${viewYear}-${mm}-01`;
             }
-
-            // 3. 重新向 Firebase 請求這個月的資料
-            listenToMonth(yyyyMm);
+            updatePeriodHint();
+            listenToMonth(`${viewYear}-${mm}`);
         }
 
         function listenToMonth(monthStr) {
             if (currentListenerRef) currentListenerRef.off();
-            
             currentListenerRef = db.ref(`cashierData/${monthStr}`);
             currentListenerRef.on('value', (snapshot) => {
                 const dataObj = snapshot.val();
@@ -144,86 +137,62 @@
             });
         }
 
-        function checkVendor(val) {
-            document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
-        }
+        function checkVendor(val) { document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM'); }
 
         function addEntry() {
-            const date = document.getElementById('entryDate').value; // e.g., "2026-03-15"
+            const date = document.getElementById('entryDate').value;
             const select = document.getElementById('vendorSelect');
             let vendor = select.value === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : select.value;
-            
-            if (!vendor) { alert("請輸入廠商名稱！"); return; }
+            if (!vendor) return alert("請輸入廠商！");
             const qty = parseInt(document.getElementById('quantity').value) || 0;
-            
             if (qty > 0) {
-                // 以輸入的日期來決定寫入哪個月 (防呆：就算在3月頁面輸入4月的日期，也會存到4月)
-                const entryMonth = date.slice(0, 7); 
-                const newRecord = { date, vendor, qty, price: qty * 65, timestamp: firebase.database.ServerValue.TIMESTAMP };
-                
-                db.ref(`cashierData/${entryMonth}`).push(newRecord);
-                
-                // 寫入後重置介面
+                const entryMonth = date.slice(0, 7);
+                const day = new Date(date).getDate();
+                const period = day <= 20 ? "A" : "B"; // A: 前期, B: 後期
+                db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * 65, period });
                 document.getElementById('quantity').value = "1";
-                if(select.value === 'CUSTOM') {
-                    document.getElementById('customVendor').value = "";
-                    document.getElementById('customVendor').classList.add('hidden');
-                    select.value = "俊丰";
-                }
             }
         }
 
         function renderTable(data) {
             const body = document.getElementById('tableBody');
             const foot = document.getElementById('tableFoot');
-            let totalSum = 0;
-            let vendorTotals = {};
             body.innerHTML = "";
+            let sumA = 0, sumB = 0;
+            let vendorTotals = {};
 
             if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="text-slate-400 py-6 font-normal">這個月乾乾淨淨，沒有任何紀錄！</td></tr>`;
-                foot.innerHTML = "";
-                return;
+                body.innerHTML = `<tr><td colspan="4" class="py-10 text-slate-400 font-normal">尚無紀錄</td></tr>`;
+                foot.innerHTML = ""; return;
             }
 
+            let lastPeriod = "";
             data.forEach((item) => {
-                totalSum += item.price;
+                if (item.period === 'A') sumA += item.price; else sumB += item.price;
                 vendorTotals[item.vendor] = (vendorTotals[item.vendor] || 0) + item.price;
 
+                if (lastPeriod !== "" && lastPeriod !== item.period) {
+                    const sep = body.insertRow();
+                    sep.innerHTML = `<td colspan="4" class="period-header">--- 21 號後（後期帳）---</td>`;
+                }
+                lastPeriod = item.period;
+
                 const row = body.insertRow();
-                const day = new Date(item.date).getDay();
-                if (day === 0 || day === 6) row.className = "weekend";
-                
-                row.insertCell(0).innerText = item.date.split('-').slice(1).join('/');
+                row.insertCell(0).innerText = item.date.split('-')[2] + "日";
                 row.insertCell(1).innerText = item.vendor;
-                row.insertCell(2).innerText = "$" + item.price;
-                
-                // 刪除按鈕
+                row.insertCell(2).innerText = `$${item.price}`;
                 const mm = String(viewMonth).padStart(2, '0');
-                const currentMonthStr = `${viewYear}-${mm}`;
-                const delCell = row.insertCell(3);
-                delCell.innerHTML = `<button onclick="deleteItem('${currentMonthStr}', '${item.id}')" class="text-red-500 text-2xl active:scale-75 transition-transform">❌</button>`;
+                row.insertCell(3).innerHTML = `<button onclick="deleteItem('${viewYear}-${mm}', '${item.id}')">❌</button>`;
             });
 
-            let footHtml = "";
-            for (let v in vendorTotals) {
-                footHtml += `<tr class="vendor-summary"><td colspan="2">${v}</td><td colspan="2">$${vendorTotals[v]}</td></tr>`;
-            }
-            footHtml += `<tr class="bg-slate-800 text-white"><td colspan="2">本月總計</td><td colspan="2">$${totalSum}</td></tr>`;
-            foot.innerHTML = footHtml;
+            foot.innerHTML = `
+                <tr class="period-subtotal"><td colspan="2">1-20號(前期)小計</td><td colspan="2">$${sumA}</td></tr>
+                <tr class="period-subtotal"><td colspan="2">21-末(後期)小計</td><td colspan="2">$${sumB}</td></tr>
+                <tr class="bg-slate-800 text-white text-lg"><td colspan="2">本月總帳金額</td><td colspan="2">$${sumA + sumB}</td></tr>
+            `;
         }
 
-        function deleteItem(month, id) {
-            if(confirm("確定刪除這筆紀錄？")) db.ref(`cashierData/${month}/${id}`).remove();
-        }
-
-        function clearCurrentMonth() {
-            const mm = String(viewMonth).padStart(2, '0');
-            const currentMonthStr = `${viewYear}-${mm}`;
-            if(confirm(`⚠️ 高能警告！\n這會清空【${currentMonthStr}】所有的餐費紀錄！\n確定要刪除嗎？`)) {
-                db.ref(`cashierData/${currentMonthStr}`).remove();
-            }
-        }
+        function deleteItem(month, id) { if(confirm("刪除？")) db.ref(`cashierData/${month}/${id}`).remove(); }
     </script>
 </body>
 </html>
