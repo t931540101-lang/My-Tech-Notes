@@ -8,6 +8,7 @@
     <link rel="apple-touch-icon" href="IMG_0968.png">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
@@ -20,11 +21,11 @@
         
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg-dark); color: var(--text); user-select: none; overflow: hidden; }
 
-        /* --- 登入頁面 --- */
-        #login-page { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; box-sizing: border-box; background-image: linear-gradient(rgba(10, 15, 22, 0.9), rgba(10, 15, 22, 0.9)), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 100% 100%, 20px 20px, 20px 20px; }
+        #login-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; z-index: 999; background-color: var(--bg-dark); background-image: linear-gradient(rgba(10, 15, 22, 0.9), rgba(10, 15, 22, 0.9)), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 100% 100%, 20px 20px, 20px 20px; }
         .login-glass-card { width: 100%; max-width: 360px; background: rgba(25, 30, 40, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 30px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); text-align: center; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .login-logo { width: 75px; height: 75px; margin-bottom: 15px; filter: drop-shadow(0 0 10px var(--primary-glow)); }
+        .login-logo-container { width: 75px; height: 75px; margin: 0 auto 15px auto; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); border-radius: 50%; box-shadow: 0 0 15px var(--primary-glow); }
+        .login-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .login-title { font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
         .login-subtitle { font-size: 11px; color: var(--primary); letter-spacing: 3px; margin-bottom: 30px; opacity: 0.8; }
         .input-group { position: relative; margin-bottom: 20px; }
@@ -39,11 +40,10 @@
         .cyber-btn:active { transform: scale(0.98); }
         .sys-footer { margin-top: 20px; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
 
-        /* --- 主系統框架 --- */
         #main-app { display: none; overflow-y: auto; height: 100vh; } 
         .header { position: fixed; top: 0; width: 100%; height: 60px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; box-sizing: border-box; border-bottom: 1px solid #333; z-index: 100; }
         .header-left { display: flex; align-items: center; gap: 10px; }
-        .header img { height: 30px; width: 30px; }
+        .header-logo { width: 30px; height: 30px; object-fit: contain; }
         .status-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); }
         .content { margin-top: 60px; margin-bottom: 70px; padding: 15px; }
         .page { display: none; animation: fadeIn 0.3s ease; }
@@ -57,13 +57,11 @@
         .action-btn { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: bold; border: none; border-radius: 8px; font-size: 16px; margin-top: 15px; cursor: pointer; transition: 0.2s; }
         .action-btn:active { background: #39a3d4; }
 
-        /* --- 查詢結果框專用 UI --- */
         .res-box { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; border-left: 5px solid transparent; background: rgba(0,0,0,0.3); }
         .res-warn { border-left-color: var(--danger); background: rgba(239, 83, 80, 0.1); }
         .res-ok { border-left-color: var(--success); background: rgba(76, 175, 80, 0.1); }
         .res-none { border-left-color: var(--text-muted); }
 
-        /* --- 相機介面專用 UI --- */
         #video-container { width: 100%; height: 250px; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 2px solid #333; margin-top: 15px; display: none; }
         video { width: 100%; height: 100%; object-fit: cover; }
         .scan-line { position: absolute; width: 100%; height: 2px; background: var(--danger); box-shadow: 0 0 10px var(--danger); top: 0; animation: scan 2s infinite linear; }
@@ -74,7 +72,9 @@
 
 <div id="login-page">
     <div class="login-glass-card">
-        <img src="IMG_0968.png" alt="LOGO" class="login-logo" onerror="this.style.display='none'">
+        <div class="login-logo-container">
+            <img src="IMG_0968.png" alt="🛡️" class="login-logo" onerror="this.style.display='none'">
+        </div>
         <div class="login-title">M-Security 查詢端</div>
         <div class="login-subtitle">OBSIDIAN GUARD PROTOCOL</div>
         
@@ -94,14 +94,14 @@
             <label for="shift-night">🌙 夜班</label>
         </div>
         <button class="cyber-btn" onclick="doLogin()">啟 動 防 禦 系 統</button>
-        <div class="sys-footer">SECURE CONNECTION ESTABLISHED</div>
+        <div class="sys-footer">SECURE AUTHENTICATION ENABLED</div>
     </div>
 </div>
 
 <div id="main-app">
     <div class="header">
         <div class="header-left">
-            <img src="IMG_0968.png" alt="LOGO" onerror="this.style.display='none'">
+            <img src="IMG_0968.png" alt="🛡️" class="header-logo" onerror="this.style.display='none'">
             <div style="font-size: 18px; font-weight: bold;">台灣精銳 警衛查詢端</div>
         </div>
         <div><span class="status-dot" id="online-dot"></span></div>
@@ -112,9 +112,9 @@
             <div class="card">
                 <h3 style="margin-top:0; color:var(--primary);">🛡️ 值勤人員</h3>
                 <p style="font-size: 14px; color: var(--text-muted); line-height: 1.8;">
-                    登入人員：<span style="color:var(--text); font-weight:bold;">盧家慶</span> <br>
-                    值勤班別：<span id="display-shift" style="color:var(--text);">讀取中...</span><br>
-                    資料庫連線：<span style="color:var(--success);">正常 (Firebase)</span><br>
+                    登入人員：<span id="display-name" style="color:var(--text); font-weight:bold;">載入中...</span> <br>
+                    值勤班別：<span id="display-shift" style="color:var(--text);">載入中...</span><br>
+                    雲端權限：<span style="color:var(--success);">已獲得最高授權</span><br>
                     環境狀態：<span style="color:var(--primary);">安全</span>
                 </p>
             </div>
@@ -125,10 +125,7 @@
                 <strong style="color:var(--primary);">🔍 綜合資料查核</strong>
                 <input type="text" id="qInput" placeholder="輸入工號 / 車牌 / 姓名" oninput="this.value=this.value.toUpperCase()" style="width: 100%; padding: 12px; margin-top: 15px; background: var(--bg-dark); border: 1px solid #333; color: var(--text); border-radius: 6px; box-sizing: border-box; font-size: 16px;">
                 <button class="action-btn" onclick="qSearch()" id="btn-search">執 行 查 詢</button>
-                
-                <div id="res-box" class="res-box">
-                    <div id="res-info"></div>
-                </div>
+                <div id="res-box" class="res-box"><div id="res-info"></div></div>
             </div>
         </div>
 
@@ -137,12 +134,10 @@
                 <div style="font-size: 40px; margin-bottom: 10px;">📷</div>
                 <strong style="color:var(--primary);">光學辨識模組</strong>
                 <p style="font-size: 12px; color: var(--text-muted);">啟動後將調用裝置後置鏡頭進行掃描</p>
-                
                 <div id="video-container">
                     <video id="cam-video" autoplay playsinline></video>
                     <div class="scan-line"></div>
                 </div>
-
                 <button class="action-btn" id="btn-camera" onclick="toggleCamera()">啟 動 掃 描 儀</button>
             </div>
         </div>
@@ -152,7 +147,7 @@
                 <strong style="color:var(--primary);">⚙️ 系統設定</strong>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; margin-top: 10px;">
                     系統版本：V9.0 (黑曜旗艦版)<br>
-                    開發代號：OBSIDIAN GUARD
+                    安全協定：Firebase Auth Enabled
                 </p>
                 <button class="action-btn" style="background: transparent; border: 1px solid var(--danger); color: var(--danger);" onclick="doLogout()">安 全 登 出</button>
             </div>
@@ -168,9 +163,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // 1. Firebase 雲端資料庫初始化 (你的專屬資料庫)
-    // ==========================================
     const firebaseConfig = { 
         apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", 
         databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", 
@@ -179,35 +171,61 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
+    const auth = firebase.auth(); // 初始化驗證模組
 
-    // ==========================================
-    // 2. 登入與系統狀態管理
-    // ==========================================
+    // --- 真實的 Firebase 雲端登入 ---
     function doLogin() {
-        const u = document.getElementById('pUser').value;
-        const p = document.getElementById('pPass').value;
+        const u = document.getElementById('pUser').value.trim();
+        const p = document.getElementById('pPass').value.trim().toUpperCase();
         const s = document.querySelector('input[name="shift"]:checked').value;
 
-        if(u === "盧家慶" && p === "D01762") {
-            localStorage.setItem('v9_logged_in', 'true');
-            localStorage.setItem('v9_shift', s);
-            const btn = document.querySelector('.cyber-btn');
-            btn.innerText = "驗證成功，連線中..."; btn.style.background = "#4caf50";
-            
-            setTimeout(() => {
-                enterSystem(s);
-                btn.innerText = "啟 動 防 禦 系 統"; btn.style.background = ""; 
-            }, 600);
-        } else { alert("權限不足：識別碼或密碼錯誤。"); }
+        if(!u || !p) { alert("請輸入姓名與工號！"); return; }
+
+        // 核心魔法：將輸入的工號轉換成 Firebase 認識的信箱格式
+        const email = p + "@obsidian.com";
+        const password = p; 
+        const btn = document.querySelector('.cyber-btn');
+        btn.innerText = "驗證伺服器中...";
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // 登入成功
+                localStorage.setItem('v9_shift', s);
+                localStorage.setItem('v9_name', u); // 把名字記下來顯示用
+                btn.style.background = "#4caf50";
+                btn.innerText = "授權通過，連線中...";
+            })
+            .catch((error) => {
+                // 登入失敗 (帳號不存在或密碼錯誤)
+                alert("登入失敗：查無此工號或權限尚未開通！");
+                btn.innerText = "啟 動 防 禦 系 統";
+            });
     }
 
     function doLogout() {
-        localStorage.removeItem('v9_logged_in'); localStorage.removeItem('v9_shift'); localStorage.removeItem('v9_last_page');
-        stopCamera(); // 登出時確保相機關閉
-        document.getElementById('main-app').style.display = 'none';
-        document.getElementById('login-page').style.display = 'flex';
-        document.getElementById('pPass').value = ''; 
+        auth.signOut().then(() => {
+            localStorage.removeItem('v9_shift');
+            localStorage.removeItem('v9_name');
+            localStorage.removeItem('v9_last_page');
+            stopCamera(); 
+        });
     }
+
+    // --- 監聽 Firebase 登入狀態 (真正的防護機制) ---
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // 已登入狀態，放行進入系統
+            const s = localStorage.getItem('v9_shift') || '日班';
+            const n = localStorage.getItem('v9_name') || '值勤員';
+            document.getElementById('display-name').innerText = n;
+            enterSystem(s);
+        } else {
+            // 未登入，強制退回登入畫面
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('pPass').value = ''; 
+        }
+    });
 
     function enterSystem(shift) {
         document.getElementById('login-page').style.display = 'none';
@@ -226,14 +244,10 @@
         else { const defaultNav = document.querySelector(`.nav-item[onclick*="${pageId}"]`); if(defaultNav) defaultNav.classList.add('active'); }
         
         localStorage.setItem('v9_last_page', pageId);
-
-        // 如果離開掃描頁面，自動關閉相機省電
         if(pageId !== 'scan') { stopCamera(); }
     }
 
-    // ==========================================
-    // 3. 核心功能：雲端資料查核系統
-    // ==========================================
+    // --- 查詢資料庫 (現在有了 auth != null 保護，能正常運作了) ---
     async function qSearch() {
         const val = document.getElementById('qInput').value.trim();
         const resBox = document.getElementById('res-box');
@@ -242,9 +256,7 @@
         
         if(!val) { alert("請輸入查詢條件！"); return; }
 
-        // UI 變化：顯示搜尋中
-        resBox.style.display = 'block';
-        resBox.className = "res-box res-none";
+        resBox.style.display = 'block'; resBox.className = "res-box res-none";
         resInfo.innerHTML = "<span style='color:var(--primary);'>📡 正在透過加密通道比對資料庫...</span>";
         btn.innerText = "查 詢 中..."; btn.disabled = true;
 
@@ -253,10 +265,8 @@
                 db.ref('blacklist_data').once('value'),
                 db.ref('employee_list').once('value')
             ]);
-
             let found = false;
 
-            // 優先比對黑名單 (警戒狀態)
             snapBlack.forEach(c => {
                 const d = c.val();
                 if(d.name === val || d.id === val || d.plate === val) {
@@ -271,7 +281,6 @@
                 }
             });
 
-            // 若無黑名單，比對內部員工 (安全狀態)
             if(!found) {
                 snapEmp.forEach(c => {
                     const d = c.val();
@@ -287,74 +296,47 @@
                 });
             }
 
-            // 都查不到
             if(!found) {
                 resBox.className = "res-box res-none";
                 resInfo.innerHTML = `<div style="color:var(--text-muted); text-align:center;">🔍 資料庫中無「${val}」的相關紀錄。</div>`;
             }
         } catch (error) {
             resBox.className = "res-box res-warn";
-            resInfo.innerHTML = "❌ 連線失敗，請檢查網路狀態。";
+            resInfo.innerHTML = "❌ 連線或權限錯誤，請重新登入。";
         }
 
-        // 恢復按鈕狀態
         btn.innerText = "執 行 查 詢"; btn.disabled = false;
     }
 
-    // ==========================================
-    // 4. 擴充模組：光學掃描系統 (呼叫手機鏡頭)
-    // ==========================================
     let localStream = null;
-    
     async function toggleCamera() {
         const video = document.getElementById('cam-video');
         const container = document.getElementById('video-container');
         const btn = document.getElementById('btn-camera');
 
-        if (localStream) {
-            // 關閉相機
-            stopCamera();
-        } else {
-            // 啟動相機 (指定呼叫後置鏡頭)
+        if (localStream) { stopCamera(); } 
+        else {
             try {
                 btn.innerText = "連 線 中...";
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } // environment 代表後置鏡頭
-                });
-                localStream = stream;
-                video.srcObject = stream;
-                container.style.display = 'block';
-                btn.innerText = "關 閉 掃 描 儀";
-                btn.style.background = "transparent";
-                btn.style.border = "1px solid var(--danger)";
-                btn.style.color = "var(--danger)";
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                localStream = stream; video.srcObject = stream; container.style.display = 'block';
+                btn.innerText = "關 閉 掃 描 儀"; btn.style.background = "transparent";
+                btn.style.border = "1px solid var(--danger)"; btn.style.color = "var(--danger)";
             } catch (err) {
-                alert("無法啟動相機！請確認已允許網頁使用相機權限。");
-                btn.innerText = "啟 動 掃 描 儀";
+                alert("無法啟動相機！請確認已允許網頁使用相機權限。"); btn.innerText = "啟 動 掃 描 儀";
             }
         }
     }
 
     function stopCamera() {
         if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
+            localStream.getTracks().forEach(track => track.stop()); localStream = null;
             document.getElementById('video-container').style.display = 'none';
             const btn = document.getElementById('btn-camera');
-            btn.innerText = "啟 動 掃 描 儀";
-            btn.style.background = "var(--primary)";
-            btn.style.border = "none";
-            btn.style.color = "#000";
+            btn.innerText = "啟 動 掃 描 儀"; btn.style.background = "var(--primary)";
+            btn.style.border = "none"; btn.style.color = "#000";
         }
     }
-
-    // --- 系統初始化 ---
-    window.onload = () => {
-        if(localStorage.getItem('v9_logged_in') === 'true') {
-            const savedShift = localStorage.getItem('v9_shift') || '未知';
-            enterSystem(savedShift);
-        }
-    };
 </script>
 </body>
 </html>
