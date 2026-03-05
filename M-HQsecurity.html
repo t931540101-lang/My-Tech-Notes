@@ -3,235 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-SECURITY HQ | 戰術指揮中心</title>
+    <title>M-SECURITY HQ | 台灣精銳指揮中心</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            /* 💡 神秘感调色盘：更深邃的幽蓝与纯黑 */
-            --hq-cyan: #00f2ff;
-            --hq-cyan-dim: rgba(0, 242, 255, 0.4);
-            --hq-cyan-dark: #008899;
-            --hq-bg: #030303; /* 比 050505 更深邃 */
-            --hq-border: rgba(51, 51, 51, 0.6);
+            --hq-primary: #00e5ff;
+            --hq-bg: #0f172a;
+            --hq-card: #1e293b;
+            --hq-border: #334155;
+            --danger: #ef4444;
+            --success: #10b981;
+            --vip-gold: #f1c40f;
         }
 
-        * { box-sizing: border-box; }
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            background-color: var(--hq-bg); 
-            color: white; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
-            overflow: hidden;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; min-height: 100vh; background-color: var(--hq-bg); color: #f8fafc; font-family: -apple-system, "Microsoft JhengHei", sans-serif; overflow-x: hidden; }
 
-        /* 💡 戰術動態背景：极轻微的幽灵扫瞄线 */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(10, 10, 10, 0) 50%, rgba(0, 0, 0, 0.05) 50%), 
-                        linear-gradient(90deg, rgba(100, 0, 0, 0.02), rgba(0, 100, 0, 0.01), rgba(0, 0, 100, 0.02));
-            z-index: 1;
-            background-size: 100% 3px, 4px 100%;
-            pointer-events: none;
-            opacity: 0.6; /* 降低背景特效的存在感，增加神秘感 */
-        }
+        /* === 🚪 戰術大門 === */
+        #login-gate { display: flex; height: 100vh; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); transition: opacity 0.5s; }
+        .login-panel { width: 90%; max-width: 380px; padding: 30px; background: var(--hq-card); border-radius: 16px; border: 2px solid var(--hq-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .input-field { width: 100%; background: #0f172a; border: 1.5px solid var(--hq-border); padding: 16px; color: white; margin-bottom: 20px; border-radius: 8px; font-size: 16px; outline: none; }
+        .input-field:focus { border-color: var(--hq-primary); }
+        .btn-access { width: 100%; background: var(--hq-primary); color: #0f172a; padding: 16px; font-weight: 900; border: none; border-radius: 8px; font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        .btn-access:active { transform: scale(0.98); }
 
-        .hq-gate-container {
-            display: flex;
-            height: 100vh;
-            align-items: center;
-            justify-content: flex-start; /* 🚀 核心修正：靠左对齐 */
-            padding-left: 15vw; /* 🚀 核心修正：通过 padding-left 精准左移 */
-            z-index: 10;
-            position: relative;
-        }
+        /* === 🛡️ HQ 主系統 === */
+        #main-system { display: none; flex-direction: column; }
+        .top-nav { background: #000; border-bottom: 3px solid var(--hq-primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-tabs { display: flex; background: #111; overflow-x: auto; sticky: top; top: 0; z-index: 50; }
+        .tab { flex: 1; text-align: center; padding: 18px 10px; cursor: pointer; color: #94a3b8; font-weight: bold; min-width: 100px; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--hq-primary); background: #1e293b; border-bottom-color: var(--hq-primary); }
 
-        /* 🚀 左側：霸氣標語 (電腦版顯示) */
-        .hq-brand-side {
-            padding-right: 50px;
-            border-right: 1.5px solid var(--hq-border);
-            text-align: right;
-            display: none; 
-            transition: opacity 0.3s ease;
-        }
+        .content-section { display: none; padding: 15px; animation: fadeIn 0.4s; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🔒 右側：極簡登入控制面板 */
-        .login-panel {
-            padding-left: 50px;
-            width: 420px;
-            position: relative;
-        }
+        /* 📊 數據看盤 */
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
+        .stat-card { background: var(--hq-card); border: 1.5px solid var(--hq-border); padding: 15px; border-radius: 12px; border-left: 4px solid var(--hq-primary); }
+        .stat-val { font-size: 28px; font-weight: 900; color: var(--hq-primary); display: block; }
+        .stat-label { font-size: 12px; color: #94a3b8; font-weight: bold; }
 
-        /* HQ 專屬 Logo：幽暗光暈 */
-        .hq-logo-img {
-            width: 100px;
-            filter: drop-shadow(0 0 15px var(--hq-cyan-dim));
-            margin-bottom: 25px;
-            transition: all 0.3s ease;
-        }
+        /* 📋 清單與日誌 */
+        .panel { background: var(--hq-card); border: 1.5px solid var(--hq-border); border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
+        .panel-header { padding: 12px 15px; background: rgba(0,0,0,0.2); font-weight: 900; color: var(--hq-primary); font-size: 14px; border-bottom: 1px solid var(--hq-border); display: flex; justify-content: space-between; }
+        .scroll-list { max-height: 400px; overflow-y: auto; padding: 10px; }
+        .data-item { background: #162030; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #334155; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .data-item.vip { border-left-color: var(--vip-gold); }
+        .log-time { color: var(--hq-primary); font-family: monospace; font-weight: bold; margin-right: 8px; }
         
-        .hq-logo-img:hover {
-            filter: drop-shadow(0 0 20px var(--hq-cyan));
-            transform: scale(1.02);
-        }
-
-        .system-title {
-            font-size: 38px;
-            font-weight: 900;
-            letter-spacing: 10px; /* 增加字距，增加神秘感 */
-            margin: 0;
-            color: white;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-        }
-
-        .system-subtitle {
-            font-size: 13px;
-            color: var(--hq-cyan-dim);
-            letter-spacing: 5px;
-            margin-top: 8px;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-        
-        .hq-brand-side:hover .system-subtitle {
-            color: var(--hq-cyan);
-        }
-
-        /* 戰術輸入框：極簡幽黑 */
-        .input-field {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1.5px solid var(--hq-border);
-            border-left: 5px solid var(--hq-cyan-dark); /* 暗蓝色边框 */
-            padding: 16px;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 22px;
-            outline: none;
-            transition: all 0.3s ease;
-            font-family: monospace; /* 代码风格字型 */
-        }
-
-        .input-field:focus {
-            border-color: var(--hq-cyan);
-            border-left-color: var(--hq-cyan);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
-            background: rgba(0, 0, 0, 1);
-        }
-        
-        .input-field::placeholder {
-            color: #555;
-            font-weight: normal;
-        }
-
-        /* ACCESS SYSTEM 按鈕：幽藍高光 */
-        .btn-access {
-            width: 100%;
-            background: rgba(0, 242, 255, 0.1);
-            color: var(--hq-cyan);
-            border: 2px solid var(--hq-cyan-dark);
-            padding: 16px;
-            font-size: 17px;
-            font-weight: 900;
-            letter-spacing: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-access:hover {
-            background: var(--hq-cyan);
-            color: black;
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
-            border-color: var(--hq-cyan);
-        }
-        
-        .btn-access:active {
-            transform: translateY(2px);
-            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
-        }
-
-        /* 手機版適配 */
-        @media (max-width: 899px) {
-            .hq-gate-container {
-                padding-left: 0;
-                justify-content: center;
-            }
-            .login-panel {
-                padding-left: 0;
-                width: 90%;
-                max-width: 380px;
-                text-align: center;
-            }
-            .btn-access {
-                font-size: 16px;
-                letter-spacing: 4px;
-            }
-        }
-
-        /* 電腦版適配 */
-        @media (min-width: 900px) {
-            .hq-brand-side { display: block; }
-        }
+        .btn-del { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="hq-gate-container">
-        <div class="hq-brand-side">
-            <h1 class="system-title">M-SECURITY</h1>
-            <div class="system-subtitle">COMMAND CENTER HQ V9.1</div>
-            <p style="color: #444; font-size: 11px; margin-top: 25px; font-weight: bold; letter-spacing: 1px; line-height: 1.6;">
-                GLOBAL STRATEGIC MONITORING SYSTEM<br>
-                LEVEL-5 AUTHORIZATION REQUIRED<br>
-                SECURED ACCESS PROTOCOL
-            </p>
+    <div id="login-gate">
+        <div class="login-panel">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color:white; font-size:32px; font-weight:900; letter-spacing:3px; margin:0;">台灣精銳</h1>
+                <div style="color:var(--hq-primary); font-size:14px; font-weight:bold; letter-spacing:2px; margin-top:5px;">M-SECURITY HQ 指揮中心</div>
+            </div>
+            <input type="text" id="hqUser" class="input-field" placeholder="指揮官姓名">
+            <input type="password" id="hqPass" class="input-field" placeholder="最高授權密碼">
+            <button onclick="handleHQLogin()" class="btn-access">授權登入基地</button>
+        </div>
+    </div>
+
+    <div id="main-system">
+        <div class="top-nav">
+            <div style="font-weight:900; font-size:20px; letter-spacing:2px;">M-SECURITY HQ</div>
+            <div style="background:rgba(0,229,255,0.1); color:var(--hq-primary); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">
+                指揮官：<span id="display-commander">盧家慶</span>
+            </div>
         </div>
 
-        <div class="login-panel">
-            <img src="IMG_1096.jpeg" class="hq-logo-img" alt="HQ Logo" onerror="this.style.display='none'">
-            
-            <div style="margin-bottom: 35px; text-align: left;">
-                <div style="font-size: 11px; color: #777; margin-bottom: 10px; letter-spacing: 1.5px; font-weight: bold;">COMMANDER IDENTIFICATION</div>
-                <input type="text" id="hqUser" class="input-field" placeholder="COMMANDER NAME" autocomplete="off">
-                
-                <div style="font-size: 11px; color: #777; margin-bottom: 10px; letter-spacing: 1.5px; font-weight: bold;">ACCESS CODE</div>
-                <input type="password" id="hqPass" class="input-field" placeholder="••••••••">
+        <nav class="nav-tabs">
+            <div class="tab active" onclick="switchHQTab('tab-status', this)">即時戰情</div>
+            <div class="tab" onclick="switchHQTab('tab-deploy', this)">名單部署</div>
+            <div class="tab" onclick="switchHQTab('tab-auth', this)">權限控管</div>
+        </nav>
+
+        <div id="tab-status" class="content-section active">
+            <div class="stat-grid">
+                <div class="stat-card"><span class="stat-val" id="val-onsite">0</span><span class="stat-label">場內總人數</span></div>
+                <div class="stat-card"><span class="stat-val" id="val-vip" style="color:var(--vip-gold);">0</span><span class="stat-label">今日 VIP 流量</span></div>
             </div>
-            
-            <button class="btn-access" onclick="verifyHQAccess()">ACCESS SYSTEM</button>
-            <div id="errMsg" style="color: #e74c3c; font-size: 12px; margin-top: 20px; text-align: center; font-weight: bold; letter-spacing: 1px; min-height: 15px;"></div>
+            <div class="panel">
+                <div class="panel-header">📡 前線動態即時串流 (LIVE)</div>
+                <div id="live-log-feed" class="scroll-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-deploy" class="content-section">
+            <div class="panel" style="padding:15px;">
+                <h3 style="margin:0 0 15px 0; color:var(--hq-primary);">快速名單部署</h3>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <button id="btn-type-emp" style="flex:1; padding:10px; border-radius:6px; border:none; font-weight:bold; background:var(--hq-primary);" onclick="setDeployType('emp')">一般員工</button>
+                    <button id="btn-type-vip" style="flex:1; padding:10px; border-radius:6px; border:none; font-weight:bold; background:#334155; color:white;" onclick="setDeployType('vip')">VIP 貴賓</button>
+                </div>
+                <input type="text" id="deployName" class="input-field" style="margin-bottom:10px;" placeholder="姓名">
+                <input type="text" id="deployId" class="input-field" placeholder="車牌/工號">
+                <button class="btn-access" onclick="executeDeploy()">執行雲端部署</button>
+            </div>
+            <div class="panel">
+                <div class="panel-header">📂 部署清單監控 <span id="list-mode-text">一般員工</span></div>
+                <div id="db-list-display" class="scroll-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-auth" class="content-section">
+            <div class="panel" style="padding:15px;">
+                <h3 style="margin:0 0 15px 0; color:var(--hq-primary);">核發人員值勤授權</h3>
+                <input type="text" id="newGuardName" class="input-field" style="margin-bottom:10px;" placeholder="弟兄姓名">
+                <input type="text" id="newGuardPwd" class="input-field" placeholder="設定授權密碼">
+                <button class="btn-access" onclick="issueGuardAuth()">核發電子通行證</button>
+            </div>
+            <div class="panel">
+                <div class="panel-header">🟢 目前已授權人員</div>
+                <div id="guard-auth-list" class="scroll-list"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        function verifyHQAccess() {
-            const user = document.getElementById('hqUser').value.trim();
-            const pass = document.getElementById('hqPass').value.trim();
-            const err = document.getElementById('errMsg');
+        const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
-            // 🚀 維持與前線一致的最高權限密鑰
-            if (user === '盧家慶' && pass === 'D01762') {
-                err.style.color = 'var(--hq-cyan)';
-                err.style.textShadow = '0 0 10px rgba(0, 242, 255, 0.5)';
-                err.innerText = "AUTHENTICATED. INITIALIZING COMMAND CENTER...";
-                
-                // 暫存登入狀態
-                sessionStorage.setItem('hq_auth', 'active');
-                sessionStorage.setItem('hq_commander', user);
-                
-                setTimeout(() => {
-                    alert('歡迎回到指揮中心，指揮官。');
-                    // 这里之后会接上 HQ 的主画面
-                    // window.location.href = 'hq_main.html';
-                }, 1000);
-            } else {
-                err.innerText = "ACCESS DENIED. INVALID CREDENTIALS.";
-                err.style.color = '#e74c3c';
-                document.getElementById('hqPass').value = '';
-            }
+        let deployType = 'emp';
+        let viewType = 'emp';
+
+        function handleHQLogin() {
+            const u = document.getElementById('hqUser').value.trim();
+            const p = document.getElementById('hqPass').value.trim();
+            if (u === '盧家慶' && p === 'D01762') {
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('main-system').style.display = 'flex';
+                initHQManager();
+            } else { alert('❌ 授權失敗！'); }
+        }
+
+        function switchHQTab(id, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+            el.classList.add('active'); document.getElementById(id).classList.add('active');
+            if(id === 'tab-deploy') loadDBList();
+        }
+
+        function setDeployType(t) {
+            deployType = t;
+            document.getElementById('btn-type-emp').style.background = t === 'emp' ? 'var(--hq-primary)' : '#334155';
+            document.getElementById('btn-type-vip').style.background = t === 'vip' ? 'var(--hq-primary)' : '#334155';
+        }
+
+        function executeDeploy() {
+            const n = document.getElementById('deployName').value.trim();
+            const i = document.getElementById('deployId').value.trim().toUpperCase();
+            if(!n || !i) return alert("資料不全");
+            const path = deployType === 'emp' ? 'employee_list' : 'vip_list';
+            db.ref(path).push({ name: n, plate: i, id: i, timestamp: Date.now() }).then(() => {
+                alert("✅ 部署成功！"); document.getElementById('deployName').value=''; document.getElementById('deployId').value='';
+            });
+        }
+
+        function initHQManager() {
+            // 場內人數
+            db.ref('visitor_logs').on('value', s => {
+                let count = 0; s.forEach(c => { if(!c.val().leaveTime) count++; });
+                document.getElementById('val-onsite').innerText = count;
+            });
+            // VIP 人數
+            db.ref('vip_list').on('value', s => { document.getElementById('val-vip').innerText = s.numChildren(); });
+            // 日誌
+            db.ref('search_logs').limitToLast(15).on('value', s => {
+                const feed = document.getElementById('live-log-feed'); feed.innerHTML = '';
+                s.forEach(c => { const d = c.val(); feed.innerHTML = `<div class="data-item"><span class="log-time">[${d.time}]</span><b>${d.user}</b> 檢索了 <b>${d.query}</b></div>` + feed.innerHTML; });
+            });
+            // 授權名單
+            db.ref('guard_accounts').on('value', s => {
+                const list = document.getElementById('guard-auth-list'); list.innerHTML = '';
+                s.forEach(c => { list.innerHTML += `<div class="data-item"><div><b>${c.key}</b><br><small style="color:var(--hq-primary)">PW: ${c.val().password}</small></div><button class="btn-del" onclick="db.ref('guard_accounts/${c.key}').remove()">撤銷</button></div>`; });
+            });
+        }
+
+        function loadDBList() {
+            const path = deployType === 'emp' ? 'employee_list' : 'vip_list';
+            db.ref(path).on('value', s => {
+                const list = document.getElementById('db-list-display'); list.innerHTML = '';
+                s.forEach(c => { list.innerHTML += `<div class="data-item ${deployType==='vip'?'vip':''}"><div><b>${c.val().name}</b><br><small>${c.val().plate}</small></div><button class="btn-del" onclick="db.ref('${path}/${c.key}').remove()">撤除</button></div>`; });
+            });
+        }
+
+        function issueGuardAuth() {
+            const n = document.getElementById('newGuardName').value.trim();
+            const p = document.getElementById('newGuardPwd').value.trim();
+            if(n && p) db.ref('guard_accounts/'+n).set({ password: p }).then(() => { alert("核發成功！"); document.getElementById('newGuardName').value=''; document.getElementById('newGuardPwd').value=''; });
         }
     </script>
 </body>
