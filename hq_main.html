@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-SECURITY HQ | COMMAND CENTER V9.0</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --hq-cyan: #00f2ff;
+            --hq-bg: #050505;
+            --hq-panel: rgba(20, 20, 20, 0.95);
+            --hq-border: #333;
+            --hq-text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background-color: var(--hq-bg); 
+            color: white; 
+            font-family: -apple-system, "Microsoft JhengHei", sans-serif;
+            overflow: hidden;
+        }
+
+        /* 頂部戰術狀態條 */
+        .top-bar {
+            height: 60px;
+            background: #000;
+            border-bottom: 2px solid var(--hq-cyan);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            justify-content: space-between;
+        }
+
+        .nav-tabs { display: flex; gap: 2px; background: #111; height: 50px; }
+        .tab { 
+            padding: 0 30px; display: flex; align-items: center; cursor: pointer; 
+            font-weight: bold; color: var(--hq-text-dim); border-bottom: 3px solid transparent; 
+        }
+        .tab.active { color: var(--hq-cyan); background: #1a1a1a; border-bottom-color: var(--hq-cyan); }
+
+        /* 主佈局：三欄式監控 */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 350px; /* 左側狀態 | 中央監控 | 右側工具 */
+            height: calc(100vh - 110px);
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .monitor-card {
+            background: var(--hq-panel);
+            border: 1px solid var(--hq-border);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--hq-border);
+            color: var(--hq-cyan);
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding: 15px; }
+
+        /* 狀態方塊 */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { 
+            background: #000; border: 1px solid #222; padding: 10px; border-radius: 4px; 
+            text-align: center; border-left: 3px solid var(--hq-cyan); 
+        }
+        .stat-val { font-size: 24px; font-weight: 900; color: var(--hq-cyan); display: block; }
+        .stat-label { font-size: 10px; color: var(--hq-text-dim); }
+
+        /* 日誌樣式 */
+        .log-entry { 
+            padding: 10px; border-bottom: 1px solid #1a1a1a; font-size: 13px; 
+            border-left: 3px solid transparent; margin-bottom: 5px; background: rgba(255,255,255,0.02);
+        }
+        .log-entry:hover { background: rgba(0, 242, 255, 0.05); border-left-color: var(--hq-cyan); }
+        .log-time { color: var(--hq-cyan); font-family: monospace; font-size: 11px; margin-right: 8px; }
+
+        .btn-hq {
+            width: 100%; padding: 12px; background: var(--hq-cyan); color: #000;
+            border: none; font-weight: 900; cursor: pointer; margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="IMG_1096.jpeg" style="height:40px; filter:drop-shadow(0 0 5px var(--hq-cyan));">
+            <div style="font-weight:900; font-size:22px; letter-spacing:4px;">M-SECURITY HQ</div>
+        </div>
+        <div style="color:var(--hq-cyan); font-size:12px; font-weight:bold; letter-spacing:2px;">
+            COMMANDER: <span id="commander-name">盧家慶</span> | STATUS: ONLINE
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <div class="tab active">戰術監控</div>
+        <div class="tab">數據部署</div>
+        <div class="tab">人員授權</div>
+        <div class="tab">查詢日誌庫</div>
+    </nav>
+
+    <div class="dashboard-container">
+        
+        <div class="monitor-card">
+            <div class="card-header">📊 系統運行狀態 <span>STATUS</span></div>
+            <div class="scroll-content">
+                <div class="stat-grid">
+                    <div class="stat-box"><span class="stat-val">ONLINE</span><span class="stat-label">NETWORK</span></div>
+                    <div class="stat-box"><span class="stat-val" style="color:#10b981;">1</span><span class="stat-label">ON-SITE</span></div>
+                    <div class="stat-box"><span class="stat-val" style="color:#f1c40f;">0</span><span class="stat-label">VIP TODAY</span></div>
+                    <div class="stat-box"><span class="stat-val">0</span><span class="stat-label">ALERTS</span></div>
+                </div>
+                <div class="card" style="border:1px solid #222; padding:15px; font-size:12px; background:#000;">
+                    <span style="color:var(--hq-cyan);">系統核心版本：</span> V9.0<br>
+                    <span style="color:var(--hq-cyan);">前線連線節點：</span> 31540101-lang.github.io<br>
+                    <span style="color:var(--hq-cyan);">雲端同步模式：</span> Real-time Firebase
+                </div>
+            </div>
+        </div>
+
+        <div class="monitor-card">
+            <div class="card-header">📡 戰術日誌串流 <span>LIVE FEED</span></div>
+            <div id="log-feed" class="scroll-content">
+                <div class="log-entry"><span class="log-time">[12:20]</span> 指揮中心系統初始化完畢。</div>
+                <div class="log-entry"><span class="log-time">[12:20]</span> 盧家慶 指揮官 已登入。</div>
+            </div>
+        </div>
+
+        <div class="monitor-card">
+            <div class="card-header">⚡ 快速部署中心 <span>TOOLS</span></div>
+            <div class="scroll-content">
+                <div style="font-size:11px; color:var(--hq-text-dim); margin-bottom:10px;">快速新增員工/VIP：</div>
+                <input type="text" style="background:#000; border:1px solid #333; color:white; padding:10px; width:100%; margin-bottom:10px;" placeholder="姓名">
+                <input type="text" style="background:#000; border:1px solid #333; color:white; padding:10px; width:100%; margin-bottom:10px;" placeholder="車牌/工號">
+                <button class="btn-hq">部署至雲端</button>
+                
+                <hr style="border:none; border-top:1px solid #222; margin:20px 0;">
+                
+                <div style="text-align:center;">
+                    <p style="font-size:10px; color:#555; font-weight:bold;">OBSIDIAN PROJECT COMMAND</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
