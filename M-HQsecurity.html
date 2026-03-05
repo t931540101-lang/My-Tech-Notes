@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-SECURITY HQ | 戰術指揮中心</title>
+    <style>
+        :root {
+            --hq-cyan: #00f2ff;
+            --hq-blue: #1e3a8a;
+            --hq-bg: #050505;
+            --hq-panel: rgba(20, 20, 20, 0.9);
+        }
+
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background-color: var(--hq-bg); 
+            color: white; 
+            font-family: -apple-system, "Microsoft JhengHei", sans-serif;
+            overflow: hidden;
+        }
+
+        /* 💡 戰術動態背景：掃描線特效 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 1;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .hq-gate-container {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* 🚀 左側：戰術標語與裝飾 */
+        .hq-brand-side {
+            padding-right: 60px;
+            border-right: 2px solid var(--hq-cyan);
+            text-align: right;
+            display: none; /* 在手機上隱藏，電腦版顯示 */
+        }
+
+        /* 🔒 右側：登入控制面板 */
+        .login-panel {
+            padding-left: 60px;
+            width: 400px;
+        }
+
+        .hq-logo-img {
+            width: 120px;
+            filter: drop-shadow(0 0 10px var(--hq-cyan));
+            margin-bottom: 20px;
+        }
+
+        .system-title {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin: 0;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .system-subtitle {
+            font-size: 14px;
+            color: var(--hq-cyan);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #333;
+            border-left: 4px solid var(--hq-cyan);
+            padding: 15px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--hq-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+
+        .btn-access {
+            width: 100%;
+            background: var(--hq-cyan);
+            color: black;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-access:hover {
+            background: white;
+            box-shadow: 0 0 20px var(--hq-cyan);
+        }
+
+        @media (min-width: 900px) {
+            .hq-brand-side { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hq-gate-container">
+        <div class="hq-brand-side">
+            <h1 class="system-title">M-SECURITY</h1>
+            <div class="system-subtitle">COMMAND CENTER HQ V9.0</div>
+            <p style="color: #666; font-size: 12px; margin-top: 20px; font-weight: bold;">
+                GLOBAL STRATEGIC MONITORING SYSTEM<br>
+                LEVEL-5 AUTHORIZATION REQUIRED
+            </p>
+        </div>
+
+        <div class="login-panel">
+            <img src="IMG_1096.jpeg" class="hq-logo-img" alt="HQ Logo" onerror="this.style.display='none'">
+            <div style="margin-bottom: 30px;">
+                <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">IDENTIFICATION</div>
+                <input type="text" id="hqUser" class="input-field" placeholder="COMMANDER NAME">
+                
+                <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">ACCESS CODE</div>
+                <input type="password" id="hqPass" class="input-field" placeholder="••••••••">
+            </div>
+            <button class="btn-access" onclick="verifyHQAccess()">ACCESS SYSTEM</button>
+            <div id="errMsg" style="color: red; font-size: 12px; margin-top: 15px; text-align: center; font-weight: bold;"></div>
+        </div>
+    </div>
+
+    <script>
+        function verifyHQAccess() {
+            const user = document.getElementById('hqUser').value.trim();
+            const pass = document.getElementById('hqPass').value.trim();
+            const err = document.getElementById('errMsg');
+
+            // 🚀 維持與前線一致的最高權限密鑰
+            if (user === '盧家慶' && pass === 'D01762') {
+                err.style.color = 'var(--hq-cyan)';
+                err.innerText = "AUTHENTICATED. INITIALIZING COMMAND CENTER...";
+                
+                // 暫存登入狀態
+                sessionStorage.setItem('hq_auth', 'active');
+                
+                setTimeout(() => {
+                    alert('歡迎回到指揮中心，小黑哥。');
+                    // 這裡之後會接上 HQ 的主畫面
+                    // window.location.href = 'hq_main.html';
+                }, 1000);
+            } else {
+                err.innerText = "ACCESS DENIED. INVALID CREDENTIALS.";
+                document.getElementById('hqPass').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
