@@ -5,172 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Security - 綜合查詢</title>
     <style>
-        /* 💡 架構師專屬控制台：色彩與尺寸設定 */
         :root {
-            --bg-color: #eaf1f9;            /* 背景淺藍灰色 */
-            --tab-bg-dark: #63768b;         /* 未選取頁籤背景色 */
-            --tab-bg-active: #4a5c70;       /* 已選取頁籤背景色 */
-            --tab-highlight: #00e5ff;       /* 頁籤底部高光線條 (青藍色) */
-            --primary-blue: #2c7ce6;        /* 主要按鈕/邊框藍色 */
-            --text-dark: #333333;           /* 深色文字 */
-            --text-blue: #1c529b;           /* 標題藍色文字 */
+            --bg-color: #eaf1f9;
+            --tab-bg-dark: #63768b;
+            --tab-bg-active: #4a5c70;
+            --tab-highlight: #00e5ff;
+            --primary-blue: #2c7ce6;
+            --text-dark: #333333;
+            --text-blue: #1c529b;
         }
 
         * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
 
-        /* === 1. 頂部頁籤導覽列 === */
-        .tabs-header {
-            display: flex;
-            background-color: var(--tab-bg-dark);
-            height: 50px;
-        }
-        .tab-item {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .tab-item.active {
-            background-color: var(--tab-bg-active);
-            border-bottom: 3px solid var(--tab-highlight);
-        }
+        /* 頂部頁籤 */
+        .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; }
+        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .tab-item.active { background-color: var(--tab-bg-active); border-bottom: 3px solid var(--tab-highlight); }
 
-        /* === 內容主區域 === */
-        .main-content {
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
+        .main-content { padding: 15px; flex: 1; overflow-y: auto; }
 
-        /* === 2. 狀態列 (查詢模式) === */
-        .status-bar {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text-dark);
-        }
-        .status-badge {
-            background-color: var(--primary-blue);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-left: 8px;
-        }
+        /* 狀態列 */
+        .status-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-dark); }
+        .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; transition: background-color 0.3s; }
+        .status-badge.loading { background-color: #f39c12; } /* 讀取中變橘色 */
 
-        /* === 3. 搜尋輸入框卡片 === */
-        .search-box-card {
-            background-color: #ffffff;
-            border: 2px solid var(--primary-blue);
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .search-label {
-            font-size: 13px;
-            color: #666;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        .search-input {
-            width: 100%;
-            border: none;
-            font-size: 24px;
-            font-weight: 900;
-            color: var(--text-dark);
-            outline: none;
-        }
+        /* 搜尋輸入框 */
+        .search-box-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-label { font-size: 13px; color: #666; font-weight: bold; margin-bottom: 4px; }
+        .search-input { width: 100%; border: none; font-size: 24px; font-weight: 900; color: var(--text-dark); outline: none; }
 
-        /* === 4. 操作按鈕區 (Grid 網格) === */
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 兩欄 */
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        /* 佔滿整行的按鈕 */
-        .btn-full {
-            grid-column: 1 / -1; 
-        }
-        .btn {
-            background-color: var(--primary-blue);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            box-shadow: 0 3px 0 #1b56a3; /* 模擬原圖的立體按鈕陰影 */
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 #1b56a3;
-        }
+        /* 操作按鈕區 */
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .btn-full { grid-column: 1 / -1; }
+        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 0 0 #1b56a3; }
+        .btn:disabled { background-color: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; cursor: not-allowed; transform: none; }
 
-        /* === 5. 結果顯示卡片 === */
-        .result-card {
-            background-color: #ffffff;
-            border: 2px solid var(--primary-blue);
-            border-radius: 8px;
-            padding: 20px 15px;
-        }
-        .result-title {
-            color: var(--primary-blue);
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .result-divider {
-            border: none;
-            border-top: 1px solid #e0e0e0;
-            margin-bottom: 15px;
-        }
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 18px;
-            font-weight: bold;
-        }
+        /* 結果顯示卡片 */
+        .result-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 20px 15px; transition: opacity 0.3s; }
+        .result-title { color: var(--primary-blue); font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
+        .result-divider { border: none; border-top: 1px solid #e0e0e0; margin-bottom: 15px; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
         .result-label { color: var(--text-blue); }
         .result-value { color: var(--text-dark); }
+        .value-loading { color: #95a5a6; font-style: italic; }
         
     </style>
 </head>
 <body>
 
     <div class="tabs-header">
-        <div class="tab-item active">一般</div>
-        <div class="tab-item">進階</div>
-        <div class="tab-item">應用</div>
-        <div class="tab-item">頻道</div>
-        <div class="tab-item">設定</div>
+        <div class="tab-item active">一般</div><div class="tab-item">進階</div><div class="tab-item">應用</div><div class="tab-item">頻道</div><div class="tab-item">設定</div>
     </div>
 
     <div class="main-content">
         <div class="status-bar">
-            查詢模式： <span class="status-badge">線上</span>
+            查詢模式： <span class="status-badge" id="statusBadge">線上</span>
         </div>
 
         <div class="search-box-card">
@@ -179,41 +70,104 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn btn-full">查詢</button>
+            <button class="btn btn-full" id="searchBtn" onclick="executeSearch()">查詢</button>
             <button class="btn btn-full">條碼掃描</button>
             <button class="btn" onclick="clearInput()">清除</button>
             <button class="btn">資料同步</button>
         </div>
 
-        <div class="result-card">
-            <div class="result-title">身份確認：台灣精銳員工</div>
+        <div class="result-card" id="resultCard">
+            <div class="result-title" id="res-title">身份確認：等待查詢</div>
             <hr class="result-divider">
-            
-            <div class="result-row">
-                <span class="result-label">姓名：</span>
-                <span class="result-value">---</span>
-            </div>
-            <div class="result-row">
-                <span class="result-label">單位：</span>
-                <span class="result-value">---</span>
-            </div>
-            <div class="result-row">
-                <span class="result-label">工號：</span>
-                <span class="result-value">---</span>
-            </div>
-            <div class="result-row">
-                <span class="result-label">車牌：</span>
-                <span class="result-value">---</span>
-            </div>
+            <div class="result-row"><span class="result-label">姓名：</span><span class="result-value" id="res-name">---</span></div>
+            <div class="result-row"><span class="result-label">單位：</span><span class="result-value" id="res-unit">---</span></div>
+            <div class="result-row"><span class="result-label">工號：</span><span class="result-value" id="res-id">---</span></div>
+            <div class="result-row"><span class="result-label">車牌：</span><span class="result-value" id="res-plate">---</span></div>
         </div>
     </div>
 
     <script>
-        // 提供簡單的清除按鈕功能
+        // 清除按鈕功能
         function clearInput() {
             const input = document.getElementById('queryInput');
             input.value = '';
             input.focus();
+            resetResultCard();
+        }
+
+        function resetResultCard() {
+            document.getElementById('res-title').innerText = "身份確認：等待查詢";
+            document.getElementById('res-title').style.color = "var(--primary-blue)";
+            ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "---");
+        }
+
+        // 🚀 架構師的核心：雲端查詢引擎
+        async function executeSearch() {
+            const inputVal = document.getElementById('queryInput').value.trim();
+            const searchBtn = document.getElementById('searchBtn');
+            const statusBadge = document.getElementById('statusBadge');
+
+            if (!inputVal) { alert('請輸入車牌或工號！'); return; }
+
+            // 1. 觸發 UI 讀取狀態
+            searchBtn.disabled = true;
+            searchBtn.innerText = "連線中...";
+            statusBadge.innerText = "檢索中";
+            statusBadge.classList.add('loading');
+            
+            ['name', 'unit', 'id', 'plate'].forEach(field => {
+                document.getElementById(`res-${field}`).innerHTML = '<span class="value-loading">連線雲端...</span>';
+            });
+
+            try {
+                // 💡 這裡就是未來接真實雲端 API 的位子！
+                // 真實寫法會像這樣：
+                // const response = await fetch(`https://api.yourcompany.com/search?q=${inputVal}`);
+                // const data = await response.json();
+
+                // 為了測試，賈維斯幫你呼叫了「模擬雲端資料庫」
+                const data = await mockCloudDatabase(inputVal);
+
+                // 2. 將雲端結果渲染到畫面上
+                if (data) {
+                    document.getElementById('res-title').innerText = "身份確認：台灣精銳員工";
+                    document.getElementById('res-title').style.color = "var(--primary-blue)";
+                    document.getElementById('res-name').innerText = data.name;
+                    document.getElementById('res-unit').innerText = data.unit;
+                    document.getElementById('res-id').innerText = data.id;
+                    document.getElementById('res-plate').innerText = data.plate;
+                } else {
+                    document.getElementById('res-title').innerText = "警告：查無此人/車";
+                    document.getElementById('res-title').style.color = "#e74c3c"; // 找不到時顯示紅色警示
+                    ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "無資料");
+                }
+
+            } catch (error) {
+                alert("雲端連線失敗，請檢查網路狀態！");
+                resetResultCard();
+            } finally {
+                // 3. 恢復 UI 狀態
+                searchBtn.disabled = false;
+                searchBtn.innerText = "查詢";
+                statusBadge.innerText = "線上";
+                statusBadge.classList.remove('loading');
+            }
+        }
+
+        // ☁️ 賈維斯的模擬雲端資料庫 (Mock Database)
+        function mockCloudDatabase(query) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // 這裡先建立幾筆測試資料
+                    const db = {
+                        "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" },
+                        "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" },
+                        "TEST-01": { name: "測試員A", unit: "安管中心", id: "A123", plate: "TEST-01" }
+                    };
+                    // 不分大小寫比對
+                    resolve(db[query.toUpperCase()] || null);
+                }, 800); // 模擬真實網路需要 0.8 秒的時間
+            });
         }
     </script>
 </body>
