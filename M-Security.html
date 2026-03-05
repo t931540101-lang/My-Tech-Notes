@@ -19,14 +19,18 @@
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
 
-        .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; }
-        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 16px; font-weight: bold; cursor: pointer; }
+        /* 頂部頁籤 */
+        .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; flex-shrink: 0; }
+        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
         .tab-item.active { background-color: var(--tab-bg-active); border-bottom: 3px solid var(--tab-highlight); }
 
-        .main-content { padding: 15px; flex: 1; overflow-y: auto; }
+        /* 💡 頁籤內容區塊切換設定 */
+        .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
+        .tab-content.active { display: block; }
 
+        /* 共用 UI 元件 */
         .status-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-dark); }
-        .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; transition: background-color 0.3s; }
+        .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; }
         .status-badge.loading { background-color: #f39c12; }
 
         .search-box-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -35,11 +39,11 @@
 
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .btn-full { grid-column: 1 / -1; }
-        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; transition: transform 0.1s; }
         .btn:active { transform: translateY(3px); box-shadow: 0 0 0 #1b56a3; }
-        .btn:disabled { background-color: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; cursor: not-allowed; transform: none; }
+        .btn:disabled { background-color: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; }
 
-        .result-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 20px 15px; transition: opacity 0.3s; }
+        .result-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 20px 15px; }
         .result-title { color: var(--primary-blue); font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
         .result-divider { border: none; border-top: 1px solid #e0e0e0; margin-bottom: 15px; }
         .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
@@ -47,44 +51,38 @@
         .result-value { color: var(--text-dark); }
         .value-loading { color: #95a5a6; font-style: italic; }
 
-        /* 📸 掃描器全螢幕遮罩 UI */
-        .scanner-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.9); z-index: 1000; flex-direction: column;
-            align-items: center; justify-content: center; padding: 20px;
-        }
+        /* 佔位符號樣式 (給新頁面用的) */
+        .placeholder-box { background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px; }
+
+        /* 掃描器全螢幕遮罩 UI */
+        .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         #reader { width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; background: #000; }
-        .close-scanner-btn {
-            margin-top: 20px; padding: 15px 30px; background-color: #e74c3c; color: white;
-            border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 3px 0 #c0392b;
-        }
+        .close-scanner-btn { margin-top: 20px; padding: 15px 30px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #c0392b; }
         .close-scanner-btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
 
     <div class="tabs-header">
-        <div class="tab-item active">一般</div><div class="tab-item">進階</div><div class="tab-item">應用</div><div class="tab-item">頻道</div><div class="tab-item">設定</div>
+        <div class="tab-item active" onclick="switchTab('tab-general', this)">一般</div>
+        <div class="tab-item" onclick="switchTab('tab-advanced', this)">進階</div>
+        <div class="tab-item" onclick="switchTab('tab-apps', this)">應用</div>
+        <div class="tab-item" onclick="switchTab('tab-channels', this)">頻道</div>
+        <div class="tab-item" onclick="switchTab('tab-settings', this)">設定</div>
     </div>
 
-    <div class="main-content">
-        <div class="status-bar">
-            查詢模式： <span class="status-badge" id="statusBadge">線上</span>
-        </div>
-
+    <div id="tab-general" class="tab-content active">
+        <div class="status-bar">查詢模式： <span class="status-badge" id="statusBadge">線上</span></div>
         <div class="search-box-card">
             <div class="search-label">車牌/工號</div>
-            <input type="text" class="search-input" id="queryInput" value="" placeholder="請輸入或掃描...">
+            <input type="text" class="search-input" id="queryInput" placeholder="請輸入或掃描...">
         </div>
-
         <div class="action-buttons">
             <button class="btn btn-full" id="searchBtn" onclick="executeSearch()">查詢</button>
             <button class="btn btn-full" onclick="startScanner()">條碼掃描</button>
             <button class="btn" onclick="clearInput()">清除</button>
             <button class="btn">資料同步</button>
         </div>
-
         <div class="result-card" id="resultCard">
             <div class="result-title" id="res-title">身份確認：等待查詢</div>
             <hr class="result-divider">
@@ -95,6 +93,31 @@
         </div>
     </div>
 
+    <div id="tab-advanced" class="tab-content">
+        <div class="status-bar">資料庫： <span class="status-badge" style="background-color: #8e44ad;">VIP 專區</span></div>
+        <div class="placeholder-box">
+            🛡️ 董事與 VIP 車輛查詢系統<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        </div>
+    </div>
+
+    <div id="tab-apps" class="tab-content">
+        <div class="status-bar">目前系統： <span class="status-badge" style="background-color: #16a085;">訪客管理</span></div>
+        <div class="placeholder-box">
+            📝 訪客登記系統查看<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        </div>
+    </div>
+
+    <div id="tab-channels" class="tab-content">
+        <div class="status-bar">頻道： <span class="status-badge" style="background-color: #d35400;">內部廣播</span></div>
+        <div class="placeholder-box">
+            📋 勤務交接簿查看<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+        <div class="placeholder-box">⚙️ 系統設定<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span></div>
+    </div>
+
     <div class="scanner-modal" id="scannerModal">
         <h3 style="color: white; margin-bottom: 10px;">請將條碼/QR Code 對準畫面</h3>
         <div id="reader"></div>
@@ -102,11 +125,22 @@
     </div>
 
     <script>
+        // 💡 賈維斯新增：頁籤切換核心邏輯
+        function switchTab(tabId, element) {
+            // 1. 移除所有頁籤的高光狀態
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            // 2. 隱藏所有內容區塊
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 3. 亮起點擊的頁籤，並顯示對應的內容
+            element.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        /* --- 以下為原有的查詢與掃描邏輯，維持不變 --- */
         function clearInput() {
             const input = document.getElementById('queryInput');
-            input.value = '';
-            input.focus();
-            resetResultCard();
+            input.value = ''; input.focus(); resetResultCard();
         }
 
         function resetResultCard() {
@@ -119,40 +153,29 @@
             const inputVal = document.getElementById('queryInput').value.trim();
             const searchBtn = document.getElementById('searchBtn');
             const statusBadge = document.getElementById('statusBadge');
-
             if (!inputVal) { alert('請輸入車牌或工號！'); return; }
 
-            searchBtn.disabled = true;
-            searchBtn.innerText = "連線中...";
-            statusBadge.innerText = "檢索中";
-            statusBadge.classList.add('loading');
-            
-            ['name', 'unit', 'id', 'plate'].forEach(field => {
-                document.getElementById(`res-${field}`).innerHTML = '<span class="value-loading">連線雲端...</span>';
-            });
+            searchBtn.disabled = true; searchBtn.innerText = "連線中...";
+            statusBadge.innerText = "檢索中"; statusBadge.classList.add('loading');
+            ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerHTML = '<span class="value-loading">連線雲端...</span>');
 
             try {
                 const data = await mockCloudDatabase(inputVal);
                 if (data) {
                     document.getElementById('res-title').innerText = "身份確認：台灣精銳員工";
                     document.getElementById('res-title').style.color = "var(--primary-blue)";
-                    document.getElementById('res-name').innerText = data.name;
-                    document.getElementById('res-unit').innerText = data.unit;
-                    document.getElementById('res-id').innerText = data.id;
-                    document.getElementById('res-plate').innerText = data.plate;
+                    document.getElementById('res-name').innerText = data.name; document.getElementById('res-unit').innerText = data.unit;
+                    document.getElementById('res-id').innerText = data.id; document.getElementById('res-plate').innerText = data.plate;
                 } else {
                     document.getElementById('res-title').innerText = "警告：查無此人/車";
                     document.getElementById('res-title').style.color = "#e74c3c";
                     ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "無資料");
                 }
             } catch (error) {
-                alert("雲端連線失敗，請檢查網路狀態！");
-                resetResultCard();
+                alert("雲端連線失敗！"); resetResultCard();
             } finally {
-                searchBtn.disabled = false;
-                searchBtn.innerText = "查詢";
-                statusBadge.innerText = "線上";
-                statusBadge.classList.remove('loading');
+                searchBtn.disabled = false; searchBtn.innerText = "查詢";
+                statusBadge.innerText = "線上"; statusBadge.classList.remove('loading');
             }
         }
 
@@ -162,55 +185,28 @@
                     const db = {
                         "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" },
                         "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" },
-                        "TEST-01": { name: "測試員A", unit: "安管中心", id: "A123", plate: "TEST-01" }
+                        "4710088638793": { name: "測試條碼商品", unit: "後勤部", id: "4710088638793", plate: "無" } // 幫你把剛剛掃的條碼加進來了XD
                     };
                     resolve(db[query.toUpperCase()] || null);
                 }, 800);
             });
         }
 
-        // ==========================================
-        // 📸 相機掃描引擎邏輯 (Html5Qrcode)
-        // ==========================================
         let html5QrCode;
-
         function startScanner() {
-            // 顯示全螢幕掃描 UI
             document.getElementById('scannerModal').style.display = 'flex';
-            
-            // 初始化掃描器 (指向 reader 這個 div)
             html5QrCode = new Html5Qrcode("reader");
-            
-            // 設定掃描參數：使用後置鏡頭、掃描框大小
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-            .catch(err => {
-                alert("啟動相機失敗！請確認是否已允許網頁存取相機權限。");
-                closeScanner();
-            });
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess)
+            .catch(err => { alert("啟動相機失敗！請確認權限。"); closeScanner(); });
         }
-
         function onScanSuccess(decodedText, decodedResult) {
-            // 1. 掃描成功後，關閉相機
             closeScanner();
-            
-            // 2. 將掃描到的文字帶入輸入框
             document.getElementById('queryInput').value = decodedText;
-            
-            // 3. 賈維斯貼心功能：自動幫你按下查詢！
             executeSearch();
         }
-
         function closeScanner() {
             document.getElementById('scannerModal').style.display = 'none';
-            if (html5QrCode) {
-                html5QrCode.stop().then((ignore) => {
-                    html5QrCode.clear();
-                }).catch((err) => {
-                    console.log("關閉相機時發生錯誤：", err);
-                });
-            }
+            if (html5QrCode) { html5QrCode.stop().then(ignore => html5QrCode.clear()).catch(err => console.log(err)); }
         }
     </script>
 </body>
