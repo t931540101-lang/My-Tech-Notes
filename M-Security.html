@@ -3,228 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台灣精銳 M-Security - 系統授權登入</title>
+    <title>M-Security 旗艦版 | 台灣精銳</title>
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
-        /* 💡 旗艦版控制台：全方位精細操控 */
         :root {
-            --main-title-color: #1e3a8a;
-            --main-title-weight: 900;
-            --main-title-size: 38px;
-            --main-title-spacing: 5px;
-            --main-title-bottom-margin: 10px;
-            --sub-title-color: #333333;
-            --sub-title-weight: 600;
-            --sub-title-size: 20px;
-            --sub-title-spacing: 1px;
-            --card-width: calc(100% - 40px);
-            --card-max-width: 440px;
-            --card-border-color: #547bba;
-            --card-content-max-width: 300px;
-            --card-title-color: #1d4ed8;
-            --card-title-weight: 800;
+            --bg-color: #eaf1f9;
+            --tab-bg-dark: #63768b;
+            --tab-bg-active: #4a5c70;
+            --tab-highlight: #00e5ff;
+            --primary-blue: #2c7ce6;
+            --text-dark: #1e293b;
+            --text-blue: #1c529b;
+            --danger: #e74c3c;
+            --success: #10b981;
+            --vip-gold: #f1c40f;
+            --vip-purple: #8e44ad;
         }
 
         * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; overflow: hidden; background-color: #d2d6dc; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 12vh; 
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #d2d6dc; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
 
-        .header-global {
-            text-align: center;
-            width: 90%;
-            max-width: calc(var(--card-max-width) * 0.9);
-            margin-bottom: 4vh;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.4);
-        }
+        /* === 🚪 登入大門樣式 === */
+        #login-gate { height: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 12vh; transition: opacity 0.5s; }
+        .login-card { background: #ffffff; width: calc(100% - 40px); max-width: 440px; padding: 40px 24px; border-radius: 12px; border: 2px solid #547bba; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .login-input { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 20px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 16px; outline: none; }
+        .btn-login { width: 100%; max-width: 300px; padding: 16px; background-color: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; letter-spacing: 4px; cursor: pointer; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); }
 
-        .main-title-text {
-            font-size: var(--main-title-size);
-            font-weight: var(--main-title-weight); 
-            color: var(--main-title-color); 
-            letter-spacing: var(--main-title-spacing);
-            margin: 0 0 var(--main-title-bottom-margin) 0;
-        }
+        /* === 🛡️ 主系統樣式 (預設隱藏) === */
+        #main-system { display: none; height: 100%; flex-direction: column; background-color: var(--bg-color); }
+        .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; flex-shrink: 0; }
+        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .tab-item.active { background-color: var(--tab-bg-active); border-bottom: 3px solid var(--tab-highlight); }
+        .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
+        .tab-content.active { display: block; }
 
-        .sub-title-text {
-            font-size: var(--sub-title-size);
-            font-weight: var(--sub-title-weight); 
-            color: var(--sub-title-color); 
-            letter-spacing: var(--sub-title-spacing);
-            margin: 0;
-        }
+        /* 共用卡片與按鈕 */
+        .status-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; }
+        .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; }
+        .search-box-card, .v-card, .result-card, .duty-card, .settings-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-main { width: 100%; padding: 16px; background-color: var(--primary-blue); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #1b56a3; margin-bottom: 10px; }
+        
+        /* 隱形墨水 */
+        .ink-container { background: #fdfbf7; border: 2px dashed var(--vip-gold); border-radius: 8px; padding: 15px; cursor: pointer; }
+        .blur-text { filter: blur(6px); transition: filter 0.3s; user-select: none; color: transparent; background: #e5e7eb; }
+        .blur-text.revealed { filter: blur(0px); color: var(--text-dark); background: transparent; }
 
-        .login-card-container {
-            background: #ffffff;
-            width: var(--card-width);
-            max-width: var(--card-max-width);
-            padding: 40px 24px;
-            border-radius: 12px;
-            border: 2px solid var(--card-border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .card-content-wrapper {
-            width: 100%;
-            max-width: var(--card-content-max-width);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .card-title-text {
-            color: var(--card-title-color);
-            font-size: 22px;
-            font-weight: var(--card-title-weight);
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        .input-group-container { 
-            width: 100%;
-            margin-bottom: 20px; 
-            position: relative; 
-            display: flex;
-            align-items: center;
-        }
-        
-        .input-group-container input {
-            width: 100%;
-            padding: 16px 12px;
-            padding-right: 40px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            color: #1e293b;
-            outline: none;
-            -webkit-appearance: none;
-            transition: all 0.2s ease;
-        }
-        
-        .input-group-container input::placeholder { color: #b2bec3; font-weight: 500;}
-        .input-group-container input:focus { 
-            border-color: #3b82f6; 
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
-        }
-        
-        .input-clear-btn {
-            position: absolute;
-            right: 12px;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background-color: #dfe6e9;
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            visibility: hidden;
-            opacity: 0;
-            transition: all 0.2s ease;
-        }
-        
-        .input-group-container input:not(:placeholder-shown) + .input-clear-btn {
-            visibility: visible;
-            opacity: 1;
-        }
-        
-        .input-clear-btn:hover { background-color: #b2bec3; }
-
-        .login-btn-global {
-            width: 100%;
-            padding: 16px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 8px;
-            background-color: #3b82f6; 
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            cursor: pointer;
-            transition: background 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-        
-        .login-btn-global:active { background-color: #2563eb; transform: translateY(1px); }
+        /* 📸 掃描器 */
+        .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        #reader { width: 90%; max-width: 400px; border-radius: 8px; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <div class="header-global">
-        <h1 class="main-title-text">台灣精銳</h1>
-        <h2 class="sub-title-text">M-Security 綜合查詢系統</h2>
-    </div>
-
-    <div class="login-card-container">
-        <div class="card-content-wrapper">
-            <div class="card-title-text">系統授權登入</div>
-            
-            <div class="input-group-container">
-                <input type="text" id="officerName" placeholder="值勤人員姓名">
-                <span class="input-clear-btn" onclick="clearInput('officerName')">×</span>
-            </div>
-            <div class="input-group-container">
-                <input type="password" id="authCode" placeholder="授權碼" inputmode="text">
-                <span class="input-clear-btn" onclick="clearInput('authCode')">×</span>
-            </div>
-            
-            <button class="login-btn-global" onclick="handleLogin()">授權登入</button>
+    <div id="login-gate">
+        <div style="text-align: center; margin-bottom: 4vh;">
+            <h1 style="font-size: 38px; font-weight: 900; color: #1e3a8a; letter-spacing: 5px; margin: 0;">台灣精銳</h1>
+            <h2 style="font-size: 20px; font-weight: 600; color: #333; margin: 5px 0 0 0;">M-Security 綜合查詢系統</h2>
+        </div>
+        <div class="login-card">
+            <h3 style="color: #1d4ed8; font-size: 22px; margin-bottom: 25px;">系統授權登入</h3>
+            <input type="text" id="officerName" class="login-input" placeholder="值勤人員姓名">
+            <input type="password" id="authCode" class="login-input" placeholder="授權碼">
+            <button class="btn-login" onclick="handleLogin()">授權登入</button>
         </div>
     </div>
 
+    <div id="main-system">
+        <div class="tabs-header">
+            <div class="tab-item active" onclick="switchTab('tab-general', this)">一般</div>
+            <div class="tab-item" onclick="switchTab('tab-advanced', this)">進階</div>
+            <div class="tab-item" onclick="switchTab('tab-apps', this)">應用</div>
+            <div class="tab-item" onclick="switchTab('tab-channels', this)">頻道</div>
+            <div class="tab-item" onclick="switchTab('tab-settings', this)">設定</div>
+        </div>
+
+        <div id="tab-general" class="tab-content active">
+            <div class="status-bar">查詢模式：<span class="status-badge" id="statusBadge">線上</span></div>
+            <div class="search-box-card">
+                <input type="text" id="queryInput" class="search-input" style="width:100%; border:none; font-size:24px; font-weight:900; outline:none;" placeholder="車牌/工號...">
+            </div>
+            <button class="btn-main" onclick="executeSearch()">查詢</button>
+            <button class="btn-main" onclick="startScanner()">條碼掃描</button>
+            <div class="result-card" id="resultCard">
+                <div id="res-title" style="text-align:center; font-weight:bold; margin-bottom:10px;">身份確認：等待查詢</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>姓名：</span><span id="res-name">---</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>單位：</span><span id="res-unit">---</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>車牌：</span><span id="res-plate">---</span></div>
+            </div>
+        </div>
+
+        <div id="tab-advanced" class="tab-content">
+            <div class="status-bar">資料庫：<span class="status-badge" style="background:var(--vip-purple);">VIP 專區</span></div>
+            <div class="search-box-card" style="border-color:var(--vip-purple);">
+                <input type="text" id="vipQueryInput" style="width:100%; border:none; font-size:20px; text-align:center; outline:none;" placeholder="輸入 VIP 代號">
+            </div>
+            <button class="btn-main" style="background:var(--vip-purple);" onclick="searchVIP()">機密檢索</button>
+            <div id="vipResultArea" style="display:none;" class="ink-container" onclick="revealInk()">
+                <div style="text-align:center; font-size:12px; color:#b7950b; margin-bottom:10px;">⚠️ 點擊區塊解碼 (3秒後重鎖)</div>
+                <div style="display:flex; justify-content:space-between;"><span>姓名：</span><span id="vip-name" class="blur-text">---</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>車牌：</span><span id="vip-plate" class="blur-text">---</span></div>
+            </div>
+        </div>
+
+        <div id="tab-apps" class="tab-content">
+            <div class="v-card">
+                <h3 style="text-align:center; color:var(--primary-blue);">訪客登記</h3>
+                <input type="text" id="vName" class="login-input" style="max-width:100%;" placeholder="訪客姓名">
+                <input type="text" id="vComp" class="login-input" style="max-width:100%;" placeholder="公司行號">
+                <button class="btn-main" onclick="submitLog()">送出登記</button>
+            </div>
+            <div id="logList"></div>
+        </div>
+
+        <div id="tab-channels" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">勤務交接簿</h2>
+                <button onclick="addHandoverEntry()" style="padding:8px 15px; border-radius:8px; background:#1e293b; color:white;">+ 新增</button>
+            </div>
+            <div id="handoverList"></div>
+        </div>
+
+        <div id="tab-settings" class="tab-content">
+            <div class="settings-card" style="text-align:center;">
+                <div style="font-size:50px;">👮‍♂️</div>
+                <div id="setting-officer-name" style="font-size:22px; font-weight:900;">載入中...</div>
+                <button class="btn-main" style="background:#f1f5f9; color:#1e293b; border:1px solid #ccc; margin-top:20px;" onclick="systemLogout()">🚪 登出系統</button>
+                <button class="btn-main" style="background:#fef2f2; color:var(--danger); border:1px solid #fecaca;" onclick="systemClearCache()">🗑️ 清除快取重置</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="scanner-modal" id="scannerModal">
+        <div id="reader"></div>
+        <button onclick="closeScanner()" style="margin-top:20px; padding:15px; background:var(--danger); color:white; border:none; border-radius:8px;">關閉相機</button>
+    </div>
+
     <script>
-        window.onload = function() {
-            // 讀取上次登入成功的紀錄（有的話自動帶入姓名）
-            const savedName = localStorage.getItem('m_security_officer_name');
-            if (savedName) {
-                document.getElementById('officerName').value = savedName;
-            }
-        };
-        
-        function clearInput(inputId) {
-            const inputInput = document.getElementById(inputId);
-            inputInput.value = '';
-            inputInput.focus();
-        }
+        // 1. 初始化與驗證
+        const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentOfficerName = localStorage.getItem('m_security_officer_name');
 
         function handleLogin() {
-            const nameInput = document.getElementById('officerName').value.trim();
-            const codeInput = document.getElementById('authCode').value.trim();
-            
-            if (!nameInput || !codeInput) { 
-                alert('⚠️ 請完整輸入姓名與授權碼！'); 
-                return; 
-            }
-            
-            // 🚀 真實門鎖驗證邏輯：比對帳號密碼
-            if (nameInput === '盧家慶' && codeInput === 'D01762') {
-                // 登入成功：記憶姓名
-                localStorage.setItem('m_security_officer_name', nameInput);
-                
-                alert(`授權成功！歡迎值勤，${nameInput}。`);
-                
-                // 💡 登入成功後跳轉到主系統 (請確保你的主系統檔名是 main.html，如果不同請修改這裡！)
-                window.location.href = 'main.html'; 
-                
-            } else {
-                // 登入失敗：擋在門外並清空密碼
-                alert('❌ 系統拒絕存取：帳號或密碼錯誤！');
-                document.getElementById('authCode').value = '';
+            const name = document.getElementById('officerName').value.trim();
+            const code = document.getElementById('authCode').value.trim();
+            if (name === '盧家慶' && code === 'D01762') {
+                localStorage.setItem('m_security_officer_name', name);
+                currentOfficerName = name;
+                showSystem();
+            } else { alert('❌ 授權錯誤！'); }
+        }
+
+        function showSystem() {
+            document.getElementById('login-gate').style.display = 'none';
+            document.getElementById('main-system').style.display = 'flex';
+            document.getElementById('setting-officer-name').innerText = currentOfficerName;
+            loadData(); // 啟動 Firebase 監聽
+        }
+
+        if (currentOfficerName) showSystem();
+
+        // 2. 切換邏輯
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 3. 查詢邏輯 (對接 HQ)
+        async function executeSearch() {
+            const val = document.getElementById('queryInput').value.trim().toUpperCase();
+            if (!val) return;
+            // 紀錄日誌
+            db.ref('search_logs').push({ time: new Date().toLocaleTimeString(), user: currentOfficerName, query: val });
+            const snap = await db.ref('employee_list').once('value');
+            let found = null;
+            snap.forEach(c => { 
+                const d = c.val(); 
+                if (d.plate === val || d.id === val || d.name === val) found = d; 
+            });
+            if (found) {
+                document.getElementById('res-title').innerText = "身份確認：台灣精銳員工";
+                document.getElementById('res-name').innerText = found.name;
+                document.getElementById('res-unit').innerText = found.reason || '---';
+                document.getElementById('res-plate').innerText = found.plate || '---';
+            } else { alert('查無此人'); }
+        }
+
+        // 4. VIP 查詢
+        async function searchVIP() {
+            const val = document.getElementById('vipQueryInput').value.trim().toUpperCase();
+            const snap = await db.ref('vip_list').once('value');
+            let found = null;
+            snap.forEach(c => { if(c.val().plate === val || c.val().name === val) found = c.val(); });
+            if (found) {
+                document.getElementById('vip-name').innerText = found.name;
+                document.getElementById('vip-plate').innerText = found.plate;
+                document.getElementById('vipResultArea').style.display = 'block';
             }
         }
+        function revealInk() {
+            const el = document.querySelectorAll('.blur-text');
+            el.forEach(e => e.classList.add('revealed'));
+            setTimeout(() => el.forEach(e => e.classList.remove('revealed')), 3000);
+        }
+
+        // 5. 數據監聽 (訪客與交接)
+        function loadData() {
+            db.ref('visitor_logs').limitToLast(10).on('value', s => {
+                const list = document.getElementById('logList'); list.innerHTML = '';
+                s.forEach(c => { const d = c.val(); list.innerHTML = `<div class="result-card"><b>${d.name}</b> - ${d.company}<br><small>入廠：${d.timeIn}</small></div>` + list.innerHTML; });
+            });
+            db.ref('reactLogs').limitToLast(10).on('value', s => {
+                const list = document.getElementById('handoverList'); list.innerHTML = '';
+                s.forEach(c => { const d = c.val(); list.innerHTML = `<div class="duty-card"><b>${d.time}</b><br>${d.note}</div>` + list.innerHTML; });
+            });
+        }
+
+        function systemLogout() { localStorage.removeItem('m_security_officer_name'); window.location.reload(); }
+        function systemClearCache() { localStorage.clear(); window.location.reload(); }
+        
+        // 📸 掃描邏輯維持原樣
+        let html5QrCode;
+        function startScanner() { document.getElementById('scannerModal').style.display = 'flex'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => { document.getElementById('queryInput').value = txt; closeScanner(); executeSearch(); }); }
+        function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; if(html5QrCode) html5QrCode.stop(); }
     </script>
 </body>
 </html>
