@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security - 綜合查詢</title>
+    <title>M-Security - 綜合查詢與應用</title>
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
         :root {
             --bg-color: #eaf1f9;
@@ -14,51 +18,59 @@
             --primary-blue: #2c7ce6;
             --text-dark: #333333;
             --text-blue: #1c529b;
+            --danger: #e74c3c;
         }
 
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
 
-        /* 頂部頁籤 */
+        /* === 頂部頁籤 === */
         .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; flex-shrink: 0; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
         .tab-item.active { background-color: var(--tab-bg-active); border-bottom: 3px solid var(--tab-highlight); }
 
-        /* 💡 頁籤內容區塊切換設定 */
         .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
 
-        /* 共用 UI 元件 */
+        /* === 共用 UI 元件 === */
         .status-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-dark); }
         .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; }
-        .status-badge.loading { background-color: #f39c12; }
-
+        
+        /* 一般查詢 UI */
         .search-box-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .search-label { font-size: 13px; color: #666; font-weight: bold; margin-bottom: 4px; }
         .search-input { width: 100%; border: none; font-size: 24px; font-weight: 900; color: var(--text-dark); outline: none; }
-
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .btn-full { grid-column: 1 / -1; }
-        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; transition: transform 0.1s; }
+        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; }
         .btn:active { transform: translateY(3px); box-shadow: 0 0 0 #1b56a3; }
-        .btn:disabled { background-color: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; }
-
         .result-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 20px 15px; }
         .result-title { color: var(--primary-blue); font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
         .result-divider { border: none; border-top: 1px solid #e0e0e0; margin-bottom: 15px; }
         .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
-        .result-label { color: var(--text-blue); }
-        .result-value { color: var(--text-dark); }
-        .value-loading { color: #95a5a6; font-style: italic; }
-
-        /* 佔位符號樣式 (給新頁面用的) */
-        .placeholder-box { background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px; }
-
+        
+        /* === 📝 訪客系統專屬 UI (整合進主視覺) === */
+        .v-card { background: white; border-radius: 8px; padding: 15px; border: 2px solid var(--primary-blue); margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .v-header-title { text-align: center; color: var(--primary-blue); margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; }
+        .v-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .v-full-width { grid-column: span 2; }
+        .v-card label { font-size: 13px; color: #666; font-weight: bold; }
+        .v-card input, .v-card textarea { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1.5px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; outline: none; }
+        .v-card input:focus, .v-card textarea:focus { border-color: var(--primary-blue); }
+        .btn-submit-v { width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; letter-spacing: 2px; cursor: pointer; box-shadow: 0 3px 0 #1b56a3; }
+        .btn-submit-v:active { transform: translateY(3px); box-shadow: none; }
+        
+        /* 訪客紀錄清單 UI */
+        .log-item { background: #fff; border-left: 5px solid var(--primary-blue); padding: 12px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; position: relative; }
+        .log-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-blue); margin-bottom: 5px; padding-right: 50px; }
+        .del-btn { position: absolute; top: 10px; right: 10px; color: var(--danger); font-size: 11px; cursor: pointer; padding: 3px 6px; border: 1px solid #ffeded; border-radius: 4px; }
+        .checkout-btn { margin-top: 10px; background: #fff; color: var(--primary-blue); border: 1.5px solid var(--primary-blue); padding: 8px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .checkout-btn:active { background: var(--primary-blue); color: white; }
+        
         /* 掃描器全螢幕遮罩 UI */
         .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         #reader { width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; background: #000; }
-        .close-scanner-btn { margin-top: 20px; padding: 15px 30px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #c0392b; }
-        .close-scanner-btn:active { transform: translateY(3px); box-shadow: none; }
+        .close-scanner-btn { margin-top: 20px; padding: 15px 30px; background-color: var(--danger); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -95,27 +107,43 @@
 
     <div id="tab-advanced" class="tab-content">
         <div class="status-bar">資料庫： <span class="status-badge" style="background-color: #8e44ad;">VIP 專區</span></div>
-        <div class="placeholder-box">
+        <div style="background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px;">
             🛡️ 董事與 VIP 車輛查詢系統<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
         </div>
     </div>
 
     <div id="tab-apps" class="tab-content">
         <div class="status-bar">目前系統： <span class="status-badge" style="background-color: #16a085;">訪客管理</span></div>
-        <div class="placeholder-box">
-            📝 訪客登記系統查看<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        
+        <div class="v-card">
+            <h2 class="v-header-title">訪客登記入廠</h2>
+            <div class="v-form-grid">
+                <div class="v-full-width"><label>訪客姓名</label><input type="text" id="vName"></div>
+                <div><label>來訪人數</label><input type="number" id="vCount" value="1"></div>
+                <div><label>電話</label><input type="tel" id="vPhone"></div>
+                <div class="v-full-width"><label>公司行號</label><input type="text" id="vComp"></div>
+                <div class="v-full-width"><label>受訪人員</label><input type="text" id="vTarget"></div>
+                <div class="v-full-width"><label>事由</label><textarea id="vReason" rows="1"></textarea></div>
+            </div>
+            <button class="btn-submit-v" onclick="submitLog()">送出登記並同步雲端</button>
+        </div>
+
+        <div id="logList">
+            <h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單載入中...</h3>
         </div>
     </div>
 
     <div id="tab-channels" class="tab-content">
         <div class="status-bar">頻道： <span class="status-badge" style="background-color: #d35400;">內部廣播</span></div>
-        <div class="placeholder-box">
+        <div style="background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px;">
             📋 勤務交接簿查看<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
         </div>
     </div>
 
     <div id="tab-settings" class="tab-content">
-        <div class="placeholder-box">⚙️ 系統設定<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span></div>
+        <div style="background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px;">
+            ⚙️ 系統設定<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        </div>
     </div>
 
     <div class="scanner-modal" id="scannerModal">
@@ -125,19 +153,116 @@
     </div>
 
     <script>
-        // 💡 賈維斯新增：頁籤切換核心邏輯
-        function switchTab(tabId, element) {
-            // 1. 移除所有頁籤的高光狀態
-            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
-            // 2. 隱藏所有內容區塊
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        // ==========================================
+        // 1. Firebase 初始化與訪客登記邏輯
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+            authDomain: "factor-security-d1965.firebaseapp.com",
+            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+            projectId: "factor-security-d1965",
+            storageBucket: "factor-security-d1965.firebasestorage.app",
+            messagingSenderId: "864846943143",
+            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        // 賈維斯智慧連動：自動抓取登入時儲存的姓名
+        let currentOfficerName = localStorage.getItem('m_security_officer_name') || "未登入人員";
+
+        function submitLog() {
+            const vName = document.getElementById('vName').value.trim();
+            if(!vName) return alert("請輸入訪客姓名！");
             
-            // 3. 亮起點擊的頁籤，並顯示對應的內容
+            const now = new Date();
+            const timeIn = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            
+            const logData = {
+                date: now.toISOString().split('T')[0],
+                name: vName,
+                count: document.getElementById('vCount').value,
+                phone: document.getElementById('vPhone').value,
+                company: document.getElementById('vComp').value,
+                target: document.getElementById('vTarget').value,
+                timeIn: timeIn,
+                leaveTime: "",
+                recorder: currentOfficerName, // 自動帶入登入姓名
+                reason: document.getElementById('vReason').value,
+                timestamp: Date.now()
+            };
+
+            db.ref('visitor_logs').push(logData).then(() => {
+                alert("訪客登記成功，已同步雲端！");
+                document.getElementById('vName').value = ""; 
+                document.getElementById('vPhone').value = ""; 
+                document.getElementById('vReason').value = ""; 
+            }).catch((error) => {
+                alert("雲端連線失敗：" + error.message);
+            });
+        }
+
+        function checkout(key) {
+            const now = new Date();
+            const defaultTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const leaveTime = prompt("請確認或手動修改出廠時間：", defaultTime);
+            
+            if(leaveTime) {
+                db.ref('visitor_logs/' + key).update({ leaveTime: leaveTime });
+            }
+        }
+
+        function deleteRecord(key) {
+            if(confirm("確定要刪除這筆訪客紀錄嗎？（刪除後無法復原）")) {
+                db.ref('visitor_logs/' + key).remove();
+            }
+        }
+
+        // 即時監聽訪客資料庫
+        db.ref('visitor_logs').limitToLast(15).on('value', (snapshot) => {
+            const listDiv = document.getElementById('logList');
+            listDiv.innerHTML = '<h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單 (自動更新)</h3>';
+            
+            const data = snapshot.val();
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    const item = data[key];
+                    const isOut = item.leaveTime !== "";
+                    listDiv.innerHTML += `
+                        <div class="log-item" style="${isOut ? 'opacity: 0.6; border-left-color: #95a5a6;' : ''}">
+                            <span class="del-btn" onclick="deleteRecord('${key}')">刪除</span>
+                            <div class="log-header">
+                                <span>${item.name} (${item.count}人)</span>
+                                <span style="color: ${isOut ? '#95a5a6' : '#27ae60'}">${isOut ? '已出廠' : '在場中'}</span>
+                            </div>
+                            <div style="color:#555; line-height: 1.6; font-size: 13px;">
+                                公司：${item.company}<br>
+                                拜訪：${item.target} | 入廠：${item.timeIn}<br>
+                                負責登記：${item.recorder || '未知'}<br>
+                                ${isOut ? '<b style="color:var(--primary-blue);">出廠時間：' + item.leaveTime + '</b>' : ''}
+                            </div>
+                            ${!isOut ? `<button class="checkout-btn" onclick="checkout('${key}')">簽退離開 (可補填時間)</button>` : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                listDiv.innerHTML += '<div style="text-align:center; color:#999; margin-top:20px;">目前尚無訪客紀錄</div>';
+            }
+        });
+
+        // ==========================================
+        // 2. 頁籤切換與查詢系統邏輯 (維持原樣)
+        // ==========================================
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             element.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
 
-        /* --- 以下為原有的查詢與掃描邏輯，維持不變 --- */
         function clearInput() {
             const input = document.getElementById('queryInput');
             input.value = ''; input.focus(); resetResultCard();
@@ -157,15 +282,16 @@
 
             searchBtn.disabled = true; searchBtn.innerText = "連線中...";
             statusBadge.innerText = "檢索中"; statusBadge.classList.add('loading');
-            ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerHTML = '<span class="value-loading">連線雲端...</span>');
-
+            
             try {
                 const data = await mockCloudDatabase(inputVal);
                 if (data) {
                     document.getElementById('res-title').innerText = "身份確認：台灣精銳員工";
                     document.getElementById('res-title').style.color = "var(--primary-blue)";
-                    document.getElementById('res-name').innerText = data.name; document.getElementById('res-unit').innerText = data.unit;
-                    document.getElementById('res-id').innerText = data.id; document.getElementById('res-plate').innerText = data.plate;
+                    document.getElementById('res-name').innerText = data.name; 
+                    document.getElementById('res-unit').innerText = data.unit;
+                    document.getElementById('res-id').innerText = data.id; 
+                    document.getElementById('res-plate').innerText = data.plate;
                 } else {
                     document.getElementById('res-title').innerText = "警告：查無此人/車";
                     document.getElementById('res-title').style.color = "#e74c3c";
@@ -184,20 +310,22 @@
                 setTimeout(() => {
                     const db = {
                         "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" },
-                        "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" },
-                        "4710088638793": { name: "測試條碼商品", unit: "後勤部", id: "4710088638793", plate: "無" } // 幫你把剛剛掃的條碼加進來了XD
+                        "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" }
                     };
                     resolve(db[query.toUpperCase()] || null);
-                }, 800);
+                }, 500);
             });
         }
 
+        // ==========================================
+        // 3. 掃描器引擎邏輯
+        // ==========================================
         let html5QrCode;
         function startScanner() {
             document.getElementById('scannerModal').style.display = 'flex';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess)
-            .catch(err => { alert("啟動相機失敗！請確認權限。"); closeScanner(); });
+            .catch(err => { alert("啟動相機失敗！"); closeScanner(); });
         }
         function onScanSuccess(decodedText, decodedResult) {
             closeScanner();
