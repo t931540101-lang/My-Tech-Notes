@@ -3,351 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security - 綜合查詢與應用</title>
-    
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
+    <title>台灣精銳 M-Security - 系統授權登入</title>
     <style>
+        /* 💡 旗艦版控制台：全方位精細操控 */
         :root {
-            --bg-color: #eaf1f9;
-            --tab-bg-dark: #63768b;
-            --tab-bg-active: #4a5c70;
-            --tab-highlight: #00e5ff;
-            --primary-blue: #2c7ce6;
-            --text-dark: #1e293b;
-            --text-blue: #1c529b;
-            --danger: #e74c3c;
-            --success: #10b981;
-            --vip-gold: #f1c40f;
-            --vip-purple: #8e44ad;
+            --main-title-color: #1e3a8a;
+            --main-title-weight: 900;
+            --main-title-size: 38px;
+            --main-title-spacing: 5px;
+            --main-title-bottom-margin: 10px;
+            --sub-title-color: #333333;
+            --sub-title-weight: 600;
+            --sub-title-size: 20px;
+            --sub-title-spacing: 1px;
+            --card-width: calc(100% - 40px);
+            --card-max-width: 440px;
+            --card-border-color: #547bba;
+            --card-content-max-width: 300px;
+            --card-title-color: #1d4ed8;
+            --card-title-weight: 800;
         }
 
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
-
-        /* === 頂部頁籤 === */
-        .tabs-header { display: flex; background-color: var(--tab-bg-dark); height: 50px; flex-shrink: 0; }
-        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
-        .tab-item.active { background-color: var(--tab-bg-active); border-bottom: 3px solid var(--tab-highlight); }
-
-        .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
-
-        /* === 共用 UI 元件 === */
-        .status-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-dark); }
-        .status-badge { background-color: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-left: 8px; }
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: #d2d6dc; }
         
-        /* 🔵 一般查詢 UI */
-        .search-box-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .search-label { font-size: 13px; color: #666; font-weight: bold; margin-bottom: 4px; }
-        .search-input { width: 100%; border: none; font-size: 24px; font-weight: 900; color: var(--text-dark); outline: none; }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .btn-full { grid-column: 1 / -1; }
-        .btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 18px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 3px 0 #1b56a3; cursor: pointer; }
-        .btn:active { transform: translateY(3px); box-shadow: 0 0 0 #1b56a3; }
-        .result-card { background-color: #ffffff; border: 2px solid var(--primary-blue); border-radius: 8px; padding: 20px 15px; }
-        .result-title { color: var(--primary-blue); font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
-        .result-divider { border: none; border-top: 1px solid #e0e0e0; margin-bottom: 15px; }
-        .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
-        
-        /* 🟡 進階 VIP 專屬 UI */
-        .vip-card { background: white; border-radius: 8px; padding: 15px; border: 2px solid var(--vip-purple); margin-bottom: 20px; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.15); }
-        .vip-header { text-align: center; color: var(--vip-purple); margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--vip-purple); padding-bottom: 10px; font-weight: 900; letter-spacing: 1px; }
-        .vip-input-box { border: 1.5px solid #d1d5db; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; }
-        .vip-input { width: 100%; border: none; font-size: 20px; font-weight: 900; color: var(--text-dark); outline: none; text-align: center; }
-        .btn-vip { width: 100%; padding: 15px; background: var(--vip-purple); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; letter-spacing: 2px; cursor: pointer; box-shadow: 0 3px 0 #6c3483; }
-        .btn-vip:active { transform: translateY(3px); box-shadow: none; }
-        .ink-container { background: #fdfbf7; border: 2px dashed var(--vip-gold); border-radius: 8px; padding: 20px; cursor: pointer; transition: all 0.3s ease; position: relative; }
-        .ink-container:active { background: #fcf3cf; }
-        .ink-hint { text-align: center; font-size: 12px; color: #b7950b; font-weight: bold; margin-bottom: 15px; letter-spacing: 1px; }
-        .blur-text { filter: blur(6px); user-select: none; transition: filter 0.3s ease; background: #e5e7eb; color: transparent; border-radius: 4px; padding: 0 4px; }
-        .blur-text.revealed { filter: blur(0px); background: transparent; color: var(--text-dark); }
-        
-        /* 🟢 應用 (訪客系統) 專屬 UI */
-        .v-card { background: white; border-radius: 8px; padding: 15px; border: 2px solid var(--primary-blue); margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .v-header-title { text-align: center; color: var(--primary-blue); margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; }
-        .v-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .v-full-width { grid-column: span 2; }
-        .v-card label { font-size: 13px; color: #666; font-weight: bold; }
-        .v-card input, .v-card textarea { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1.5px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; outline: none; }
-        .btn-submit-v { width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 3px 0 #1b56a3; }
-        .log-item { background: #fff; border-left: 5px solid var(--primary-blue); padding: 12px; margin-bottom: 10px; border-radius: 5px; font-size: 0.9rem; position: relative; }
-        .log-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-blue); margin-bottom: 5px; }
-        .del-btn { position: absolute; top: 10px; right: 10px; color: var(--danger); font-size: 11px; cursor: pointer; padding: 3px 6px; border: 1px solid #ffeded; border-radius: 4px; }
-        .checkout-btn { margin-top: 10px; background: #fff; color: var(--primary-blue); border: 1.5px solid var(--primary-blue); padding: 8px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 14px; cursor: pointer; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 12vh; 
+        }
 
-        /* 🟠 頻道 (勤務交接簿) 專屬 UI */
-        .handover-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; }
-        .btn-add-log { background-color: var(--text-dark); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .duty-card { background: white; border-left: 8px solid var(--text-dark); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; transition: all 0.2s; }
-        .duty-card.confirmed { background: #ecfdf5; border-left-color: var(--success); opacity: 0.95; }
-        .duty-time { font-family: monospace; font-size: 12px; background: #334155; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-        .duty-urgent { font-size: 10px; background: var(--danger); color: white; padding: 3px 6px; border-radius: 4px; font-weight: 900; margin-left: 6px; }
-        .duty-confirmed-badge { font-size: 10px; background: var(--success); color: white; padding: 3px 6px; border-radius: 4px; font-weight: 900; margin-left: 6px; }
-        .duty-text { font-size: 18px; font-weight: bold; margin: 12px 0 8px 0; color: var(--text-dark); line-height: 1.4; padding-right: 20px; }
-        .duty-text.urgent { color: var(--danger); }
-        .duty-text.confirmed { color: #94a3b8; font-style: italic; }
-        .btn-confirm-duty { width: 100%; padding: 10px; background: #f8fafc; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 14px; transition: all 0.2s; }
-        .del-duty-btn { position: absolute; top: 12px; right: 12px; color: #cbd5e1; font-size: 24px; line-height: 1; font-weight: bold; cursor: pointer; border: none; background: transparent; padding: 0; }
+        .header-global {
+            text-align: center;
+            width: 90%;
+            max-width: calc(var(--card-max-width) * 0.9);
+            margin-bottom: 4vh;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.4);
+        }
 
-        /* ⚪ 設定頁面專屬 UI */
-        .settings-card { background: white; border-radius: 8px; padding: 25px 20px; border: 2px solid #cbd5e1; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .profile-icon { font-size: 50px; margin-bottom: 10px; }
-        .profile-name { font-size: 22px; font-weight: 900; color: var(--text-dark); margin-bottom: 5px; letter-spacing: 1px; }
-        .profile-status { font-size: 14px; color: var(--success); font-weight: bold; margin-bottom: 20px; }
-        .btn-setting { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 15px; transition: all 0.2s; }
-        .btn-logout { background-color: #f1f5f9; color: var(--text-dark); border: 2px solid #cbd5e1; }
-        .btn-logout:active { background-color: #e2e8f0; transform: scale(0.98); }
-        .btn-danger { background-color: #fef2f2; color: var(--danger); border: 2px solid #fecaca; }
-        .btn-danger:active { background-color: #fee2e2; transform: scale(0.98); }
+        .main-title-text {
+            font-size: var(--main-title-size);
+            font-weight: var(--main-title-weight); 
+            color: var(--main-title-color); 
+            letter-spacing: var(--main-title-spacing);
+            margin: 0 0 var(--main-title-bottom-margin) 0;
+        }
+
+        .sub-title-text {
+            font-size: var(--sub-title-size);
+            font-weight: var(--sub-title-weight); 
+            color: var(--sub-title-color); 
+            letter-spacing: var(--sub-title-spacing);
+            margin: 0;
+        }
+
+        .login-card-container {
+            background: #ffffff;
+            width: var(--card-width);
+            max-width: var(--card-max-width);
+            padding: 40px 24px;
+            border-radius: 12px;
+            border: 2px solid var(--card-border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         
-        /* 📸 掃描器全螢幕遮罩 UI */
-        .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        #reader { width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; background: #000; }
-        .close-scanner-btn { margin-top: 20px; padding: 15px 30px; background-color: var(--danger); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .card-content-wrapper {
+            width: 100%;
+            max-width: var(--card-content-max-width);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-title-text {
+            color: var(--card-title-color);
+            font-size: 22px;
+            font-weight: var(--card-title-weight);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .input-group-container { 
+            width: 100%;
+            margin-bottom: 20px; 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-group-container input {
+            width: 100%;
+            padding: 16px 12px;
+            padding-right: 40px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #1e293b;
+            outline: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease;
+        }
+        
+        .input-group-container input::placeholder { color: #b2bec3; font-weight: 500;}
+        .input-group-container input:focus { 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+        }
+        
+        .input-clear-btn {
+            position: absolute;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #dfe6e9;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .input-group-container input:not(:placeholder-shown) + .input-clear-btn {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .input-clear-btn:hover { background-color: #b2bec3; }
+
+        .login-btn-global {
+            width: 100%;
+            padding: 16px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: #3b82f6; 
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+        
+        .login-btn-global:active { background-color: #2563eb; transform: translateY(1px); }
     </style>
 </head>
 <body>
 
-    <div class="tabs-header">
-        <div class="tab-item active" onclick="switchTab('tab-general', this)">一般</div>
-        <div class="tab-item" onclick="switchTab('tab-advanced', this)">進階</div>
-        <div class="tab-item" onclick="switchTab('tab-apps', this)">應用</div>
-        <div class="tab-item" onclick="switchTab('tab-channels', this)">頻道</div>
-        <div class="tab-item" onclick="switchTab('tab-settings', this)">設定</div>
+    <div class="header-global">
+        <h1 class="main-title-text">台灣精銳</h1>
+        <h2 class="sub-title-text">M-Security 綜合查詢系統</h2>
     </div>
 
-    <div id="tab-general" class="tab-content active">
-        <div class="status-bar">查詢模式： <span class="status-badge" id="statusBadge">線上</span></div>
-        <div class="search-box-card">
-            <div class="search-label">車牌/工號</div>
-            <input type="text" class="search-input" id="queryInput" placeholder="請輸入或掃描...">
-        </div>
-        <div class="action-buttons">
-            <button class="btn btn-full" id="searchBtn" onclick="executeSearch()">查詢</button>
-            <button class="btn btn-full" onclick="startScanner()">條碼掃描</button>
-            <button class="btn" onclick="clearInput()">清除</button>
-            <button class="btn">資料同步</button>
-        </div>
-        <div class="result-card" id="resultCard">
-            <div class="result-title" id="res-title">身份確認：等待查詢</div>
-            <hr class="result-divider">
-            <div class="result-row"><span class="result-label">姓名：</span><span class="result-value" id="res-name">---</span></div>
-            <div class="result-row"><span class="result-label">單位：</span><span class="result-value" id="res-unit">---</span></div>
-            <div class="result-row"><span class="result-label">工號：</span><span class="result-value" id="res-id">---</span></div>
-            <div class="result-row"><span class="result-label">車牌：</span><span class="result-value" id="res-plate">---</span></div>
-        </div>
-    </div>
-
-    <div id="tab-advanced" class="tab-content">
-        <div class="status-bar">資料庫： <span class="status-badge" style="background-color: var(--vip-purple);">VIP 專區</span></div>
-        <div class="vip-card">
-            <h2 class="vip-header">🛡️ 董事與 VIP 查驗系統</h2>
-            <div class="vip-input-box">
-                <input type="text" id="vipQueryInput" class="vip-input" placeholder="輸入 VIP 車牌或代號">
-            </div>
-            <button class="btn-vip" id="vipSearchBtn" onclick="searchVIP()">機密檢索</button>
-            <div id="vipResultArea" style="display: none; margin-top: 20px;">
-                <div class="ink-container" onclick="revealInk()">
-                    <div class="ink-hint">⚠️ 機密資料：點擊區塊解碼 (3秒後自動上鎖)</div>
-                    <div class="result-row"><span class="result-label" style="color:var(--vip-purple);">身分：</span><span class="result-value blur-text" style="color:var(--vip-gold); font-weight:900;">VIP</span></div>
-                    <div class="result-row"><span class="result-label" style="color:var(--vip-purple);">姓名：</span><span class="result-value blur-text" id="vip-name">---</span></div>
-                    <div class="result-row"><span class="result-label" style="color:var(--vip-purple);">車牌：</span><span class="result-value blur-text" id="vip-plate">---</span></div>
-                    <div class="result-row" style="margin-bottom:0;"><span class="result-label" style="color:var(--vip-purple);">備註：</span><span class="result-value blur-text" id="vip-reason">---</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-apps" class="tab-content">
-        <div class="status-bar">目前系統： <span class="status-badge" style="background-color: #16a085;">訪客管理</span></div>
-        <div class="v-card">
-            <h2 class="v-header-title">訪客登記入廠</h2>
-            <div class="v-form-grid">
-                <div class="v-full-width"><label>訪客姓名</label><input type="text" id="vName"></div>
-                <div><label>來訪人數</label><input type="number" id="vCount" value="1"></div>
-                <div><label>電話</label><input type="tel" id="vPhone"></div>
-                <div class="v-full-width"><label>公司行號</label><input type="text" id="vComp"></div>
-                <div class="v-full-width"><label>受訪人員</label><input type="text" id="vTarget"></div>
-                <div class="v-full-width"><label>事由</label><textarea id="vReason" rows="1"></textarea></div>
-            </div>
-            <button class="btn-submit-v" onclick="submitLog()">送出登記並同步雲端</button>
-        </div>
-        <div id="logList"><h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單載入中...</h3></div>
-    </div>
-
-    <div id="tab-channels" class="tab-content">
-        <div class="status-bar">頻道： <span class="status-badge" style="background-color: #d35400;">內部廣播</span></div>
-        <div class="handover-header">
-            <div>
-                <h2 style="margin:0; font-size:22px; font-weight:900; color:var(--text-dark); letter-spacing:1px;">勤務交接簿</h2>
-                <div style="font-size:12px; color:#64748b; font-weight:bold;">CORE V3.1 CLOUD SYSTEM</div>
-            </div>
-            <button class="btn-add-log" onclick="addHandoverEntry()">+ 新增交接</button>
-        </div>
-        <div id="handoverList"><h3 style="text-align:center; color:#666; font-size: 14px;">載入交接事項中...</h3></div>
-    </div>
-
-    <div id="tab-settings" class="tab-content">
-        <div class="status-bar">系統狀態： <span class="status-badge" style="background-color: #64748b;">本機設定</span></div>
-        <div class="settings-card">
-            <div class="profile-icon">👮‍♂️</div>
-            <div class="profile-name" id="setting-officer-name">載入中...</div>
-            <div class="profile-status">🟢 當前連線值勤中</div>
+    <div class="login-card-container">
+        <div class="card-content-wrapper">
+            <div class="card-title-text">系統授權登入</div>
             
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+            <div class="input-group-container">
+                <input type="text" id="officerName" placeholder="值勤人員姓名">
+                <span class="input-clear-btn" onclick="clearInput('officerName')">×</span>
+            </div>
+            <div class="input-group-container">
+                <input type="password" id="authCode" placeholder="授權碼" inputmode="text">
+                <span class="input-clear-btn" onclick="clearInput('authCode')">×</span>
+            </div>
             
-            <button class="btn-setting btn-logout" onclick="systemLogout()">🚪 登出系統</button>
-            <button class="btn-setting btn-danger" onclick="systemClearCache()">🗑️ 一鍵清除快取與重置</button>
+            <button class="login-btn-global" onclick="handleLogin()">授權登入</button>
         </div>
-        
-        <div style="text-align:center; color:#94a3b8; font-size: 12px; margin-top: 20px; font-weight: bold; letter-spacing: 1px;">
-            M-Security Core V8.1<br>Obsidian Project
-        </div>
-    </div>
-
-    <div class="scanner-modal" id="scannerModal">
-        <h3 style="color: white; margin-bottom: 10px;">請將條碼/QR Code 對準畫面</h3>
-        <div id="reader"></div>
-        <button class="close-scanner-btn" onclick="closeScanner()">關閉相機</button>
     </div>
 
     <script>
-        // ==========================================
-        // 1. Firebase 初始化 & 全域變數
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
-            authDomain: "factor-security-d1965.firebaseapp.com",
-            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-            projectId: "factor-security-d1965",
-            storageBucket: "factor-security-d1965.firebasestorage.app",
-            messagingSenderId: "864846943143",
-            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
-        };
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        const db = firebase.database();
-
-        let currentOfficerName = localStorage.getItem('m_security_officer_name') || "未登入人員";
-
-        // 設定頁面的名稱顯示
         window.onload = function() {
-            document.getElementById('setting-officer-name').innerText = currentOfficerName;
+            // 讀取上次登入成功的紀錄（有的話自動帶入姓名）
+            const savedName = localStorage.getItem('m_security_officer_name');
+            if (savedName) {
+                document.getElementById('officerName').value = savedName;
+            }
         };
+        
+        function clearInput(inputId) {
+            const inputInput = document.getElementById(inputId);
+            inputInput.value = '';
+            inputInput.focus();
+        }
 
-        // ==========================================
-        // 2. ⚪ 設定頁面邏輯 (登出與快取清除)
-        // ==========================================
-        function systemLogout() {
-            if(confirm('確定要結束值勤並登出系統嗎？')) {
-                localStorage.removeItem('m_security_officer_name');
-                alert('已成功登出！即將返回登入畫面。');
-                // 假設你的登入畫面檔名叫 index.html，若不同請自行修改
-                window.location.href = 'index.html'; 
+        function handleLogin() {
+            const nameInput = document.getElementById('officerName').value.trim();
+            const codeInput = document.getElementById('authCode').value.trim();
+            
+            if (!nameInput || !codeInput) { 
+                alert('⚠️ 請完整輸入姓名與授權碼！'); 
+                return; 
+            }
+            
+            // 🚀 真實門鎖驗證邏輯：比對帳號密碼
+            if (nameInput === '盧家慶' && codeInput === 'D01762') {
+                // 登入成功：記憶姓名
+                localStorage.setItem('m_security_officer_name', nameInput);
+                
+                alert(`授權成功！歡迎值勤，${nameInput}。`);
+                
+                // 💡 登入成功後跳轉到主系統 (請確保你的主系統檔名是 main.html，如果不同請修改這裡！)
+                window.location.href = 'main.html'; 
+                
+            } else {
+                // 登入失敗：擋在門外並清空密碼
+                alert('❌ 系統拒絕存取：帳號或密碼錯誤！');
+                document.getElementById('authCode').value = '';
             }
         }
-
-        function systemClearCache() {
-            if(confirm('⚠️ 警告：這將清除本機所有暫存資料與登入狀態。確定要重置嗎？')) {
-                localStorage.clear();
-                alert('系統快取已清除完畢！即將重新載入。');
-                window.location.reload();
-            }
-        }
-
-        // ==========================================
-        // 3. 🟡 進階 (VIP 隱形墨水查詢) 邏輯
-        // ==========================================
-        let inkTimer;
-        async function searchVIP() {
-            const inputVal = document.getElementById('vipQueryInput').value.trim().toUpperCase();
-            if (!inputVal) return alert('請輸入 VIP 車牌或姓名！');
-            const searchBtn = document.getElementById('vipSearchBtn'); searchBtn.innerText = "機密連線中..."; searchBtn.disabled = true;
-            try {
-                const snap = await db.ref('vip_list').once('value'); let foundVIP = null;
-                snap.forEach(child => { const data = child.val(); if ((data.plate && data.plate === inputVal) || (data.name && data.name === inputVal) || (data.id && data.id === inputVal)) { foundVIP = data; } });
-                const resDiv = document.getElementById('vipResultArea');
-                if (foundVIP) {
-                    document.getElementById('vip-name').innerText = foundVIP.name || '---'; document.getElementById('vip-plate').innerText = foundVIP.plate || '---'; document.getElementById('vip-reason').innerText = foundVIP.reason || '無備註';
-                    document.querySelectorAll('.blur-text').forEach(el => el.classList.remove('revealed')); resDiv.style.display = 'block';
-                } else { alert("查無此 VIP 資料，請確認權限或輸入是否正確。"); resDiv.style.display = 'none'; }
-            } catch (error) { alert("資料庫連線異常！"); } finally { searchBtn.innerText = "機密檢索"; searchBtn.disabled = false; }
-        }
-        function revealInk() {
-            const elements = document.querySelectorAll('.blur-text'); elements.forEach(el => el.classList.add('revealed'));
-            clearTimeout(inkTimer); inkTimer = setTimeout(() => { elements.forEach(el => el.classList.remove('revealed')); }, 3000); 
-        }
-
-        // ==========================================
-        // 4. 📋 勤務交接簿邏輯
-        // ==========================================
-        const handoverRef = db.ref('reactLogs');
-        function addHandoverEntry() {
-            const note = prompt("請輸入交接事項："); if (!note) return;
-            const isUrgent = confirm("這件事需要標註為「重要」嗎？");
-            const now = new Date(); const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            handoverRef.push({ time: timeStr, note: note, urgent: isUrgent, confirmedBy: null, timestamp: firebase.database.ServerValue.TIMESTAMP });
-        }
-        function confirmHandover(id) { if(confirm(`確定要以「${currentOfficerName}」簽署確認嗎？`)) handoverRef.child(id).update({ confirmedBy: currentOfficerName }); }
-        function deleteHandover(id) { if(confirm("確定刪除這條紀錄？")) handoverRef.child(id).remove(); }
-        handoverRef.on('value', (snap) => {
-            const listDiv = document.getElementById('handoverList'); listDiv.innerHTML = ''; const data = snap.val();
-            if (data) {
-                const sortedLogs = Object.keys(data).map(key => ({ id: key, ...data[key] })).sort((a, b) => b.timestamp - a.timestamp);
-                sortedLogs.forEach(log => {
-                    const isConfirmed = !!log.confirmedBy;
-                    listDiv.innerHTML += `<div class="duty-card ${isConfirmed ? 'confirmed' : ''}"><button class="del-duty-btn" onclick="deleteHandover('${log.id}')">×</button><div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;"><span class="duty-time">${log.time}</span>${log.urgent ? '<span class="duty-urgent">⚠️重要</span>' : ''}${isConfirmed ? `<span class="duty-confirmed-badge">✓ 已閱：${log.confirmedBy}</span>` : ''}</div><div class="duty-text ${log.urgent ? 'urgent' : ''} ${isConfirmed ? 'confirmed' : ''}">${log.note}</div>${!isConfirmed ? `<button class="btn-confirm-duty" onclick="confirmHandover('${log.id}')">🖱️ 點擊以「${currentOfficerName}」簽署確認</button>` : ''}</div>`;
-                });
-            } else { listDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:30px; font-weight:bold;">目前尚無交接事項</div>'; }
-        });
-
-        // ==========================================
-        // 5. 📝 訪客登記邏輯
-        // ==========================================
-        function submitLog() {
-            const vName = document.getElementById('vName').value.trim(); if(!vName) return alert("請輸入訪客姓名！");
-            const now = new Date(); const timeIn = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            db.ref('visitor_logs').push({ date: now.toISOString().split('T')[0], name: vName, count: document.getElementById('vCount').value, phone: document.getElementById('vPhone').value, company: document.getElementById('vComp').value, target: document.getElementById('vTarget').value, timeIn: timeIn, leaveTime: "", recorder: currentOfficerName, reason: document.getElementById('vReason').value, timestamp: Date.now() }).then(() => { alert("登記成功！"); ['vName','vPhone','vReason'].forEach(id => document.getElementById(id).value = ""); });
-        }
-        function checkout(key) { const now = new Date(); const dt = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0'); const leaveTime = prompt("確認出廠時間：", dt); if(leaveTime) db.ref('visitor_logs/' + key).update({ leaveTime: leaveTime }); }
-        function deleteRecord(key) { if(confirm("確定刪除訪客紀錄？")) db.ref('visitor_logs/' + key).remove(); }
-        db.ref('visitor_logs').limitToLast(15).on('value', (snap) => {
-            const listDiv = document.getElementById('logList'); listDiv.innerHTML = '<h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單</h3>'; const data = snap.val();
-            if (data) {
-                Object.keys(data).reverse().forEach(key => {
-                    const item = data[key]; const isOut = item.leaveTime !== "";
-                    listDiv.innerHTML += `<div class="log-item" style="${isOut ? 'opacity: 0.6; border-left-color: #95a5a6;' : ''}"><span class="del-btn" onclick="deleteRecord('${key}')">刪除</span><div class="log-header"><span>${item.name} (${item.count}人)</span><span style="color: ${isOut ? '#95a5a6' : '#27ae60'}">${isOut ? '已出廠' : '在場中'}</span></div><div style="color:#555; line-height: 1.6; font-size: 13px;">公司：${item.company}<br>拜訪：${item.target} | 入廠：${item.timeIn}<br>負責：${item.recorder || '未知'}<br>${isOut ? '<b style="color:var(--primary-blue);">出廠時間：' + item.leaveTime + '</b>' : ''}</div>${!isOut ? `<button class="checkout-btn" onclick="checkout('${key}')">簽退離開</button>` : ''}</div>`;
-                });
-            }
-        });
-
-        // ==========================================
-        // 6. 頁籤與一般查詢、掃描器邏輯
-        // ==========================================
-        function switchTab(tabId, element) {
-            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            element.classList.add('active'); document.getElementById(tabId).classList.add('active');
-        }
-        function clearInput() { document.getElementById('queryInput').value = ''; document.getElementById('queryInput').focus(); resetResultCard(); }
-        function resetResultCard() { document.getElementById('res-title').innerText = "身份確認：等待查詢"; document.getElementById('res-title').style.color = "var(--primary-blue)"; ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "---"); }
-        async function executeSearch() {
-            const inputVal = document.getElementById('queryInput').value.trim(); const searchBtn = document.getElementById('searchBtn'); const statusBadge = document.getElementById('statusBadge');
-            if (!inputVal) return alert('請輸入車牌或工號！');
-            searchBtn.disabled = true; searchBtn.innerText = "連線中..."; statusBadge.innerText = "檢索中"; statusBadge.classList.add('loading');
-            try {
-                const data = await mockCloudDatabase(inputVal);
-                if (data) { document.getElementById('res-title').innerText = "身份確認：台灣精銳員工"; document.getElementById('res-title').style.color = "var(--primary-blue)"; document.getElementById('res-name').innerText = data.name; document.getElementById('res-unit').innerText = data.unit; document.getElementById('res-id').innerText = data.id; document.getElementById('res-plate').innerText = data.plate;
-                } else { document.getElementById('res-title').innerText = "警告：查無此人/車"; document.getElementById('res-title').style.color = "#e74c3c"; ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "無資料"); }
-            } catch (error) { alert("連線失敗！"); resetResultCard(); } finally { searchBtn.disabled = false; searchBtn.innerText = "查詢"; statusBadge.innerText = "線上"; statusBadge.classList.remove('loading'); }
-        }
-        function mockCloudDatabase(query) { return new Promise((resolve) => { setTimeout(() => { const db = { "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" } }; resolve(db[query.toUpperCase()] || null); }, 500); }); }
-
-        let html5QrCode;
-        function startScanner() { document.getElementById('scannerModal').style.display = 'flex'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess).catch(err => { alert("啟動相機失敗！"); closeScanner(); }); }
-        function onScanSuccess(decodedText) { closeScanner(); document.getElementById('queryInput').value = decodedText; executeSearch(); }
-        function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; if (html5QrCode) { html5QrCode.stop().then(ignore => html5QrCode.clear()).catch(err => console.log(err)); } }
     </script>
 </body>
 </html>
