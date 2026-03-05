@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-SECURITY HQ | 名單部署房</title>
+    <title>M-SECURITY HQ | 權限控管中心</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -13,7 +13,7 @@
             --hq-card: #1e293b;
             --hq-border: #334155;
             --danger: #ef4444;
-            --vip-gold: #f1c40f;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; }
@@ -22,7 +22,6 @@
             color: #f8fafc; font-family: -apple-system, "Microsoft JhengHei", sans-serif;
         }
 
-        /* 導覽條 */
         .top-nav {
             background: #000; border-bottom: 3px solid var(--hq-primary);
             padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
@@ -34,42 +33,38 @@
 
         .content-container { padding: 15px; }
 
-        /* 部署工具卡片 */
-        .deploy-card {
-            background: var(--hq-card); border-radius: 12px; border: 1.5px solid var(--hq-border);
-            padding: 20px; margin-bottom: 20px;
+        /* 授權發放卡片 */
+        .auth-card {
+            background: var(--hq-card); border-radius: 12px; border: 2px solid var(--hq-border);
+            padding: 25px 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        .auth-header { color: var(--hq-primary); font-size: 20px; font-weight: 900; margin-top: 0; margin-bottom: 20px; text-align: center; letter-spacing: 2px; }
+        
         .input-group { margin-bottom: 15px; }
-        .input-label { font-size: 12px; color: var(--hq-primary); font-weight: bold; margin-bottom: 5px; display: block; }
+        .input-label { font-size: 13px; color: #94a3b8; margin-bottom: 8px; display: block; }
         .input-field {
-            width: 100%; background: #0f172a; border: 1px solid var(--hq-border);
-            padding: 12px; color: white; border-radius: 8px; font-size: 16px;
+            width: 100%; background: #0f172a; border: 1.5px solid var(--hq-border);
+            padding: 14px; color: white; border-radius: 8px; font-size: 16px; outline: none;
         }
-        .btn-deploy {
+        .input-field:focus { border-color: var(--hq-primary); }
+
+        .btn-issue {
             width: 100%; background: var(--hq-primary); color: #0f172a;
-            padding: 15px; font-weight: 900; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+            padding: 16px; font-weight: 900; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; letter-spacing: 4px; margin-top: 10px;
         }
 
-        /* 名單清單區 */
-        .list-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .list-btn { 
-            flex: 1; padding: 10px; border: 1px solid var(--hq-border); background: transparent; 
-            color: #94a3b8; border-radius: 6px; font-weight: bold; cursor: pointer;
-        }
-        .list-btn.active { background: var(--hq-primary); color: #000; border-color: var(--hq-primary); }
-
-        .data-list { max-height: 500px; overflow-y: auto; }
-        .data-item {
-            background: #162030; padding: 15px; border-radius: 10px; margin-bottom: 10px;
+        /* 授權名單 */
+        .guard-list { margin-top: 20px; }
+        .guard-item {
+            background: #162030; padding: 15px; border-radius: 10px; margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            border-left: 5px solid #334155;
+            border-left: 5px solid var(--success);
         }
-        .data-item.vip { border-left-color: var(--vip-gold); }
-        .info-name { font-size: 18px; font-weight: bold; display: block; }
-        .info-sub { font-size: 12px; color: #64748b; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-
-        @media (max-width: 600px) { .data-item { flex-direction: column; align-items: flex-start; gap: 10px; } .btn-delete { width: 100%; } }
+        .guard-info { display: flex; flex-direction: column; }
+        .guard-name { font-size: 18px; font-weight: bold; color: #fff; }
+        .guard-pwd { font-size: 13px; color: var(--hq-primary); font-family: monospace; margin-top: 4px; }
+        .btn-revoke { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-revoke:hover { background: var(--danger); color: white; }
     </style>
 </head>
 <body>
@@ -81,38 +76,28 @@
 
     <nav class="nav-tabs">
         <div class="tab" onclick="location.href='hq_main.html'">即時戰情</div>
-        <div class="tab active">名單部署</div>
-        <div class="tab">權限控管</div>
+        <div class="tab" onclick="location.href='hq_deploy.html'">名單部署</div>
+        <div class="tab active">權限控管</div>
     </nav>
 
     <div class="content-container">
         
-        <div class="deploy-card">
-            <h3 style="margin-top:0; color:var(--hq-primary);">🚀 快速部署名單</h3>
-            <div class="list-selector">
-                <button id="type-emp" class="list-btn active" onclick="setDeployType('employee')">一般員工</button>
-                <button id="type-vip" class="list-btn" onclick="setDeployType('vip')">VIP 貴賓</button>
-            </div>
-            
+        <div class="auth-card">
+            <h3 class="auth-header">🛡️ 核發人員值勤授權</h3>
             <div class="input-group">
-                <span class="input-label">姓名</span>
-                <input type="text" id="targetName" class="input-field" placeholder="請輸入姓名">
+                <span class="input-label">弟兄姓名 (將作為登入帳號)</span>
+                <input type="text" id="guardName" class="input-field" placeholder="請輸入姓名">
             </div>
             <div class="input-group">
-                <span class="input-label">車牌 / 工號</span>
-                <input type="text" id="targetId" class="input-field" placeholder="請輸入車牌或工號">
+                <span class="input-label">設定授權密碼 (建議使用工號)</span>
+                <input type="text" id="guardPwd" class="input-field" placeholder="請輸入密碼">
             </div>
-            <button class="btn-deploy" onclick="executeDeploy()">確認部署至雲端</button>
+            <button class="btn-issue" onclick="issueAuth()">核發電子通行證</button>
         </div>
 
-        <div class="deploy-card">
-            <h3 style="margin-top:0; color:var(--hq-primary);">📂 名單庫監控</h3>
-            <div class="list-selector">
-                <button id="show-emp" class="list-btn active" onclick="switchListView('employee')">員工清單</button>
-                <button id="show-vip" class="list-btn" onclick="switchListView('vip')">VIP 清單</button>
-            </div>
-            <div id="data-display" class="data-list">
-                </div>
+        <div class="guard-list" id="guardContainer">
+            <h4 style="margin-left: 5px; color: #94a3b8; letter-spacing: 1px;">🟢 目前已授權人員</h4>
+            <div style="text-align: center; padding: 40px; color: #555;">正在掃描權限資料庫...</div>
         </div>
 
     </div>
@@ -121,71 +106,56 @@
         const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
-        let currentDeployType = 'employee';
-        let currentViewType = 'employee';
+        // 核發授權邏輯
+        function issueAuth() {
+            const name = document.getElementById('guardName').value.trim();
+            const pwd = document.getElementById('guardPwd').value.trim();
+            if(!name || !pwd) return alert("姓名與密碼為必填欄位！");
 
-        function setDeployType(type) {
-            currentDeployType = type;
-            document.getElementById('type-emp').className = type === 'employee' ? 'list-btn active' : 'list-btn';
-            document.getElementById('type-vip').className = type === 'vip' ? 'list-btn active' : 'list-btn';
-        }
-
-        function switchListView(type) {
-            currentViewType = type;
-            document.getElementById('show-emp').className = type === 'employee' ? 'list-btn active' : 'list-btn';
-            document.getElementById('show-vip').className = type === 'vip' ? 'list-btn active' : 'list-btn';
-            loadListData();
-        }
-
-        // 執行部署
-        function executeDeploy() {
-            const name = document.getElementById('targetName').value.trim();
-            const id = document.getElementById('targetId').value.trim().toUpperCase();
-            if(!name || !id) return alert("請填寫完整資料！");
-
-            const path = currentDeployType === 'employee' ? 'employee_list' : 'vip_list';
-            const data = { name: name, plate: id, id: id, timestamp: Date.now() };
-
-            db.ref(path).push(data).then(() => {
-                alert("✅ 部署成功！前線人員已可同步查驗。");
-                document.getElementById('targetName').value = '';
-                document.getElementById('targetId').value = '';
+            db.ref('guard_accounts/' + name).set({
+                password: pwd,
+                grantedAt: new Date().toLocaleString(),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert(`✅ 授權成功！\n值勤弟兄「${name}」現在已可登入前線系統。`);
+                document.getElementById('guardName').value = '';
+                document.getElementById('guardPwd').value = '';
             });
         }
 
-        // 載入清單資料
-        function loadListData() {
-            const path = currentViewType === 'employee' ? 'employee_list' : 'vip_list';
-            db.ref(path).on('value', snap => {
-                const container = document.getElementById('data-display');
-                container.innerHTML = '';
-                if(!snap.exists()) { container.innerHTML = '<div style="text-align:center; color:#555;">暫無資料</div>'; return; }
+        // 監聽並載入授權名單
+        db.ref('guard_accounts').on('value', snap => {
+            const container = document.getElementById('guardContainer');
+            container.innerHTML = '<h4 style="margin-left: 5px; color: #94a3b8; letter-spacing: 1px;">🟢 目前已授權人員</h4>';
+            
+            if(!snap.exists()) {
+                container.innerHTML += '<div style="text-align:center; padding:30px; color:#555;">尚未核發任何人員授權</div>';
+                return;
+            }
 
-                snap.forEach(child => {
-                    const d = child.val();
-                    const isVip = currentViewType === 'vip';
-                    container.innerHTML += `
-                        <div class="data-item ${isVip?'vip':''}">
-                            <div>
-                                <span class="info-name">${d.name} ${isVip?'⭐':''}</span>
-                                <span class="info-sub">辨識碼：${d.plate}</span>
-                            </div>
-                            <button class="btn-delete" onclick="deleteRecord('${path}', '${child.key}')">撤除部署</button>
+            snap.forEach(child => {
+                const name = child.key;
+                const d = child.val();
+                container.innerHTML += `
+                    <div class="guard-item">
+                        <div class="guard-info">
+                            <span class="guard-name">${name}</span>
+                            <span class="guard-pwd">授權密碼：${d.password}</span>
                         </div>
-                    `;
-                });
+                        <button class="btn-revoke" onclick="revokeAuth('${name}')">撤銷權限</button>
+                    </div>
+                `;
             });
-        }
+        });
 
-        // 刪除資料
-        function deleteRecord(path, key) {
-            if(confirm("確定要撤除此筆部署資料嗎？撤除後前線將無法查驗。")) {
-                db.ref(`${path}/${key}`).remove();
+        // 撤銷授權
+        function revokeAuth(name) {
+            if(confirm(`⚠️ 警告：撤銷 [${name}] 的權限後，該弟兄將立即被踢出系統且無法再次登入。確定執行？`)) {
+                db.ref('guard_accounts/' + name).remove().then(() => {
+                    alert(`已撤銷 ${name} 的存取權限。`);
+                });
             }
         }
-
-        // 初始載入
-        loadListData();
     </script>
 </body>
 </html>
