@@ -3,156 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台灣精銳 M-Security - 系統授權登入</title>
+    <title>台湾精锐 M-Security - 旗舰版授权登入</title>
     <style>
-        /* 💡 架構師專屬控制台：直接修改這裡的數值！ */
+        /* 💡 旗舰版控制台：全方位精细操控 */
         :root {
-            /* 1. 台灣精銳 (主標題) 設定 */
-            --main-title-color: #000000;       /* 顏色：純黑 (#000000) 或企業藍 (#1e3a8a) */
-            --main-title-weight: 900;          /* 粗細：可填 400(正常) 到 900(極粗) */
-            --main-title-spacing: 4px;         /* 字距：文字之間的距離 */
-            --main-title-bottom-margin: 8px;   /* 位置：與下方副標題的距離 */
+            /* === 1. Logo 设置 === */
+            --logo-size: 60px;                  /* Logo 大小 */
+            --logo-offset-x: 20px;             /* Logo 距离左边缘 */
+            --logo-offset-y: 20px;             /* Logo 距离上边缘 */
 
-            /* 2. M-Security 綜合查詢系統 (副標題) 設定 */
-            --sub-title-color: #333333;        /* 顏色：深灰 (#333333) */
-            --sub-title-weight: 600;           /* 粗細：600 為微粗體 */
+            /* === 2. 台湾精锐 (主标题) 设置 === */
+            --main-title-color: #000000;       /* 颜色：纯黑，更庄重 */
+            --main-title-weight: 900;          /* 粗细：极粗，更有气势 */
+            --main-title-size: 38px;          /* 字体大小 */
+            --main-title-spacing: 5px;         /* 字距：增加距离，更清晰 */
+            --main-title-bottom-margin: 10px;   /* 位置：与下方副标题的距离 */
+
+            /* === 3. M-Security (副标题) 设置 === */
+            --sub-title-color: #333333;        /* 颜色：深灰 */
+            --sub-title-weight: 600;           /* 粗细：微粗 */
+            --sub-title-size: 20px;           /* 字体大小 */
             --sub-title-spacing: 1px;          /* 字距 */
 
-            /* 3. 系統授權登入 (卡片標題) 設定 */
-            --card-title-color: #195bba;       /* 顏色：經典藍 */
-            --card-title-weight: 800;          /* 粗細：800 */
+            /* === 4. 卡片与内容设置 === */
+            --card-width: calc(100% - 40px);    /* 卡片相对于屏幕的宽度 */
+            --card-max-width: 440px;            /* 卡片最大宽度 */
+            --card-border-color: #547bba;       /* 经典蓝色外框 */
+            --card-content-max-width: 300px;    /* 💡 卡片内部内容(文字和按钮)的最大宽度，实现集中感 */
+
+            /* === 5. 卡片标题设置 === */
+            --card-title-color: #1d4ed8;       /* 颜色：醒目蓝 */
+            --card-title-weight: 800;          /* 粗细：800 */
         }
 
         * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; overflow: hidden; }
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: #d2d6dc; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #d2d6dc; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 8vh; 
+            /* 为Logo预留出顶部空间 */
+            padding-top: calc(var(--logo-offset-y) + var(--logo-size) + 10vh); 
         }
         
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 90%;
-            max-width: 420px;
-            margin-bottom: 30px;
-            gap: 15px; 
-        }
-        
-        .company-logo {
-            width: 60px;
-            height: 60px;
+        /* 全域独立 Logo (固定在左上角) */
+        .company-logo-global {
+            position: fixed;
+            left: var(--logo-offset-x);
+            top: var(--logo-offset-y);
+            width: var(--logo-size);
+            height: var(--logo-size);
             border-radius: 6px;
+            z-index: 100;
         }
 
-        .text-group {
-            display: flex;
-            flex-direction: column;
-            text-align: left; 
+        /* 💡 标题区块佈局设定 (整體置中) */
+        .header-global {
+            text-align: center; /* 文字整体居中 */
+            width: 90%;
+            max-width: calc(var(--card-max-width) * 0.9);
+            margin-bottom: 5vh;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.4); /* 轻微光晕 */
         }
 
-        /* 這裡套用上方控制台的變數 */
-        .main-title {
-            font-size: 34px;
+        /* 这里的套用控制台变量，实现文字的颜色、粗细、位置微调 */
+        .main-title-text {
+            font-size: var(--main-title-size);
             font-weight: var(--main-title-weight); 
             color: var(--main-title-color); 
             letter-spacing: var(--main-title-spacing);
             margin: 0 0 var(--main-title-bottom-margin) 0;
         }
 
-        .sub-title {
-            font-size: 18px;
+        .sub-title-text {
+            font-size: var(--sub-title-size);
             font-weight: var(--sub-title-weight); 
             color: var(--sub-title-color); 
             letter-spacing: var(--sub-title-spacing);
             margin: 0;
         }
 
-        .login-card {
+        /* 登入卡片設定 */
+        .login-card-container {
             background: #ffffff;
-            width: 90%;
-            max-width: 420px;
-            padding: 35px 24px;
+            width: var(--card-width);
+            max-width: var(--card-max-width);
+            padding: 40px 24px;
             border-radius: 12px;
-            border: 2px solid #547bba;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 2px solid var(--card-border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 让卡片内容整体居中 */
         }
         
-        .card-title {
+        /* 💡 内部内容限制器：限制文字和按钮的宽度 */
+        .card-content-wrapper {
+            width: 100%;
+            max-width: var(--card-content-max-width);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-title-text {
             color: var(--card-title-color);
             font-size: 22px;
             font-weight: var(--card-title-weight);
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
         }
 
-        .input-group { margin-bottom: 18px; }
-        .input-group input {
+        .input-group-container { 
             width: 100%;
-            padding: 15px 12px;
+            margin-bottom: 20px; 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-group-container input {
+            width: 100%;
+            padding: 16px 12px;
+            padding-right: 40px; /* 为右侧清除按钮留出空间 */
             border: 1.5px solid #e2e8f0;
             border-radius: 8px;
             font-size: 16px;
             color: #1e293b;
             outline: none;
             -webkit-appearance: none;
+            transition: all 0.2s ease;
         }
-        .input-group input::placeholder { color: #94a3b8; }
-        .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .login-btn {
+        
+        .input-group-container input::placeholder { color: #b2bec3; font-weight: 500;}
+        .input-group-container input:focus { 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+        }
+        
+        /* 💡 一键清除按钮 */
+        .input-clear-btn {
+            position: absolute;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #dfe6e9;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            visibility: hidden; /* 默认隐藏 */
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .input-group-container input:not(:placeholder-shown) + .input-clear-btn {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .input-clear-btn:hover { background-color: #b2bec3; }
+
+        .login-btn-global {
             width: 100%;
             padding: 16px;
-            margin-top: 8px;
+            margin-top: 10px;
             border: none;
             border-radius: 8px;
             background-color: #3b82f6; 
             color: white;
             font-size: 18px;
             font-weight: bold;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
         }
-        .login-btn:active { background-color: #2563eb; transform: translateY(1px); }
+        
+        .login-btn-global:active { background-color: #2563eb; transform: translateY(1px); }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <img src="logo.png" alt="Logo" class="company-logo" onerror="this.style.display='none'">
-        <div class="text-group">
-            <h1 class="main-title">台灣精銳</h1>
-            <h2 class="sub-title">M-Security 綜合查詢系統</h2>
-        </div>
+    <img src="logo.png" alt="Logo" class="company-logo-global" onerror="this.style.display='none'">
+
+    <div class="header-global">
+        <h1 class="main-title-text">台湾精锐</h1>
+        <h2 class="sub-title-text">M-Security 综合查询系统</h2>
     </div>
 
-    <div class="login-card">
-        <div class="card-title">系統授權登入</div>
-        <div class="input-group">
-            <input type="text" id="officerName" placeholder="值勤人員姓名">
+    <div class="login-card-container">
+        <div class="card-content-wrapper">
+            <div class="card-title-text">系统授权登入</div>
+            
+            <div class="input-group-container">
+                <input type="text" id="officerName" placeholder="值勤人员姓名">
+                <span class="input-clear-btn" onclick="clearInput('officerName')">×</span>
+            </div>
+            <div class="input-group-container">
+                <input type="password" id="authCode" placeholder="授权码" inputmode="numeric">
+                <span class="input-clear-btn" onclick="clearInput('authCode')">×</span>
+            </div>
+            
+            <button class="login-btn-global" onclick="handleLogin()">授权登入</button>
         </div>
-        <div class="input-group">
-            <input type="password" id="authCode" placeholder="授權碼" inputmode="numeric">
-        </div>
-        <button class="login-btn" onclick="handleLogin()">授權登入</button>
     </div>
 
     <script>
         window.onload = function() {
+            // 初始化：读取上次登入纪录
             const savedName = localStorage.getItem('m_security_officer_name');
-            if (savedName) document.getElementById('officerName').value = savedName;
+            if (savedName) {
+                const nameInput = document.getElementById('officerName');
+                nameInput.value = savedName;
+            }
         };
+        
+        // 💡 清除输入框内容
+        function clearInput(inputId) {
+            const inputInput = document.getElementById(inputId);
+            inputInput.value = '';
+            inputInput.focus(); // 清除后重新获取焦点
+        }
 
         function handleLogin() {
             const nameInput = document.getElementById('officerName').value.trim();
             const codeInput = document.getElementById('authCode').value.trim();
-            if (!nameInput || !codeInput) { alert('請完整輸入姓名與授權碼'); return; }
+            
+            if (!nameInput || !codeInput) { 
+                alert('請完整輸入姓名與授權碼'); 
+                return; 
+            }
+            
+            // 存储姓名供下次自动带入
             localStorage.setItem('m_security_officer_name', nameInput);
+            
+            // 模拟登入成功
             alert('授權成功！歡迎值勤，' + nameInput);
+            // window.location.href = 'main.html'; // 之后串接主畫面的路径
         }
     </script>
 </body>
