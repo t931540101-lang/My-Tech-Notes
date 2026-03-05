@@ -26,17 +26,17 @@
         .header-box { background: var(--primary); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .month-ctrl { display: flex; justify-content: space-between; align-items: center; }
         .month-title { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
-        .btn-nav { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 6px; font-weight: bold; }
+        .btn-nav { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
         .action-bar { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-sm { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; font-size: 13px; color: white; }
+        .btn-sm { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; font-size: 13px; color: white; cursor: pointer; }
         .btn-lock { background: #607d8b; }
         .btn-lock.unlocked { background: #43a047; box-shadow: 0 0 10px rgba(67,160,71,0.5); }
         .btn-export { background: #0288d1; }
 
         /* === 弟兄卡片清單 === */
         .container { padding: 15px; }
-        .staff-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--primary); }
+        .staff-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--primary); cursor: pointer; }
         .staff-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .staff-name { font-size: 18px; font-weight: 900; color: var(--primary); }
         .staff-group { font-size: 12px; background: #eee; padding: 2px 8px; border-radius: 4px; color: #666; }
@@ -64,7 +64,7 @@
         .val-特 { background: #fffde7; color: var(--special-yellow); }
         .val-假 { background: #e8f5e9; color: var(--leave-green); }
 
-        .close-btn { position: absolute; top: 15px; right: 15px; font-size: 24px; font-weight: bold; color: #999; }
+        .close-btn { position: absolute; top: 15px; right: 15px; font-size: 24px; font-weight: bold; color: #999; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -91,8 +91,8 @@
         <div id="modalMonth" style="font-size:14px; color:#666;">2026年 3月</div>
         <div class="calendar-grid" id="calendarGrid">
             </div>
-        <p style="font-size:11px; color:#999; margin-top:15px; text-align:center;">
-            提示：日/夜/休/特/假
+        <p style="font-size:11px; color:#999; margin-top:15px; text-align:center; font-weight:bold;">
+            提示：日 / 夜 / 休 / 特 / 假
         </p>
     </div>
 </div>
@@ -157,7 +157,6 @@
         grid.innerHTML = '';
         const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
         
-        // 讀取目前的 Firebase 數據
         db.ref('guardSchedules').once('value', (snapshot) => {
             const data = snapshot.val() || {};
             for (let d = 1; d <= daysInMonth; d++) {
@@ -181,7 +180,7 @@
     function saveShift(name, day, val) {
         const id = `${curYear}_${curMonth+1}_${name}_${day}`;
         db.ref('guardSchedules/' + id).set(val);
-        renderCalendar(); // 刷新顏色
+        renderCalendar(); 
     }
 
     function listenToData() {
@@ -209,7 +208,7 @@
     }
 
     function toggleLock() {
-        if(!isEditing && prompt("人事密碼：") === "8888") {
+        if(!isEditing && prompt("請輸入人事解鎖密碼：") === "8888") {
             isEditing = true; document.body.classList.add('can-edit');
             const btn = document.getElementById('lockBtn');
             btn.innerText = "🔓 編輯中"; btn.classList.add('unlocked');
@@ -230,6 +229,52 @@
 
     function closeModal() { document.getElementById('calModal').style.display = 'none'; }
     window.onclick = (e) => { if(e.target.className === 'modal') closeModal(); }
+
+    // 📊 專為公司設計的標準報表匯出引擎
+    function exportToExcel() {
+        const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+        let csv = "\ufeff"; 
+
+        // 建立傳統表頭
+        let header = ["姓名"];
+        for (let d = 1; d <= daysInMonth; d++) { header.push(d + "日"); }
+        header.push("日班總計", "夜班總計", "休假總計", "特休總計", "請假總計");
+        csv += header.join(",") + "\n";
+
+        // 從雲端抓取最新資料，並轉換成傳統橫向表格
+        db.ref('guardSchedules').once('value', (snapshot) => {
+            const data = snapshot.val() || {};
+
+            staffData.forEach(p => {
+                let row = [p.name];
+                let dc=0, nc=0, oc=0, tc=0, lc=0; 
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const id = `${curYear}_${curMonth+1}_${p.name}_${d}`;
+                    const val = data[id] || "";
+                    row.push(val); 
+
+                    if(val.includes("日")) dc++; 
+                    else if(val.includes("夜")) nc++; 
+                    else if(val.includes("特")) tc++;
+                    else if(val.includes("假") || val.includes("病") || val.includes("事")) lc++;
+                    else if(val.includes("休") || val.includes("例") || val.includes("❌")) oc++;
+                }
+
+                row.push(dc, nc, oc, tc, lc);
+                csv += row.join(",") + "\n";
+            });
+
+            const filename = `台灣精銳_K9勤務總班表_${curYear}年${curMonth + 1}月.csv`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
 
     initStaffList();
 </script>
