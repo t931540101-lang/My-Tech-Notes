@@ -81,7 +81,8 @@
     const db = firebase.database();
 
     let curYear = 2026; let curMonth = 2; let isEditing = false; let activeStaff = "";
-    let localScheduleData = {}; // 🚀 新增：全域快取資料，破解手機下載限制
+    let localScheduleData = {}; 
+    const weekNames = ["日", "一", "二", "三", "四", "五", "六"]; // 🚀 新增星期幾對照表
 
     const staffData = [
         {group: "總務", name: "盧家慶"}, {group: "總務", name: "何鴻隆"},
@@ -119,7 +120,7 @@
         const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
         for (let d = 1; d <= daysInMonth; d++) {
             const id = `${curYear}_${curMonth+1}_${activeStaff}_${d}`;
-            const val = localScheduleData[id] || ""; // 🚀 改用快取讀取
+            const val = localScheduleData[id] || ""; 
             const box = document.createElement('div'); box.className = 'cal-day-box';
             if(val) box.classList.add('val-' + val.substring(0,1));
             box.innerHTML = `<span class="cal-day-num">${d}</span><input class="cal-input" value="${val}" ${!isEditing ? 'readonly' : ''} onchange="saveShift('${activeStaff}', ${d}, this.value)">`;
@@ -130,14 +131,14 @@
     function saveShift(name, day, val) {
         const id = `${curYear}_${curMonth+1}_${name}_${day}`;
         db.ref('guardSchedules/' + id).set(val);
-        localScheduleData[id] = val; // 更新快取
+        localScheduleData[id] = val; 
         renderCalendar(); 
     }
 
     function listenToData() {
         const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
         db.ref('guardSchedules').on('value', (snapshot) => {
-            localScheduleData = snapshot.val() || {}; // 🚀 隨時把雲端資料快取在手機裡
+            localScheduleData = snapshot.val() || {}; 
             
             staffData.forEach(p => {
                 let dc=0, nc=0, oc=0, tc=0, lc=0;
@@ -171,14 +172,18 @@
     function closeModal() { document.getElementById('calModal').style.display = 'none'; }
     window.onclick = (e) => { if(e.target.className === 'modal') closeModal(); }
 
-    // 📊 🚀 同步快取匯出引擎 (解決手機被擋的問題)
+    // 📊 🚀 同步快取匯出引擎 (加上星期幾)
     function exportToExcel() {
         try {
             const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
             let csv = "\ufeff"; 
 
+            // 🚀 表頭加入自動推算星期幾
             let header = ["姓名"];
-            for (let d = 1; d <= daysInMonth; d++) { header.push(d + "日"); }
+            for (let d = 1; d <= daysInMonth; d++) { 
+                const weekDay = weekNames[new Date(curYear, curMonth, d).getDay()];
+                header.push(`${d}日(${weekDay})`); 
+            }
             header.push("日班總計", "夜班總計", "休假總計", "特休總計", "請假總計");
             csv += header.join(",") + "\n";
 
@@ -186,7 +191,7 @@
                 let row = [p.name]; let dc=0, nc=0, oc=0, tc=0, lc=0; 
                 for (let d = 1; d <= daysInMonth; d++) {
                     const id = `${curYear}_${curMonth+1}_${p.name}_${d}`;
-                    const val = localScheduleData[id] || ""; // 直接從快取拿資料，不延遲
+                    const val = localScheduleData[id] || ""; 
                     row.push(val); 
                     if(val.includes("日")) dc++; else if(val.includes("夜")) nc++; else if(val.includes("特")) tc++;
                     else if(val.includes("假") || val.includes("病") || val.includes("事")) lc++;
@@ -205,7 +210,6 @@
             link.click();
             document.body.removeChild(link);
             
-            // 給手機端的小提示
             setTimeout(() => { alert("📊 報表已匯出！請查看手機的「檔案」或「下載」資料夾。"); }, 500);
             
         } catch (error) {
