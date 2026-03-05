@@ -3,214 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-SECURITY HQ | 台灣精銳指揮中心</title>
+    <title>M-SECURITY HQ | 名單部署房</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --hq-primary: #00e5ff; /* 科技青 */
-            --hq-navy: #1a2a3a;    /* 企業深藍 */
-            --hq-bg: #0f172a;      /* 本土旗艦深 */
-            --hq-card: #1e293b;    /* 戰術卡片灰 */
+            --hq-primary: #00e5ff;
+            --hq-bg: #0f172a;
+            --hq-card: #1e293b;
             --hq-border: #334155;
+            --danger: #ef4444;
+            --vip-gold: #f1c40f;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; }
         body, html { 
-            margin: 0; padding: 0; min-height: 100vh; 
-            background-color: var(--hq-bg); 
-            color: #f8fafc; 
-            font-family: -apple-system, "Microsoft JhengHei", "PingFang TC", sans-serif;
+            margin: 0; padding: 0; background-color: var(--hq-bg); 
+            color: #f8fafc; font-family: -apple-system, "Microsoft JhengHei", sans-serif;
         }
 
-        /* === 🚪 台灣版戰術大門 === */
-        #login-gate {
-            display: flex; height: 100vh; align-items: center; justify-content: center;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-        }
-        .login-panel { 
-            width: 90%; max-width: 380px; padding: 30px; 
-            background: var(--hq-card); border-radius: 16px; 
-            border: 2px solid var(--hq-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .input-field {
-            width: 100%; background: #0f172a; border: 1.5px solid var(--hq-border);
-            padding: 16px; color: white; margin-bottom: 20px; border-radius: 8px;
-            font-size: 16px; transition: all 0.3s;
-        }
-        .input-field:focus { border-color: var(--hq-primary); box-shadow: 0 0 10px rgba(0,229,255,0.2); outline: none; }
-        .btn-access {
-            width: 100%; background: var(--hq-primary); color: #0f172a; 
-            padding: 16px; font-weight: 900; border: none; border-radius: 8px;
-            font-size: 18px; letter-spacing: 2px; cursor: pointer;
-        }
-
-        /* === 🛡️ HQ 主系統：本土旗艦佈局 === */
-        #main-system { display: none; flex-direction: column; }
-        
+        /* 導覽條 */
         .top-nav {
             background: #000; border-bottom: 3px solid var(--hq-primary);
             padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
         }
 
-        .nav-tabs { 
-            display: flex; background: #111; overflow-x: auto; 
-            sticky: top; top: 0; z-index: 50;
-        }
-        .tab { 
-            flex: 1; text-align: center; padding: 18px 10px; cursor: pointer; 
-            color: #94a3b8; font-weight: bold; min-width: 100px;
-            transition: all 0.3s; border-bottom: 3px solid transparent;
-        }
-        .tab.active { color: var(--hq-primary); background: #1e293b; border-bottom-color: var(--hq-primary); }
+        .nav-tabs { display: flex; background: #111; overflow-x: auto; }
+        .tab { flex: 1; text-align: center; padding: 18px 10px; cursor: pointer; color: #94a3b8; font-weight: bold; transition: 0.3s; }
+        .tab.active { color: var(--hq-primary); background: #1e293b; border-bottom: 3px solid var(--hq-primary); }
 
-        .content-container { padding: 15px; display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .content-container { padding: 15px; }
 
-        /* 📊 本土數據看盤卡片 */
-        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-card { 
-            background: var(--hq-card); border: 1.5px solid var(--hq-border); 
-            padding: 15px; border-radius: 12px; text-align: left;
-            position: relative; overflow: hidden;
+        /* 部署工具卡片 */
+        .deploy-card {
+            background: var(--hq-card); border-radius: 12px; border: 1.5px solid var(--hq-border);
+            padding: 20px; margin-bottom: 20px;
         }
-        .stat-card::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-            background: var(--hq-primary);
+        .input-group { margin-bottom: 15px; }
+        .input-label { font-size: 12px; color: var(--hq-primary); font-weight: bold; margin-bottom: 5px; display: block; }
+        .input-field {
+            width: 100%; background: #0f172a; border: 1px solid var(--hq-border);
+            padding: 12px; color: white; border-radius: 8px; font-size: 16px;
         }
-        .stat-val { font-size: 28px; font-weight: 900; color: var(--hq-primary); display: block; }
-        .stat-label { font-size: 12px; color: #94a3b8; font-weight: bold; margin-top: 5px; }
+        .btn-deploy {
+            width: 100%; background: var(--hq-primary); color: #0f172a;
+            padding: 15px; font-weight: 900; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+        }
 
-        /* 📋 監控清單卡片 */
-        .monitor-panel {
-            background: var(--hq-card); border: 1.5px solid var(--hq-border);
-            border-radius: 12px; overflow: hidden;
+        /* 名單清單區 */
+        .list-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .list-btn { 
+            flex: 1; padding: 10px; border: 1px solid var(--hq-border); background: transparent; 
+            color: #94a3b8; border-radius: 6px; font-weight: bold; cursor: pointer;
         }
-        .panel-header {
-            padding: 12px 15px; background: rgba(0,0,0,0.2); 
-            font-weight: 900; color: var(--hq-primary); font-size: 14px;
-            border-bottom: 1px solid var(--hq-border);
-        }
-        .log-list { max-height: 400px; overflow-y: auto; padding: 10px; }
-        .log-item {
-            background: #1e293b; padding: 12px; border-radius: 8px;
-            margin-bottom: 8px; border-left: 4px solid #334155; font-size: 14px;
-        }
-        .log-time { color: var(--hq-primary); font-family: monospace; font-weight: bold; margin-right: 8px; }
+        .list-btn.active { background: var(--hq-primary); color: #000; border-color: var(--hq-primary); }
 
-        /* 電腦版適配 */
-        @media (min-width: 900px) {
-            .content-container { grid-template-columns: 300px 1fr 300px; }
-            .stat-grid { grid-template-columns: 1fr; }
+        .data-list { max-height: 500px; overflow-y: auto; }
+        .data-item {
+            background: #162030; padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 5px solid #334155;
         }
+        .data-item.vip { border-left-color: var(--vip-gold); }
+        .info-name { font-size: 18px; font-weight: bold; display: block; }
+        .info-sub { font-size: 12px; color: #64748b; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        @media (max-width: 600px) { .data-item { flex-direction: column; align-items: flex-start; gap: 10px; } .btn-delete { width: 100%; } }
     </style>
 </head>
 <body>
 
-    <div id="login-gate">
-        <div class="login-panel">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color:white; font-size:32px; font-weight:900; letter-spacing:3px; margin:0;">台灣精銳</h1>
-                <div style="color:var(--hq-primary); font-size:14px; font-weight:bold; letter-spacing:2px; margin-top:5px;">M-SECURITY HQ 指揮中心</div>
-            </div>
-            <input type="text" id="hqUser" class="input-field" placeholder="指揮官姓名">
-            <input type="password" id="hqPass" class="input-field" placeholder="最高授權密碼">
-            <button onclick="verifyHQAccess()" class="btn-access">授權登入基地</button>
-        </div>
+    <div class="top-nav">
+        <div style="font-weight:900; font-size:18px;">M-SECURITY HQ</div>
+        <div style="font-size:12px; color:var(--hq-primary);">指揮官：盧家慶</div>
     </div>
 
-    <div id="main-system">
-        <div class="top-nav">
-            <div style="font-weight:900; font-size:20px; letter-spacing:2px;">M-SECURITY HQ</div>
-            <div style="background:rgba(0,229,255,0.1); color:var(--hq-primary); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">
-                指揮官：<span id="commander-name">盧家慶</span>
+    <nav class="nav-tabs">
+        <div class="tab" onclick="location.href='hq_main.html'">即時戰情</div>
+        <div class="tab active">名單部署</div>
+        <div class="tab">權限控管</div>
+    </nav>
+
+    <div class="content-container">
+        
+        <div class="deploy-card">
+            <h3 style="margin-top:0; color:var(--hq-primary);">🚀 快速部署名單</h3>
+            <div class="list-selector">
+                <button id="type-emp" class="list-btn active" onclick="setDeployType('employee')">一般員工</button>
+                <button id="type-vip" class="list-btn" onclick="setDeployType('vip')">VIP 貴賓</button>
             </div>
+            
+            <div class="input-group">
+                <span class="input-label">姓名</span>
+                <input type="text" id="targetName" class="input-field" placeholder="請輸入姓名">
+            </div>
+            <div class="input-group">
+                <span class="input-label">車牌 / 工號</span>
+                <input type="text" id="targetId" class="input-field" placeholder="請輸入車牌或工號">
+            </div>
+            <button class="btn-deploy" onclick="executeDeploy()">確認部署至雲端</button>
         </div>
 
-        <nav class="nav-tabs">
-            <div class="tab active">即時戰情</div>
-            <div class="tab">名單部署</div>
-            <div class="tab">權限控管</div>
-        </nav>
-
-        <div class="content-container">
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <span class="stat-val" id="count-visitor">0</span>
-                    <span class="stat-label">場內總人數</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-val" style="color:#f1c40f;" id="count-vip">0</span>
-                    <span class="stat-label">今日 VIP 流量</span>
-                </div>
+        <div class="deploy-card">
+            <h3 style="margin-top:0; color:var(--hq-primary);">📂 名單庫監控</h3>
+            <div class="list-selector">
+                <button id="show-emp" class="list-btn active" onclick="switchListView('employee')">員工清單</button>
+                <button id="show-vip" class="list-btn" onclick="switchListView('vip')">VIP 清單</button>
             </div>
-
-            <div class="monitor-panel">
-                <div class="panel-header">📡 前線動態即時串流 (LIVE)</div>
-                <div id="hq-log-feed" class="log-list">
-                    <div class="log-item">正在建立加密連線中...</div>
+            <div id="data-display" class="data-list">
                 </div>
-            </div>
-
-            <div class="monitor-panel">
-                <div class="panel-header">⚡ 快速名單部署</div>
-                <div style="padding:15px;">
-                    <input type="text" id="eName" class="input-field" style="margin-bottom:10px; padding:12px;" placeholder="姓名">
-                    <input type="text" id="ePlate" class="input-field" style="margin-bottom:15px; padding:12px;" placeholder="車牌/工號">
-                    <button onclick="saveEmployee()" class="btn-access" style="padding:12px; font-size:16px;">立即生效</button>
-                </div>
-            </div>
         </div>
+
     </div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
-        function verifyHQAccess() {
-            const user = document.getElementById('hqUser').value;
-            const pass = document.getElementById('hqPass').value;
-            if (user === '盧家慶' && pass === 'D01762') {
-                document.getElementById('login-gate').style.display = 'none';
-                document.getElementById('main-system').style.display = 'flex';
-                startHQMonitor();
-            } else { alert('❌ 授權失敗，請確認指揮官身分！'); }
+        let currentDeployType = 'employee';
+        let currentViewType = 'employee';
+
+        function setDeployType(type) {
+            currentDeployType = type;
+            document.getElementById('type-emp').className = type === 'employee' ? 'list-btn active' : 'list-btn';
+            document.getElementById('type-vip').className = type === 'vip' ? 'list-btn active' : 'list-btn';
         }
 
-        function startHQMonitor() {
-            // 訪客人數監聽
-            db.ref('visitor_logs').on('value', snap => {
-                let count = 0; snap.forEach(c => { if(!c.val().leaveTime) count++; });
-                document.getElementById('count-visitor').innerText = count;
-            });
-            
-            // VIP 人數監聽
-            db.ref('vip_list').on('value', snap => {
-                document.getElementById('count-vip').innerText = snap.numChildren();
-            });
+        function switchListView(type) {
+            currentViewType = type;
+            document.getElementById('show-emp').className = type === 'employee' ? 'list-btn active' : 'list-btn';
+            document.getElementById('show-vip').className = type === 'vip' ? 'list-btn active' : 'list-btn';
+            loadListData();
+        }
 
-            // 前線查詢日誌監聽
-            db.ref('search_logs').limitToLast(15).on('value', snap => {
-                const feed = document.getElementById('hq-log-feed'); feed.innerHTML = '';
-                snap.forEach(c => {
-                    const d = c.val();
-                    feed.innerHTML = `
-                        <div class="log-item">
-                            <span class="log-time">[${d.time}]</span> 
-                            <b>${d.user}</b> 檢索了 <b>${d.query}</b>
-                        </div>` + feed.innerHTML;
+        // 執行部署
+        function executeDeploy() {
+            const name = document.getElementById('targetName').value.trim();
+            const id = document.getElementById('targetId').value.trim().toUpperCase();
+            if(!name || !id) return alert("請填寫完整資料！");
+
+            const path = currentDeployType === 'employee' ? 'employee_list' : 'vip_list';
+            const data = { name: name, plate: id, id: id, timestamp: Date.now() };
+
+            db.ref(path).push(data).then(() => {
+                alert("✅ 部署成功！前線人員已可同步查驗。");
+                document.getElementById('targetName').value = '';
+                document.getElementById('targetId').value = '';
+            });
+        }
+
+        // 載入清單資料
+        function loadListData() {
+            const path = currentViewType === 'employee' ? 'employee_list' : 'vip_list';
+            db.ref(path).on('value', snap => {
+                const container = document.getElementById('data-display');
+                container.innerHTML = '';
+                if(!snap.exists()) { container.innerHTML = '<div style="text-align:center; color:#555;">暫無資料</div>'; return; }
+
+                snap.forEach(child => {
+                    const d = child.val();
+                    const isVip = currentViewType === 'vip';
+                    container.innerHTML += `
+                        <div class="data-item ${isVip?'vip':''}">
+                            <div>
+                                <span class="info-name">${d.name} ${isVip?'⭐':''}</span>
+                                <span class="info-sub">辨識碼：${d.plate}</span>
+                            </div>
+                            <button class="btn-delete" onclick="deleteRecord('${path}', '${child.key}')">撤除部署</button>
+                        </div>
+                    `;
                 });
             });
         }
 
-        function saveEmployee() {
-            const n = document.getElementById('eName').value;
-            const p = document.getElementById('ePlate').value.toUpperCase();
-            if(!n || !p) return alert("請完整輸入資料！");
-            db.ref('employee_list').push({ name: n, plate: p, id: "HQ-" + Date.now().toString().slice(-4) }).then(() => {
-                alert("✅ 部署成功，前線已可查驗！");
-                document.getElementById('eName').value = ''; document.getElementById('ePlate').value = '';
-            });
+        // 刪除資料
+        function deleteRecord(path, key) {
+            if(confirm("確定要撤除此筆部署資料嗎？撤除後前線將無法查驗。")) {
+                db.ref(`${path}/${key}`).remove();
+            }
         }
+
+        // 初始載入
+        loadListData();
     </script>
 </body>
 </html>
