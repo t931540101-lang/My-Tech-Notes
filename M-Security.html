@@ -16,9 +16,10 @@
             --tab-bg-active: #4a5c70;
             --tab-highlight: #00e5ff;
             --primary-blue: #2c7ce6;
-            --text-dark: #333333;
+            --text-dark: #1e293b;
             --text-blue: #1c529b;
             --danger: #e74c3c;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; }
@@ -49,23 +50,35 @@
         .result-divider { border: none; border-top: 1px solid #e0e0e0; margin-bottom: 15px; }
         .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
         
-        /* === 📝 訪客系統專屬 UI (整合進主視覺) === */
+        /* 訪客系統專屬 UI */
         .v-card { background: white; border-radius: 8px; padding: 15px; border: 2px solid var(--primary-blue); margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .v-header-title { text-align: center; color: var(--primary-blue); margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; }
         .v-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .v-full-width { grid-column: span 2; }
         .v-card label { font-size: 13px; color: #666; font-weight: bold; }
         .v-card input, .v-card textarea { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1.5px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; outline: none; }
-        .v-card input:focus, .v-card textarea:focus { border-color: var(--primary-blue); }
         .btn-submit-v { width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; letter-spacing: 2px; cursor: pointer; box-shadow: 0 3px 0 #1b56a3; }
         .btn-submit-v:active { transform: translateY(3px); box-shadow: none; }
-        
-        /* 訪客紀錄清單 UI */
         .log-item { background: #fff; border-left: 5px solid var(--primary-blue); padding: 12px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; position: relative; }
         .log-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-blue); margin-bottom: 5px; padding-right: 50px; }
         .del-btn { position: absolute; top: 10px; right: 10px; color: var(--danger); font-size: 11px; cursor: pointer; padding: 3px 6px; border: 1px solid #ffeded; border-radius: 4px; }
         .checkout-btn { margin-top: 10px; background: #fff; color: var(--primary-blue); border: 1.5px solid var(--primary-blue); padding: 8px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 14px; cursor: pointer; }
-        .checkout-btn:active { background: var(--primary-blue); color: white; }
+
+        /* === 📋 勤務交接簿專屬 UI === */
+        .handover-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; }
+        .btn-add-log { background-color: var(--text-dark); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; font-size: 14px; }
+        .btn-add-log:active { transform: scale(0.95); }
+        .duty-card { background: white; border-left: 8px solid var(--text-dark); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; transition: all 0.2s; }
+        .duty-card.confirmed { background: #ecfdf5; border-left-color: var(--success); opacity: 0.95; }
+        .duty-time { font-family: monospace; font-size: 12px; background: #334155; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .duty-urgent { font-size: 10px; background: var(--danger); color: white; padding: 3px 6px; border-radius: 4px; font-weight: 900; margin-left: 6px; }
+        .duty-confirmed-badge { font-size: 10px; background: var(--success); color: white; padding: 3px 6px; border-radius: 4px; font-weight: 900; margin-left: 6px; }
+        .duty-text { font-size: 18px; font-weight: bold; margin: 12px 0 8px 0; color: var(--text-dark); line-height: 1.4; padding-right: 20px; }
+        .duty-text.urgent { color: var(--danger); }
+        .duty-text.confirmed { color: #94a3b8; font-style: italic; }
+        .btn-confirm-duty { width: 100%; padding: 10px; background: #f8fafc; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 14px; transition: all 0.2s; }
+        .btn-confirm-duty:active { background: #ecfdf5; border-color: var(--success); color: var(--success); }
+        .del-duty-btn { position: absolute; top: 12px; right: 12px; color: #cbd5e1; font-size: 24px; line-height: 1; font-weight: bold; cursor: pointer; border: none; background: transparent; padding: 0; }
         
         /* 掃描器全螢幕遮罩 UI */
         .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -114,7 +127,6 @@
 
     <div id="tab-apps" class="tab-content">
         <div class="status-bar">目前系統： <span class="status-badge" style="background-color: #16a085;">訪客管理</span></div>
-        
         <div class="v-card">
             <h2 class="v-header-title">訪客登記入廠</h2>
             <div class="v-form-grid">
@@ -127,16 +139,26 @@
             </div>
             <button class="btn-submit-v" onclick="submitLog()">送出登記並同步雲端</button>
         </div>
-
-        <div id="logList">
-            <h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單載入中...</h3>
-        </div>
+        <div id="logList"><h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單載入中...</h3></div>
     </div>
 
     <div id="tab-channels" class="tab-content">
         <div class="status-bar">頻道： <span class="status-badge" style="background-color: #d35400;">內部廣播</span></div>
-        <div style="background: #fff; border: 2px dashed #95a5a6; border-radius: 8px; padding: 40px 20px; text-align: center; color: #7f8c8d; font-size: 18px; font-weight: bold; margin-top: 20px;">
-            📋 勤務交接簿查看<br><br><span style="font-size: 14px; font-weight: normal;">(介面建置中...)</span>
+        
+        <div class="handover-header">
+            <div>
+                <h2 style="margin:0; font-size:22px; font-weight:900; color:var(--text-dark); letter-spacing:1px;">勤務交接簿</h2>
+                <div style="font-size:12px; color:#64748b; font-weight:bold;">CORE V3.1 CLOUD SYSTEM</div>
+            </div>
+            <button class="btn-add-log" onclick="addHandoverEntry()">+ 新增交接</button>
+        </div>
+
+        <div id="handoverList">
+            <h3 style="text-align:center; color:#666; font-size: 14px;">載入交接事項中...</h3>
+        </div>
+        
+        <div style="text-align:center; margin-top:30px; font-size:10px; color:#94a3b8; font-weight:bold; letter-spacing:2px;">
+            SECURITY INTERNAL CLOUD ONLY
         </div>
     </div>
 
@@ -154,7 +176,7 @@
 
     <script>
         // ==========================================
-        // 1. Firebase 初始化與訪客登記邏輯
+        // 1. Firebase 初始化
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
@@ -165,177 +187,149 @@
             messagingSenderId: "864846943143",
             appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
         };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
-        // 賈維斯智慧連動：自動抓取登入時儲存的姓名
+        // 賈維斯智慧連動：全域登入者姓名
         let currentOfficerName = localStorage.getItem('m_security_officer_name') || "未登入人員";
 
-        function submitLog() {
-            const vName = document.getElementById('vName').value.trim();
-            if(!vName) return alert("請輸入訪客姓名！");
+        // ==========================================
+        // 2. 📋 勤務交接簿邏輯 (改寫自原本的 React，保留原本資料庫節點)
+        // ==========================================
+        const handoverRef = db.ref('reactLogs');
+
+        function addHandoverEntry() {
+            const note = prompt("請輸入交接事項：");
+            if (!note) return;
+            const isUrgent = confirm("這件事需要標註為「重要」嗎？");
             
             const now = new Date();
-            const timeIn = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             
-            const logData = {
-                date: now.toISOString().split('T')[0],
-                name: vName,
-                count: document.getElementById('vCount').value,
-                phone: document.getElementById('vPhone').value,
-                company: document.getElementById('vComp').value,
-                target: document.getElementById('vTarget').value,
-                timeIn: timeIn,
-                leaveTime: "",
-                recorder: currentOfficerName, // 自動帶入登入姓名
-                reason: document.getElementById('vReason').value,
-                timestamp: Date.now()
+            const newLog = {
+                time: timeStr,
+                note: note,
+                urgent: isUrgent,
+                confirmedBy: null,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             };
-
-            db.ref('visitor_logs').push(logData).then(() => {
-                alert("訪客登記成功，已同步雲端！");
-                document.getElementById('vName').value = ""; 
-                document.getElementById('vPhone').value = ""; 
-                document.getElementById('vReason').value = ""; 
-            }).catch((error) => {
-                alert("雲端連線失敗：" + error.message);
-            });
+            handoverRef.push(newLog);
         }
 
-        function checkout(key) {
-            const now = new Date();
-            const defaultTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            const leaveTime = prompt("請確認或手動修改出廠時間：", defaultTime);
-            
-            if(leaveTime) {
-                db.ref('visitor_logs/' + key).update({ leaveTime: leaveTime });
+        function confirmHandover(id) {
+            // 💡 賈維斯貼心優化：直接抓取登入時的「小黑哥」，不用再手動打字了！
+            if(confirm(`確定要以「${currentOfficerName}」的身分確認此項交接嗎？`)) {
+                handoverRef.child(id).update({
+                    confirmedBy: currentOfficerName,
+                    confirmTime: new Date().toLocaleTimeString('zh-TW', {hour12: false})
+                });
             }
         }
 
-        function deleteRecord(key) {
-            if(confirm("確定要刪除這筆訪客紀錄嗎？（刪除後無法復原）")) {
-                db.ref('visitor_logs/' + key).remove();
+        function deleteHandover(id) {
+            if(confirm("⚠️ 確定要從雲端刪除這條紀錄嗎？(刪除後無法復原)")) {
+                handoverRef.child(id).remove();
             }
         }
 
-        // 即時監聽訪客資料庫
-        db.ref('visitor_logs').limitToLast(15).on('value', (snapshot) => {
-            const listDiv = document.getElementById('logList');
-            listDiv.innerHTML = '<h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單 (自動更新)</h3>';
-            
+        // 即時監聽交接簿資料
+        handoverRef.on('value', (snapshot) => {
+            const listDiv = document.getElementById('handoverList');
+            listDiv.innerHTML = '';
             const data = snapshot.val();
+            
             if (data) {
-                Object.keys(data).reverse().forEach(key => {
-                    const item = data[key];
-                    const isOut = item.leaveTime !== "";
+                // 將資料轉成陣列並依照時間倒序排列
+                const sortedLogs = Object.keys(data).map(key => ({
+                    id: key, ...data[key]
+                })).sort((a, b) => b.timestamp - a.timestamp);
+
+                sortedLogs.forEach(log => {
+                    const isConfirmed = !!log.confirmedBy;
+                    const cardClass = isConfirmed ? 'duty-card confirmed' : 'duty-card';
+                    const textClass = `duty-text ${log.urgent ? 'urgent' : ''} ${isConfirmed ? 'confirmed' : ''}`;
+                    
                     listDiv.innerHTML += `
-                        <div class="log-item" style="${isOut ? 'opacity: 0.6; border-left-color: #95a5a6;' : ''}">
-                            <span class="del-btn" onclick="deleteRecord('${key}')">刪除</span>
-                            <div class="log-header">
-                                <span>${item.name} (${item.count}人)</span>
-                                <span style="color: ${isOut ? '#95a5a6' : '#27ae60'}">${isOut ? '已出廠' : '在場中'}</span>
+                        <div class="${cardClass}">
+                            <button class="del-duty-btn" onclick="deleteHandover('${log.id}')">×</button>
+                            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                                <span class="duty-time">${log.time}</span>
+                                ${log.urgent ? '<span class="duty-urgent">⚠️重要</span>' : ''}
+                                ${isConfirmed ? `<span class="duty-confirmed-badge">✓ 已閱：${log.confirmedBy}</span>` : ''}
                             </div>
-                            <div style="color:#555; line-height: 1.6; font-size: 13px;">
-                                公司：${item.company}<br>
-                                拜訪：${item.target} | 入廠：${item.timeIn}<br>
-                                負責登記：${item.recorder || '未知'}<br>
-                                ${isOut ? '<b style="color:var(--primary-blue);">出廠時間：' + item.leaveTime + '</b>' : ''}
-                            </div>
-                            ${!isOut ? `<button class="checkout-btn" onclick="checkout('${key}')">簽退離開 (可補填時間)</button>` : ''}
+                            <div class="${textClass}">${log.note}</div>
+                            ${!isConfirmed ? 
+                                `<button class="btn-confirm-duty" onclick="confirmHandover('${log.id}')">
+                                    🖱️ 點擊以「${currentOfficerName}」身分簽署確認
+                                 </button>` 
+                            : ''}
                         </div>
                     `;
                 });
             } else {
-                listDiv.innerHTML += '<div style="text-align:center; color:#999; margin-top:20px;">目前尚無訪客紀錄</div>';
+                listDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:30px; font-weight:bold;">目前尚無交接事項</div>';
             }
         });
 
         // ==========================================
-        // 2. 頁籤切換與查詢系統邏輯 (維持原樣)
+        // 3. 📝 訪客登記邏輯 (維持不變)
+        // ==========================================
+        function submitLog() {
+            const vName = document.getElementById('vName').value.trim();
+            if(!vName) return alert("請輸入訪客姓名！");
+            const now = new Date();
+            const timeIn = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const logData = { date: now.toISOString().split('T')[0], name: vName, count: document.getElementById('vCount').value, phone: document.getElementById('vPhone').value, company: document.getElementById('vComp').value, target: document.getElementById('vTarget').value, timeIn: timeIn, leaveTime: "", recorder: currentOfficerName, reason: document.getElementById('vReason').value, timestamp: Date.now() };
+            db.ref('visitor_logs').push(logData).then(() => { alert("訪客登記成功，已同步雲端！"); ['vName','vPhone','vReason'].forEach(id => document.getElementById(id).value = ""); }).catch((e) => alert("失敗：" + e.message));
+        }
+        function checkout(key) {
+            const now = new Date(); const dt = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const leaveTime = prompt("請確認或手動修改出廠時間：", dt);
+            if(leaveTime) db.ref('visitor_logs/' + key).update({ leaveTime: leaveTime });
+        }
+        function deleteRecord(key) { if(confirm("確定要刪除這筆訪客紀錄嗎？")) db.ref('visitor_logs/' + key).remove(); }
+        
+        db.ref('visitor_logs').limitToLast(15).on('value', (snapshot) => {
+            const listDiv = document.getElementById('logList');
+            listDiv.innerHTML = '<h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單 (自動更新)</h3>';
+            const data = snapshot.val();
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    const item = data[key]; const isOut = item.leaveTime !== "";
+                    listDiv.innerHTML += `<div class="log-item" style="${isOut ? 'opacity: 0.6; border-left-color: #95a5a6;' : ''}"><span class="del-btn" onclick="deleteRecord('${key}')">刪除</span><div class="log-header"><span>${item.name} (${item.count}人)</span><span style="color: ${isOut ? '#95a5a6' : '#27ae60'}">${isOut ? '已出廠' : '在場中'}</span></div><div style="color:#555; line-height: 1.6; font-size: 13px;">公司：${item.company}<br>拜訪：${item.target} | 入廠：${item.timeIn}<br>負責登記：${item.recorder || '未知'}<br>${isOut ? '<b style="color:var(--primary-blue);">出廠時間：' + item.leaveTime + '</b>' : ''}</div>${!isOut ? `<button class="checkout-btn" onclick="checkout('${key}')">簽退離開 (可補填時間)</button>` : ''}</div>`;
+                });
+            } else { listDiv.innerHTML += '<div style="text-align:center; color:#999; margin-top:20px;">目前尚無訪客紀錄</div>'; }
+        });
+
+        // ==========================================
+        // 4. 頁籤與主系統邏輯 (維持不變)
         // ==========================================
         function switchTab(tabId, element) {
             document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active'); document.getElementById(tabId).classList.add('active');
         }
-
-        function clearInput() {
-            const input = document.getElementById('queryInput');
-            input.value = ''; input.focus(); resetResultCard();
-        }
-
-        function resetResultCard() {
-            document.getElementById('res-title').innerText = "身份確認：等待查詢";
-            document.getElementById('res-title').style.color = "var(--primary-blue)";
-            ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "---");
-        }
-
+        function clearInput() { document.getElementById('queryInput').value = ''; document.getElementById('queryInput').focus(); resetResultCard(); }
+        function resetResultCard() { document.getElementById('res-title').innerText = "身份確認：等待查詢"; document.getElementById('res-title').style.color = "var(--primary-blue)"; ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "---"); }
         async function executeSearch() {
-            const inputVal = document.getElementById('queryInput').value.trim();
-            const searchBtn = document.getElementById('searchBtn');
-            const statusBadge = document.getElementById('statusBadge');
-            if (!inputVal) { alert('請輸入車牌或工號！'); return; }
-
-            searchBtn.disabled = true; searchBtn.innerText = "連線中...";
-            statusBadge.innerText = "檢索中"; statusBadge.classList.add('loading');
-            
+            const inputVal = document.getElementById('queryInput').value.trim(); const searchBtn = document.getElementById('searchBtn'); const statusBadge = document.getElementById('statusBadge');
+            if (!inputVal) return alert('請輸入車牌或工號！');
+            searchBtn.disabled = true; searchBtn.innerText = "連線中..."; statusBadge.innerText = "檢索中"; statusBadge.classList.add('loading');
             try {
                 const data = await mockCloudDatabase(inputVal);
-                if (data) {
-                    document.getElementById('res-title').innerText = "身份確認：台灣精銳員工";
-                    document.getElementById('res-title').style.color = "var(--primary-blue)";
-                    document.getElementById('res-name').innerText = data.name; 
-                    document.getElementById('res-unit').innerText = data.unit;
-                    document.getElementById('res-id').innerText = data.id; 
-                    document.getElementById('res-plate').innerText = data.plate;
-                } else {
-                    document.getElementById('res-title').innerText = "警告：查無此人/車";
-                    document.getElementById('res-title').style.color = "#e74c3c";
-                    ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "無資料");
-                }
-            } catch (error) {
-                alert("雲端連線失敗！"); resetResultCard();
-            } finally {
-                searchBtn.disabled = false; searchBtn.innerText = "查詢";
-                statusBadge.innerText = "線上"; statusBadge.classList.remove('loading');
-            }
+                if (data) { document.getElementById('res-title').innerText = "身份確認：台灣精銳員工"; document.getElementById('res-title').style.color = "var(--primary-blue)"; document.getElementById('res-name').innerText = data.name; document.getElementById('res-unit').innerText = data.unit; document.getElementById('res-id').innerText = data.id; document.getElementById('res-plate').innerText = data.plate;
+                } else { document.getElementById('res-title').innerText = "警告：查無此人/車"; document.getElementById('res-title').style.color = "#e74c3c"; ['name', 'unit', 'id', 'plate'].forEach(field => document.getElementById(`res-${field}`).innerText = "無資料"); }
+            } catch (error) { alert("連線失敗！"); resetResultCard(); } finally { searchBtn.disabled = false; searchBtn.innerText = "查詢"; statusBadge.innerText = "線上"; statusBadge.classList.remove('loading'); }
         }
-
-        function mockCloudDatabase(query) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const db = {
-                        "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" },
-                        "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" }
-                    };
-                    resolve(db[query.toUpperCase()] || null);
-                }, 500);
-            });
-        }
+        function mockCloudDatabase(query) { return new Promise((resolve) => { setTimeout(() => { const db = { "D01762": { name: "小黑哥", unit: "勤務部 / 特勤組", id: "D01762", plate: "BXD-9988" }, "0905": { name: "盧家慶", unit: "系統架構組", id: "0905", plate: "M-SEC-001" } }; resolve(db[query.toUpperCase()] || null); }, 500); }); }
 
         // ==========================================
-        // 3. 掃描器引擎邏輯
+        // 5. 掃描器邏輯 (維持不變)
         // ==========================================
         let html5QrCode;
-        function startScanner() {
-            document.getElementById('scannerModal').style.display = 'flex';
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess)
-            .catch(err => { alert("啟動相機失敗！"); closeScanner(); });
-        }
-        function onScanSuccess(decodedText, decodedResult) {
-            closeScanner();
-            document.getElementById('queryInput').value = decodedText;
-            executeSearch();
-        }
-        function closeScanner() {
-            document.getElementById('scannerModal').style.display = 'none';
-            if (html5QrCode) { html5QrCode.stop().then(ignore => html5QrCode.clear()).catch(err => console.log(err)); }
-        }
+        function startScanner() { document.getElementById('scannerModal').style.display = 'flex'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess).catch(err => { alert("啟動相機失敗！"); closeScanner(); }); }
+        function onScanSuccess(decodedText) { closeScanner(); document.getElementById('queryInput').value = decodedText; executeSearch(); }
+        function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; if (html5QrCode) { html5QrCode.stop().then(ignore => html5QrCode.clear()).catch(err => console.log(err)); } }
     </script>
 </body>
 </html>
