@@ -8,21 +8,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #d32f2f;
-            --bg: #f4f7f9;
-            --card-bg: #ffffff;
-            --day-blue: #0d47a1;
-            --night-purple: #4a148c;
-            --off-red: #b71c1c;
-            --special-yellow: #f57f17;
-            --leave-green: #2e7d32;
+            --primary: #2c3e50; --accent: #d32f2f; --bg: #f4f7f9; --card-bg: #ffffff;
+            --day-blue: #0d47a1; --night-purple: #4a148c; --off-red: #b71c1c;
+            --special-yellow: #f57f17; --leave-green: #2e7d32;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
 
-        /* === 頂部控制列 === */
         .header-box { background: var(--primary); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .month-ctrl { display: flex; justify-content: space-between; align-items: center; }
         .month-title { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
@@ -34,21 +26,16 @@
         .btn-lock.unlocked { background: #43a047; box-shadow: 0 0 10px rgba(67,160,71,0.5); }
         .btn-export { background: #0288d1; }
 
-        /* === 弟兄卡片清單 === */
         .container { padding: 15px; }
         .staff-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--primary); cursor: pointer; }
         .staff-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .staff-name { font-size: 18px; font-weight: 900; color: var(--primary); }
         .staff-group { font-size: 12px; background: #eee; padding: 2px 8px; border-radius: 4px; color: #666; }
 
-        /* 統計列 */
         .stat-row { display: flex; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; }
         .stat-item b { display: block; font-size: 16px; margin-top: 2px; }
-        .col-day { color: var(--day-blue); }
-        .col-night { color: var(--night-purple); }
-        .col-off { color: var(--off-red); }
+        .col-day { color: var(--day-blue); } .col-night { color: var(--night-purple); } .col-off { color: var(--off-red); }
 
-        /* === 浮動月曆視窗 === */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 15px; padding: 20px; position: relative; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; }
@@ -56,14 +43,9 @@
         .cal-day-num { font-size: 10px; color: #999; margin-bottom: 2px; }
         .cal-input { width: 100%; border: none; text-align: center; font-weight: 900; font-size: 14px; background: transparent; outline: none; }
         
-        /* 編輯模式顏色 */
         .can-edit .cal-input { background: #fffde7; }
-        .val-日 { background: #e3f2fd; color: var(--day-blue); }
-        .val-夜 { background: #f3e5f5; color: var(--night-purple); }
-        .val-休, .val-例, .val-❌ { background: #ffebee; color: var(--off-red); }
-        .val-特 { background: #fffde7; color: var(--special-yellow); }
-        .val-假 { background: #e8f5e9; color: var(--leave-green); }
-
+        .val-日 { background: #e3f2fd; color: var(--day-blue); } .val-夜 { background: #f3e5f5; color: var(--night-purple); }
+        .val-休, .val-例, .val-❌ { background: #ffebee; color: var(--off-red); } .val-特 { background: #fffde7; color: var(--special-yellow); } .val-假 { background: #e8f5e9; color: var(--leave-green); }
         .close-btn { position: absolute; top: 15px; right: 15px; font-size: 24px; font-weight: bold; color: #999; cursor: pointer; }
     </style>
 </head>
@@ -81,36 +63,26 @@
     </div>
 </div>
 
-<div class="container" id="staffList">
-    </div>
+<div class="container" id="staffList"></div>
 
 <div class="modal" id="calModal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">×</span>
         <h2 id="modalName" style="margin:0; color:var(--primary);">盧家慶</h2>
         <div id="modalMonth" style="font-size:14px; color:#666;">2026年 3月</div>
-        <div class="calendar-grid" id="calendarGrid">
-            </div>
-        <p style="font-size:11px; color:#999; margin-top:15px; text-align:center; font-weight:bold;">
-            提示：日 / 夜 / 休 / 特 / 假
-        </p>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <p style="font-size:11px; color:#999; margin-top:15px; text-align:center; font-weight:bold;">提示：日 / 夜 / 休 / 特 / 假</p>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
-        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-        projectId: "factor-security-d1965",
-        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965", appId: "1:864846943143:web:4cfa18cd20d2f712225c82" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let curYear = 2026;
-    let curMonth = 2; 
-    let isEditing = false;
-    let activeStaff = "";
+    let curYear = 2026; let curMonth = 2; let isEditing = false; let activeStaff = "";
+    let localScheduleData = {}; // 🚀 新增：全域快取資料，破解手機下載限制
+
     const staffData = [
         {group: "總務", name: "盧家慶"}, {group: "總務", name: "何鴻隆"},
         {group: "總務", name: "蔡易倫"}, {group: "總務", name: "邱鴻鈞"},
@@ -118,149 +90,108 @@
     ];
 
     function initStaffList() {
-        const list = document.getElementById('staffList');
-        list.innerHTML = '';
+        const list = document.getElementById('staffList'); list.innerHTML = '';
         document.getElementById('currentMonthDisplay').innerText = `${curYear}年 ${curMonth + 1}月`;
 
         staffData.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'staff-card';
-            card.onclick = () => openModal(p.name);
+            const card = document.createElement('div'); card.className = 'staff-card'; card.onclick = () => openModal(p.name);
             card.innerHTML = `
-                <div class="staff-info">
-                    <span class="staff-name">${p.name}</span>
-                    <span class="staff-group">${p.group}</span>
-                </div>
+                <div class="staff-info"><span class="staff-name">${p.name}</span><span class="staff-group">${p.group}</span></div>
                 <div class="stat-row">
                     <div class="stat-item col-day">日<b id="sd_${p.name}">0</b></div>
                     <div class="stat-item col-night">夜<b id="sn_${p.name}">0</b></div>
                     <div class="stat-item col-off">休<b id="so_${p.name}">0</b></div>
                     <div class="stat-item" style="color:var(--special-yellow)">特<b id="st_${p.name}">0</b></div>
                     <div class="stat-item" style="color:var(--leave-green)">假<b id="sl_${p.name}">0</b></div>
-                </div>
-            `;
+                </div>`;
             list.appendChild(card);
         });
         listenToData();
     }
 
     function openModal(name) {
-        activeStaff = name;
-        document.getElementById('modalName').innerText = name;
-        document.getElementById('modalMonth').innerText = `${curYear}年 ${curMonth + 1}月`;
-        renderCalendar();
-        document.getElementById('calModal').style.display = 'flex';
+        activeStaff = name; document.getElementById('modalName').innerText = name; document.getElementById('modalMonth').innerText = `${curYear}年 ${curMonth + 1}月`;
+        renderCalendar(); document.getElementById('calModal').style.display = 'flex';
     }
 
     function renderCalendar() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = '';
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
         const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
-        
-        db.ref('guardSchedules').once('value', (snapshot) => {
-            const data = snapshot.val() || {};
-            for (let d = 1; d <= daysInMonth; d++) {
-                const id = `${curYear}_${curMonth+1}_${activeStaff}_${d}`;
-                const val = data[id] || "";
-                const box = document.createElement('div');
-                box.className = 'cal-day-box';
-                if(val) box.classList.add('val-' + val.substring(0,1));
-                
-                box.innerHTML = `
-                    <span class="cal-day-num">${d}</span>
-                    <input class="cal-input" value="${val}" 
-                        ${!isEditing ? 'readonly' : ''} 
-                        onchange="saveShift('${activeStaff}', ${d}, this.value)">
-                `;
-                grid.appendChild(box);
-            }
-        });
+        for (let d = 1; d <= daysInMonth; d++) {
+            const id = `${curYear}_${curMonth+1}_${activeStaff}_${d}`;
+            const val = localScheduleData[id] || ""; // 🚀 改用快取讀取
+            const box = document.createElement('div'); box.className = 'cal-day-box';
+            if(val) box.classList.add('val-' + val.substring(0,1));
+            box.innerHTML = `<span class="cal-day-num">${d}</span><input class="cal-input" value="${val}" ${!isEditing ? 'readonly' : ''} onchange="saveShift('${activeStaff}', ${d}, this.value)">`;
+            grid.appendChild(box);
+        }
     }
 
     function saveShift(name, day, val) {
         const id = `${curYear}_${curMonth+1}_${name}_${day}`;
         db.ref('guardSchedules/' + id).set(val);
+        localScheduleData[id] = val; // 更新快取
         renderCalendar(); 
     }
 
     function listenToData() {
         const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
         db.ref('guardSchedules').on('value', (snapshot) => {
-            const data = snapshot.val() || {};
+            localScheduleData = snapshot.val() || {}; // 🚀 隨時把雲端資料快取在手機裡
+            
             staffData.forEach(p => {
                 let dc=0, nc=0, oc=0, tc=0, lc=0;
                 for (let d = 1; d <= daysInMonth; d++) {
                     const id = `${curYear}_${curMonth+1}_${p.name}_${d}`;
-                    const val = data[id] || "";
-                    if(val.includes("日")) dc++; 
-                    else if(val.includes("夜")) nc++; 
-                    else if(val.includes("特")) tc++;
+                    const val = localScheduleData[id] || "";
+                    if(val.includes("日")) dc++; else if(val.includes("夜")) nc++; else if(val.includes("特")) tc++;
                     else if(val.includes("假") || val.includes("病") || val.includes("事")) lc++;
                     else if(val.includes("休") || val.includes("例") || val.includes("❌")) oc++;
                 }
-                document.getElementById(`sd_${p.name}`).innerText = dc;
-                document.getElementById(`sn_${p.name}`).innerText = nc;
-                document.getElementById(`so_${p.name}`).innerText = oc;
-                document.getElementById(`st_${p.name}`).innerText = tc;
+                document.getElementById(`sd_${p.name}`).innerText = dc; document.getElementById(`sn_${p.name}`).innerText = nc;
+                document.getElementById(`so_${p.name}`).innerText = oc; document.getElementById(`st_${p.name}`).innerText = tc;
                 document.getElementById(`sl_${p.name}`).innerText = lc;
             });
+            if(document.getElementById('calModal').style.display === 'flex') renderCalendar();
         });
     }
 
     function toggleLock() {
         if(!isEditing && prompt("請輸入人事解鎖密碼：") === "8888") {
             isEditing = true; document.body.classList.add('can-edit');
-            const btn = document.getElementById('lockBtn');
-            btn.innerText = "🔓 編輯中"; btn.classList.add('unlocked');
+            document.getElementById('lockBtn').innerText = "🔓 編輯中"; document.getElementById('lockBtn').classList.add('unlocked');
         } else if(isEditing) {
             isEditing = false; document.body.classList.remove('can-edit');
-            const btn = document.getElementById('lockBtn');
-            btn.innerText = "🔒 唯讀模式"; btn.classList.remove('unlocked');
+            document.getElementById('lockBtn').innerText = "🔒 唯讀模式"; document.getElementById('lockBtn').classList.remove('unlocked');
         }
         if(document.getElementById('calModal').style.display === 'flex') renderCalendar();
     }
 
-    function changeMonth(dir) {
-        curMonth += dir;
-        if (curMonth < 0) { curMonth = 11; curYear--; }
-        else if (curMonth > 11) { curMonth = 0; curYear++; }
-        initStaffList();
-    }
-
+    function changeMonth(dir) { curMonth += dir; if (curMonth < 0) { curMonth = 11; curYear--; } else if (curMonth > 11) { curMonth = 0; curYear++; } initStaffList(); }
     function closeModal() { document.getElementById('calModal').style.display = 'none'; }
     window.onclick = (e) => { if(e.target.className === 'modal') closeModal(); }
 
-    // 📊 專為公司設計的標準報表匯出引擎
+    // 📊 🚀 同步快取匯出引擎 (解決手機被擋的問題)
     function exportToExcel() {
-        const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
-        let csv = "\ufeff"; 
+        try {
+            const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+            let csv = "\ufeff"; 
 
-        // 建立傳統表頭
-        let header = ["姓名"];
-        for (let d = 1; d <= daysInMonth; d++) { header.push(d + "日"); }
-        header.push("日班總計", "夜班總計", "休假總計", "特休總計", "請假總計");
-        csv += header.join(",") + "\n";
-
-        // 從雲端抓取最新資料，並轉換成傳統橫向表格
-        db.ref('guardSchedules').once('value', (snapshot) => {
-            const data = snapshot.val() || {};
+            let header = ["姓名"];
+            for (let d = 1; d <= daysInMonth; d++) { header.push(d + "日"); }
+            header.push("日班總計", "夜班總計", "休假總計", "特休總計", "請假總計");
+            csv += header.join(",") + "\n";
 
             staffData.forEach(p => {
-                let row = [p.name];
-                let dc=0, nc=0, oc=0, tc=0, lc=0; 
-
+                let row = [p.name]; let dc=0, nc=0, oc=0, tc=0, lc=0; 
                 for (let d = 1; d <= daysInMonth; d++) {
                     const id = `${curYear}_${curMonth+1}_${p.name}_${d}`;
-                    const val = data[id] || "";
+                    const val = localScheduleData[id] || ""; // 直接從快取拿資料，不延遲
                     row.push(val); 
-
-                    if(val.includes("日")) dc++; 
-                    else if(val.includes("夜")) nc++; 
-                    else if(val.includes("特")) tc++;
+                    if(val.includes("日")) dc++; else if(val.includes("夜")) nc++; else if(val.includes("特")) tc++;
                     else if(val.includes("假") || val.includes("病") || val.includes("事")) lc++;
                     else if(val.includes("休") || val.includes("例") || val.includes("❌")) oc++;
                 }
-
                 row.push(dc, nc, oc, tc, lc);
                 csv += row.join(",") + "\n";
             });
@@ -273,7 +204,13 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        });
+            
+            // 給手機端的小提示
+            setTimeout(() => { alert("📊 報表已匯出！請查看手機的「檔案」或「下載」資料夾。"); }, 500);
+            
+        } catch (error) {
+            alert("⚠️ 下載失敗！如果您是用 LINE 內部開啟，請點擊右上角「用 Safari 或系統瀏覽器開啟」再試一次！");
+        }
     }
 
     initStaffList();
