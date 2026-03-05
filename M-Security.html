@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>台灣精銳 M-Security - 系統授權登入</title>
     <style>
+        /* 💡 架構師專屬控制台：直接修改這裡的數值！ */
+        :root {
+            /* 1. 台灣精銳 (主標題) 設定 */
+            --main-title-color: #000000;       /* 顏色：純黑 (#000000) 或企業藍 (#1e3a8a) */
+            --main-title-weight: 900;          /* 粗細：可填 400(正常) 到 900(極粗) */
+            --main-title-spacing: 4px;         /* 字距：文字之間的距離 */
+            --main-title-bottom-margin: 8px;   /* 位置：與下方副標題的距離 */
+
+            /* 2. M-Security 綜合查詢系統 (副標題) 設定 */
+            --sub-title-color: #333333;        /* 顏色：深灰 (#333333) */
+            --sub-title-weight: 600;           /* 粗細：600 為微粗體 */
+            --sub-title-spacing: 1px;          /* 字距 */
+
+            /* 3. 系統授權登入 (卡片標題) 設定 */
+            --card-title-color: #195bba;       /* 顏色：經典藍 */
+            --card-title-weight: 800;          /* 粗細：800 */
+        }
+
         * { box-sizing: border-box; }
         html, body { height: 100%; margin: 0; overflow: hidden; }
         body {
@@ -16,7 +34,6 @@
             padding-top: 8vh; 
         }
         
-        /* 標題區塊佈局設定 (位置：群組靠左、整體居中) */
         .header-container {
             display: flex;
             align-items: center;
@@ -24,7 +41,7 @@
             width: 90%;
             max-width: 420px;
             margin-bottom: 30px;
-            gap: 15px; /* Logo 與文字的間距 */
+            gap: 15px; 
         }
         
         .company-logo {
@@ -36,27 +53,26 @@
         .text-group {
             display: flex;
             flex-direction: column;
-            text-align: left; /* 文字靠左對齊 */
+            text-align: left; 
         }
 
-        /* 台灣精銳 標題設定 */
+        /* 這裡套用上方控制台的變數 */
         .main-title {
             font-size: 34px;
-            font-weight: 800; /* 粗細：特粗 (800) */
-            color: #1e3a8a; /* 顏色：企業藍 */
-            margin: 0 0 4px 0;
-            letter-spacing: 2px;
+            font-weight: var(--main-title-weight); 
+            color: var(--main-title-color); 
+            letter-spacing: var(--main-title-spacing);
+            margin: 0 0 var(--main-title-bottom-margin) 0;
         }
 
-        /* M-Security 副標題設定 */
         .sub-title {
             font-size: 18px;
-            font-weight: 500; /* 粗細：適中 (500) */
-            color: #475569; /* 顏色：鐵灰色 */
+            font-weight: var(--sub-title-weight); 
+            color: var(--sub-title-color); 
+            letter-spacing: var(--sub-title-spacing);
             margin: 0;
         }
 
-        /* 登入卡片設定 */
         .login-card {
             background: #ffffff;
             width: 90%;
@@ -67,12 +83,14 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.08);
             text-align: center;
         }
+        
         .card-title {
-            color: #1d4ed8;
+            color: var(--card-title-color);
             font-size: 22px;
-            font-weight: 800;
+            font-weight: var(--card-title-weight);
             margin-bottom: 25px;
         }
+
         .input-group { margin-bottom: 18px; }
         .input-group input {
             width: 100%;
