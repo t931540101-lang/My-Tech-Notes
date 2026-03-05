@@ -6,10 +6,12 @@
     <title>M-SECURITY HQ | 戰術指揮中心</title>
     <style>
         :root {
+            /* 💡 神秘感调色盘：更深邃的幽蓝与纯黑 */
             --hq-cyan: #00f2ff;
-            --hq-blue: #1e3a8a;
-            --hq-bg: #050505;
-            --hq-panel: rgba(20, 20, 20, 0.9);
+            --hq-cyan-dim: rgba(0, 242, 255, 0.4);
+            --hq-cyan-dark: #008899;
+            --hq-bg: #030303; /* 比 050505 更深邃 */
+            --hq-border: rgba(51, 51, 51, 0.6);
         }
 
         * { box-sizing: border-box; }
@@ -17,104 +19,159 @@
             margin: 0; padding: 0; height: 100%; 
             background-color: var(--hq-bg); 
             color: white; 
-            font-family: -apple-system, "Microsoft JhengHei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
             overflow: hidden;
         }
 
-        /* 💡 戰術動態背景：掃描線特效 */
+        /* 💡 戰術動態背景：极轻微的幽灵扫瞄线 */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background: linear-gradient(rgba(10, 10, 10, 0) 50%, rgba(0, 0, 0, 0.05) 50%), 
+                        linear-gradient(90deg, rgba(100, 0, 0, 0.02), rgba(0, 100, 0, 0.01), rgba(0, 0, 100, 0.02));
             z-index: 1;
-            background-size: 100% 2px, 3px 100%;
+            background-size: 100% 3px, 4px 100%;
             pointer-events: none;
+            opacity: 0.6; /* 降低背景特效的存在感，增加神秘感 */
         }
 
         .hq-gate-container {
             display: flex;
             height: 100vh;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* 🚀 核心修正：靠左对齐 */
+            padding-left: 15vw; /* 🚀 核心修正：通过 padding-left 精准左移 */
             z-index: 10;
             position: relative;
         }
 
-        /* 🚀 左側：戰術標語與裝飾 */
+        /* 🚀 左側：霸氣標語 (電腦版顯示) */
         .hq-brand-side {
-            padding-right: 60px;
-            border-right: 2px solid var(--hq-cyan);
+            padding-right: 50px;
+            border-right: 1.5px solid var(--hq-border);
             text-align: right;
-            display: none; /* 在手機上隱藏，電腦版顯示 */
+            display: none; 
+            transition: opacity 0.3s ease;
         }
 
-        /* 🔒 右側：登入控制面板 */
+        /* 🔒 右側：極簡登入控制面板 */
         .login-panel {
-            padding-left: 60px;
-            width: 400px;
+            padding-left: 50px;
+            width: 420px;
+            position: relative;
         }
 
+        /* HQ 專屬 Logo：幽暗光暈 */
         .hq-logo-img {
-            width: 120px;
-            filter: drop-shadow(0 0 10px var(--hq-cyan));
-            margin-bottom: 20px;
+            width: 100px;
+            filter: drop-shadow(0 0 15px var(--hq-cyan-dim));
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .hq-logo-img:hover {
+            filter: drop-shadow(0 0 20px var(--hq-cyan));
+            transform: scale(1.02);
         }
 
         .system-title {
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 900;
-            letter-spacing: 8px;
+            letter-spacing: 10px; /* 增加字距，增加神秘感 */
             margin: 0;
             color: white;
             text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
 
         .system-subtitle {
-            font-size: 14px;
-            color: var(--hq-cyan);
-            letter-spacing: 4px;
-            margin-top: 5px;
+            font-size: 13px;
+            color: var(--hq-cyan-dim);
+            letter-spacing: 5px;
+            margin-top: 8px;
             font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        
+        .hq-brand-side:hover .system-subtitle {
+            color: var(--hq-cyan);
         }
 
+        /* 戰術輸入框：極簡幽黑 */
         .input-field {
             width: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #333;
-            border-left: 4px solid var(--hq-cyan);
-            padding: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1.5px solid var(--hq-border);
+            border-left: 5px solid var(--hq-cyan-dark); /* 暗蓝色边框 */
+            padding: 16px;
             color: white;
             font-size: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             outline: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-family: monospace; /* 代码风格字型 */
         }
 
         .input-field:focus {
             border-color: var(--hq-cyan);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            border-left-color: var(--hq-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+            background: rgba(0, 0, 0, 1);
+        }
+        
+        .input-field::placeholder {
+            color: #555;
+            font-weight: normal;
         }
 
+        /* ACCESS SYSTEM 按鈕：幽藍高光 */
         .btn-access {
             width: 100%;
-            background: var(--hq-cyan);
-            color: black;
-            border: none;
-            padding: 15px;
-            font-size: 18px;
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--hq-cyan);
+            border: 2px solid var(--hq-cyan-dark);
+            padding: 16px;
+            font-size: 17px;
             font-weight: 900;
-            letter-spacing: 5px;
+            letter-spacing: 6px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-access:hover {
-            background: white;
-            box-shadow: 0 0 20px var(--hq-cyan);
+            background: var(--hq-cyan);
+            color: black;
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+            border-color: var(--hq-cyan);
+        }
+        
+        .btn-access:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
         }
 
+        /* 手機版適配 */
+        @media (max-width: 899px) {
+            .hq-gate-container {
+                padding-left: 0;
+                justify-content: center;
+            }
+            .login-panel {
+                padding-left: 0;
+                width: 90%;
+                max-width: 380px;
+                text-align: center;
+            }
+            .btn-access {
+                font-size: 16px;
+                letter-spacing: 4px;
+            }
+        }
+
+        /* 電腦版適配 */
         @media (min-width: 900px) {
             .hq-brand-side { display: block; }
         }
@@ -125,24 +182,27 @@
     <div class="hq-gate-container">
         <div class="hq-brand-side">
             <h1 class="system-title">M-SECURITY</h1>
-            <div class="system-subtitle">COMMAND CENTER HQ V9.0</div>
-            <p style="color: #666; font-size: 12px; margin-top: 20px; font-weight: bold;">
+            <div class="system-subtitle">COMMAND CENTER HQ V9.1</div>
+            <p style="color: #444; font-size: 11px; margin-top: 25px; font-weight: bold; letter-spacing: 1px; line-height: 1.6;">
                 GLOBAL STRATEGIC MONITORING SYSTEM<br>
-                LEVEL-5 AUTHORIZATION REQUIRED
+                LEVEL-5 AUTHORIZATION REQUIRED<br>
+                SECURED ACCESS PROTOCOL
             </p>
         </div>
 
         <div class="login-panel">
             <img src="IMG_1096.jpeg" class="hq-logo-img" alt="HQ Logo" onerror="this.style.display='none'">
-            <div style="margin-bottom: 30px;">
-                <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">IDENTIFICATION</div>
-                <input type="text" id="hqUser" class="input-field" placeholder="COMMANDER NAME">
+            
+            <div style="margin-bottom: 35px; text-align: left;">
+                <div style="font-size: 11px; color: #777; margin-bottom: 10px; letter-spacing: 1.5px; font-weight: bold;">COMMANDER IDENTIFICATION</div>
+                <input type="text" id="hqUser" class="input-field" placeholder="COMMANDER NAME" autocomplete="off">
                 
-                <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">ACCESS CODE</div>
+                <div style="font-size: 11px; color: #777; margin-bottom: 10px; letter-spacing: 1.5px; font-weight: bold;">ACCESS CODE</div>
                 <input type="password" id="hqPass" class="input-field" placeholder="••••••••">
             </div>
+            
             <button class="btn-access" onclick="verifyHQAccess()">ACCESS SYSTEM</button>
-            <div id="errMsg" style="color: red; font-size: 12px; margin-top: 15px; text-align: center; font-weight: bold;"></div>
+            <div id="errMsg" style="color: #e74c3c; font-size: 12px; margin-top: 20px; text-align: center; font-weight: bold; letter-spacing: 1px; min-height: 15px;"></div>
         </div>
     </div>
 
@@ -155,18 +215,21 @@
             // 🚀 維持與前線一致的最高權限密鑰
             if (user === '盧家慶' && pass === 'D01762') {
                 err.style.color = 'var(--hq-cyan)';
+                err.style.textShadow = '0 0 10px rgba(0, 242, 255, 0.5)';
                 err.innerText = "AUTHENTICATED. INITIALIZING COMMAND CENTER...";
                 
                 // 暫存登入狀態
                 sessionStorage.setItem('hq_auth', 'active');
+                sessionStorage.setItem('hq_commander', user);
                 
                 setTimeout(() => {
-                    alert('歡迎回到指揮中心，小黑哥。');
-                    // 這裡之後會接上 HQ 的主畫面
+                    alert('歡迎回到指揮中心，指揮官。');
+                    // 这里之后会接上 HQ 的主画面
                     // window.location.href = 'hq_main.html';
                 }, 1000);
             } else {
                 err.innerText = "ACCESS DENIED. INVALID CREDENTIALS.";
+                err.style.color = '#e74c3c';
                 document.getElementById('hqPass').value = '';
             }
         }
