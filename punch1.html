@@ -8,29 +8,20 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --bg: #f4f7f9;
-            --primary: #1e3a8a;
-            --card-bg: #ffffff;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
+            --bg: #f4f7f9; --primary: #1e3a8a; --card-bg: #ffffff;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --text-main: #1e293b; --text-sub: #64748b;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); }
 
-        /* 頂部導航 */
         .header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-
         .container { padding: 15px; }
 
-        /* 卡片共用設定 */
         .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .card-title { font-size: 14px; color: var(--primary); font-weight: 900; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
 
-        /* 輸入框與選項 */
         .input-group { margin-bottom: 15px; }
         .input-label { display: block; font-size: 12px; font-weight: bold; color: var(--text-sub); margin-bottom: 5px; }
         .input-field { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
@@ -40,7 +31,6 @@
         .shift-btn { flex: 1; padding: 10px; border: 1.5px solid #cbd5e1; background: transparent; border-radius: 8px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
         .shift-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* 時鐘與打卡按鈕 */
         .clock-display { text-align: center; font-size: 48px; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; margin: 10px 0 20px 0; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn-punch { padding: 20px 0; border: none; border-radius: 12px; font-size: 20px; font-weight: 900; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
@@ -49,7 +39,6 @@
         .btn-out { background: var(--danger); }
         .btn-punch span { font-size: 12px; font-weight: normal; opacity: 0.9; }
 
-        /* 打卡紀錄清單 */
         .log-list { max-height: 200px; overflow-y: auto; }
         .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .log-item:last-child { border-bottom: none; }
@@ -108,13 +97,21 @@
     </div>
 
     <script>
-        // === 1. Firebase 初始化 ===
-        const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
+        // === 1. Firebase 完整初始化 (解決 iOS Safari 阻擋問題) ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+            authDomain: "factor-security-d1965.firebaseapp.com",
+            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+            projectId: "factor-security-d1965",
+            storageBucket: "factor-security-d1965.firebasestorage.app",
+            messagingSenderId: "864846943143",
+            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // === 2. 變數與時鐘 ===
-        let currentShift = 'early'; // 預設早班
+        let currentShift = 'early'; 
         const shiftTimes = {
             'early': { name: '早班', limitStr: '07:00' },
             'mid': { name: '中班', limitStr: '17:00' },
@@ -155,7 +152,7 @@
             return isLate;
         }
 
-        // === 5. 執行打卡 (儲存本機 + 傳送 Firebase) ===
+        // === 5. 執行打卡 ===
         function executePunch(type) {
             const name = document.getElementById('empName').value.trim();
             const empId = document.getElementById('empId').value.trim();
@@ -166,11 +163,8 @@
             const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')}`;
             const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             
-            // 只有「上班打卡」才判斷遲到
             let isLate = false;
-            if (type === 'IN') {
-                isLate = checkLate(now.getHours(), now.getMinutes());
-            }
+            if (type === 'IN') { isLate = checkLate(now.getHours(), now.getMinutes()); }
 
             const actionName = type === 'IN' ? '上班' : '下班';
             const confirmMsg = isLate ? 
@@ -183,22 +177,22 @@
                     empId: empId,
                     date: dateStr,
                     time: timeStr,
-                    type: type, // IN 或 OUT
+                    type: type,
                     shift: shiftTimes[currentShift].name,
                     isLate: isLate,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
 
-                // 1. 上傳 HQ Firebase 雲端差勤庫 (attendance_logs)
+                // 上傳 HQ Firebase 雲端差勤庫
                 db.ref('attendance_logs').push(logData).then(() => {
-                    // 2. 成功後寫入本機 LocalStorage 顯示在畫面上
                     const localLogs = JSON.parse(localStorage.getItem('punch_logs')) || [];
                     localLogs.push(logData);
                     localStorage.setItem('punch_logs', JSON.stringify(localLogs));
                     renderLogs();
                     alert(`✅ 打卡成功！資料已同步至 HQ 後台。`);
                 }).catch(err => {
-                    alert("連線失敗，請檢查網路狀態！");
+                    // 如果再失敗，顯示具體原因
+                    alert("連線失敗！錯誤原因：" + err.message);
                 });
             }
         }
