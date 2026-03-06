@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Security 差勤管理後台</title>
+    <title>M-SECURITY HQ | 差勤戰術指揮部</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --hq-primary: #00e5ff;
+            --hq-cyan: #00e5ff;
             --hq-bg: #0f172a;
             --hq-card: #1e293b;
             --hq-border: #334155;
@@ -18,44 +18,63 @@
         }
 
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--hq-bg); color: #f8fafc; margin: 0; padding: 20px; }
+        body { 
+            font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
+            background-color: var(--hq-bg); color: #f8fafc; margin: 0; padding: 20px; 
+        }
 
-        .header-panel { display: flex; justify-content: space-between; align-items: center; background: var(--hq-card); padding: 20px 30px; border-radius: 12px; border: 1.5px solid var(--hq-border); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .title-area h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 2px; color: white; }
-        .title-area p { margin: 5px 0 0 0; color: var(--hq-primary); font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+        /* 頂部戰略條 */
+        .header-panel { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--hq-card); padding: 20px; border-radius: 12px; 
+            border: 1.5px solid var(--hq-border); margin-bottom: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .title-group h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
+        .title-group p { margin: 5px 0 0 0; color: var(--hq-cyan); font-size: 13px; font-weight: bold; }
 
-        .btn-export { background: var(--hq-primary); color: #0f172a; padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2); }
-        .btn-export:hover { background: white; box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4); transform: translateY(-2px); }
-        .btn-export:active { transform: translateY(0); }
+        .btn-export { 
+            background: var(--hq-cyan); color: #0f172a; padding: 12px 25px; 
+            border: none; border-radius: 8px; font-weight: 900; cursor: pointer; 
+            transition: 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+        .btn-export:hover { background: white; transform: scale(1.05); }
 
-        .table-container { background: var(--hq-card); border-radius: 12px; border: 1.5px solid var(--hq-border); overflow-x: auto; padding: 1px; }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        th, td { padding: 15px 10px; border-bottom: 1px solid var(--hq-border); font-size: 15px; }
-        th { background: rgba(0,0,0,0.3); color: var(--hq-primary); font-weight: 900; letter-spacing: 1px; position: sticky; top: 0; }
-        tr:hover { background: rgba(255,255,255,0.02); }
+        /* 戰情表格 */
+        .table-container { 
+            background: var(--hq-card); border-radius: 12px; 
+            border: 1.5px solid var(--hq-border); overflow-x: auto; 
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 15px; border-bottom: 1px solid var(--hq-border); text-align: center; }
+        th { background: rgba(0,0,0,0.3); color: var(--hq-cyan); font-weight: 900; font-size: 14px; }
         
-        .badge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; display: inline-block; }
-        .badge-in { background: var(--success); }
-        .badge-out { background: #64748b; }
-        .badge-late { background: var(--warning); color: #000; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
-        .badge-normal { background: transparent; color: var(--success); border: 1px solid var(--success); }
+        /* 狀態標籤 */
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-in { background: var(--success); color: white; }
+        .badge-out { background: #64748b; color: white; }
+        .badge-late { background: var(--warning); color: black; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+        .badge-ok { border: 1px solid var(--success); color: var(--success); }
 
-        /* 備註輸入框 */
-        .reason-input { width: 100%; max-width: 250px; background: #0f172a; border: 1px solid var(--hq-border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s; }
-        .reason-input:focus { border-color: var(--warning); box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
-        .reason-input::placeholder { color: #475569; }
+        /* 編輯備註區 */
+        .reason-input { 
+            width: 100%; background: #0f172a; border: 1px solid var(--hq-border); 
+            color: white; padding: 8px; border-radius: 4px; outline: none; 
+            transition: 0.3s;
+        }
+        .reason-input:focus { border-color: var(--warning); background: #1e293b; }
 
-        .empty-state { padding: 50px; text-align: center; color: #64748b; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+        .loading-msg { padding: 50px; text-align: center; color: var(--hq-cyan); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
-        <div class="title-area">
-            <h1>台灣精銳</h1>
-            <p>M-Security 差勤管理後台</p>
+        <div class="title-group">
+            <h1>台灣精銳 HQ</h1>
+            <p>M-SECURITY 差勤管理指揮部</p>
         </div>
-        <button class="btn-export" onclick="exportToExcel()">📊 一鍵匯出 EXCEL</button>
+        <button class="btn-export" onclick="exportAttendance()">📊 一鍵匯出 EXCEL 報表</button>
     </div>
 
     <div class="table-container">
@@ -66,115 +85,97 @@
                     <th>班別</th>
                     <th>姓名</th>
                     <th>工號</th>
-                    <th>打卡類型</th>
-                    <th>打卡時間</th>
+                    <th>打卡</th>
+                    <th>時間</th>
                     <th>狀態</th>
-                    <th style="width: 25%;">後台備註 (事假/遲到原因)</th>
+                    <th style="width: 250px;">後台備註 (遲到/事假原因)</th>
                 </tr>
             </thead>
-            <tbody id="logBody">
-                <tr>
-                    <td colspan="8" class="empty-state">正在連線至雲端差勤庫...</td>
-                </tr>
+            <tbody id="attendanceBody">
+                <tr><td colspan="8" class="loading-msg">📡 正在同步雲端數據中...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // === 1. Firebase 初始化 ===
-        const firebaseConfig = { apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48", databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com", projectId: "factor-security-d1965" };
+        // === 1. Firebase 完整金鑰 (與前線同步) ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+            authDomain: "factor-security-d1965.firebaseapp.com",
+            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+            projectId: "factor-security-d1965",
+            storageBucket: "factor-security-d1965.firebasestorage.app",
+            messagingSenderId: "864846943143",
+            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let attendanceData = []; // 用於暫存給匯出功能使用
+        let allLogs = [];
 
-        // === 2. 監聽差勤資料庫 ===
+        // === 2. 實時數據監聽 ===
         db.ref('attendance_logs').on('value', (snapshot) => {
-            const tbody = document.getElementById('logBody');
+            const tbody = document.getElementById('attendanceBody');
             tbody.innerHTML = '';
-            attendanceData = [];
+            allLogs = [];
 
             if (!snapshot.exists()) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">目前尚無任何打卡紀錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:40px; color:#555;">目前尚無打卡紀錄</td></tr>';
                 return;
             }
 
-            // 將物件轉為陣列並按時間反向排序 (最新的在最上面)
             snapshot.forEach(child => {
-                attendanceData.push({ key: child.key, ...child.val() });
+                allLogs.push({ key: child.key, ...child.val() });
             });
-            attendanceData.sort((a, b) => b.timestamp - a.timestamp);
+            // 最新的排在最上面
+            allLogs.sort((a, b) => b.timestamp - a.timestamp);
 
-            // 渲染表格
-            attendanceData.forEach(log => {
+            allLogs.forEach(log => {
                 const tr = document.createElement('tr');
-                
                 const typeBadge = log.type === 'IN' ? '<span class="badge badge-in">上班</span>' : '<span class="badge badge-out">下班</span>';
-                const statusBadge = log.isLate ? '<span class="badge badge-late">⚠️ 遲到</span>' : '<span class="badge badge-normal">🟢 正常</span>';
-                const reasonText = log.reason || '';
-
+                const statusBadge = log.isLate ? '<span class="badge badge-late">⚠️ 遲到</span>' : '<span class="badge badge-ok">🟢 正常</span>';
+                
                 tr.innerHTML = `
-                    <td style="font-family: monospace; font-weight: bold;">${log.date}</td>
-                    <td style="color: #94a3b8; font-weight: bold;">${log.shift}</td>
-                    <td style="font-weight: 900; color: white;">${log.name}</td>
-                    <td style="font-family: monospace; color: var(--hq-primary);">${log.empId}</td>
+                    <td style="font-family:monospace;">${log.date}</td>
+                    <td style="color:var(--hq-cyan); font-weight:bold;">${log.shift}</td>
+                    <td style="font-weight:bold;">${log.name}</td>
+                    <td style="font-family:monospace;">${log.empId}</td>
                     <td>${typeBadge}</td>
-                    <td style="font-family: monospace; font-size: 18px; font-weight: bold;">${log.time}</td>
+                    <td style="font-size:16px; font-weight:bold;">${log.time}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <input type="text" class="reason-input" 
-                            placeholder="${log.isLate ? '請填寫遲到原因...' : '點此新增備註...'}" 
-                            value="${reasonText}" 
-                            onchange="updateReason('${log.key}', this.value)">
+                               value="${log.reason || ''}" 
+                               placeholder="輸入原因..."
+                               onchange="updateNote('${log.key}', this.value)">
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         });
 
-        // === 3. 更新備註 (自動存入 Firebase) ===
-        function updateReason(key, newReason) {
-            db.ref('attendance_logs/' + key).update({ reason: newReason }).then(() => {
-                console.log("備註已更新:", newReason);
-                // 視覺提示可以在這裡加，但因為 Firebase on('value') 會自動重繪，所以其實不用做額外動作
+        // === 3. 備註即時更新函數 ===
+        function updateNote(key, val) {
+            db.ref('attendance_logs/' + key).update({ reason: val }).then(() => {
+                console.log("備註已存檔");
             });
         }
 
-        // === 4. 📊 匯出為 Excel (CSV) ===
-        function exportToExcel() {
-            if (attendanceData.length === 0) return alert("目前沒有資料可以匯出！");
+        // === 4. 📊 報表匯出引擎 ===
+        function exportAttendance() {
+            if (allLogs.length === 0) return alert("無資料可匯出");
 
-            let csv = "\ufeff"; // UTF-8 BOM，確保中文不亂碼
-            
-            // 表頭
-            csv += "日期,班別,姓名,工號,打卡類型,打卡時間,狀態,後台備註\n";
-
-            // 內容
-            attendanceData.forEach(log => {
-                const typeStr = log.type === 'IN' ? '上班' : '下班';
-                const statusStr = log.isLate ? '遲到' : '正常';
-                const reasonStr = log.reason ? `"${log.reason}"` : ""; // 用雙引號包起來防逗號衝突
-
-                let row = [
-                    log.date,
-                    log.shift,
-                    log.name,
-                    log.empId,
-                    typeStr,
-                    log.time,
-                    statusStr,
-                    reasonStr
-                ];
-                csv += row.join(",") + "\n";
+            let csv = "\ufeff日期,班別,姓名,工號,類型,時間,狀態,後台備註\n";
+            allLogs.forEach(l => {
+                const type = l.type === 'IN' ? '上班' : '下班';
+                const status = l.isLate ? '遲到' : '正常';
+                csv += `${l.date},${l.shift},${l.name},${l.empId},${type},${l.time},${status},"${l.reason || ''}"\n`;
             });
 
-            // 下載動作
-            const now = new Date();
-            const filename = `台灣精銳_打卡紀錄表_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.csv`;
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", filename);
+            link.setAttribute("download", `台灣精銳_差勤報表_${new Date().toLocaleDateString()}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
