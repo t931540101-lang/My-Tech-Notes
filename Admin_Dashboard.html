@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣精銳 - 出勤管理後台</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root { --guard-color: #2c3e50; --emp-color: #007AFF; --bg-color: #f4f7f9; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); padding: 15px; margin: 0; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 800px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #333; margin-top: 0; font-size: 1.4rem; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+        
+        /* 頁籤設計 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; background: #e9ecef; color: #6c757d; transition: 0.3s; }
+        .tab-btn.active-guard { background: var(--guard-color); color: white; }
+        .tab-btn.active-emp { background: var(--emp-color); color: white; }
+        
+        /* 資料區塊 */
+        .data-section { display: none; }
+        .data-section.active { display: block; }
+        
+        /* 表格設計 */
+        .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #495057; white-space: nowrap; }
+        tr:hover { background: #fdfdfd; }
+        
+        /* 匯出按鈕 */
+        .export-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-top: 10px; }
+        .btn-guard { background: #34495e; }
+        .btn-emp { background: #0056b3; }
+        
+        /* 狀態標籤 */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: white; }
+        .bg-in { background: #28a745; }
+        .bg-out { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>台灣精銳 - 臨時打卡資料中心</h2>
+
+    <div class="tabs">
+        <button id="tabGuard" class="tab-btn active-guard" onclick="switchTab('guard')">🛡️ 警衛紀錄 (<span id="countGuard">0</span>)</button>
+        <button id="tabEmp" class="tab-btn" onclick="switchTab('emp')">🧑‍💼 員工紀錄 (<span id="countEmp">0</span>)</button>
+    </div>
+
+    <div id="sectionGuard" class="data-section active">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>工號 / 姓名</th>
+                        <th>班別</th>
+                        <th>動作</th>
+                    </tr>
+                </thead>
+                <tbody id="guardTableBody">
+                    <tr><td colspan="4" style="text-align:center; color:#999;">載入中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="export-btn btn-guard" onclick="exportData('guard')">⬇️ 匯出警衛 CSV 報表</button>
+    </div>
+
+    <div id="sectionEmp" class="data-section">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>工號 / 姓名</th>
+                        <th>班別</th>
+                        <th>動作</th>
+                    </tr>
+                </thead>
+                <tbody id="empTableBody">
+                    <tr><td colspan="4" style="text-align:center; color:#999;">載入中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="export-btn btn-emp" onclick="exportData('emp')">⬇️ 匯出員工 CSV 報表</button>
+    </div>
+</div>
+
+<script>
+    // Firebase 初始化
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
+        authDomain: "factor-security-d1965.firebaseapp.com",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        storageBucket: "factor-security-d1965.firebasestorage.app",
+        messagingSenderId: "864846943143",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let guardData = [];
+    let empData = [];
+
+    // 切換頁籤邏輯
+    function switchTab(type) {
+        document.getElementById('sectionGuard').classList.remove('active');
+        document.getElementById('sectionEmp').classList.remove('active');
+        document.getElementById('tabGuard').className = 'tab-btn';
+        document.getElementById('tabEmp').className = 'tab-btn';
+
+        if(type === 'guard') {
+            document.getElementById('sectionGuard').classList.add('active');
+            document.getElementById('tabGuard').classList.add('active-guard');
+        } else {
+            document.getElementById('sectionEmp').classList.add('active');
+            document.getElementById('tabEmp').classList.add('active-emp');
+        }
+    }
+
+    // 讀取與分類 Firebase 資料
+    db.ref('punch_logs').on('value', (snapshot) => {
+        const data = snapshot.val();
+        guardData = [];
+        empData = [];
+        
+        let guardHtml = '';
+        let empHtml = '';
+
+        if (data) {
+            // 將資料反轉，最新的排在最上面
+            Object.keys(data).reverse().forEach(key => {
+                const item = data[key];
+                const badgeClass = item.type === '上班' ? 'bg-in' : 'bg-out';
+                const row = `<tr>
+                    <td style="white-space:nowrap; font-size:0.8rem;">${item.time}</td>
+                    <td><b>${item.id}</b> <br> <span style="color:#666; font-size:0.8rem;">${item.name}</span></td>
+                    <td>${item.shift || '未記錄'}</td>
+                    <td><span class="badge ${badgeClass}">${item.type}</span></td>
+                </tr>`;
+
+                // 分類邏輯：根據前端傳來的班別名稱判斷
+                if (item.shift && (item.shift.includes('日班') || item.shift.includes('警衛'))) {
+                    guardData.push(item);
+                    guardHtml += row;
+                } else {
+                    empData.push(item);
+                    empHtml += row;
+                }
+            });
+        }
+
+        // 渲染畫面
+        document.getElementById('guardTableBody').innerHTML = guardHtml || '<tr><td colspan="4" style="text-align:center;">尚無警衛紀錄</td></tr>';
+        document.getElementById('empTableBody').innerHTML = empHtml || '<tr><td colspan="4" style="text-align:center;">尚無員工紀錄</td></tr>';
+        
+        // 更新計數器
+        document.getElementById('countGuard').innerText = guardData.length;
+        document.getElementById('countEmp').innerText = empData.length;
+    });
+
+    // 匯出 CSV 邏輯
+    function exportData(type) {
+        const targetData = type === 'guard' ? guardData : empData;
+        const fileName = type === 'guard' ? '警衛打卡報表' : '員工打卡報表';
+        
+        if (targetData.length === 0) {
+            alert("目前沒有資料可以匯出！");
+            return;
+        }
+
+        let csvContent = "\uFEFF時間,工號,姓名,班別,動作\n";
+        targetData.forEach(item => {
+            csvContent += `${item.time},${item.id},${item.name},${item.shift || '未記錄'},${item.type}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const dateTag = new Date().toLocaleDateString().replace(/\//g, '-');
+        
+        link.href = URL.createObjectURL(blob);
+        link.download = `台灣精銳_${fileName}_${dateTag}.csv`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
