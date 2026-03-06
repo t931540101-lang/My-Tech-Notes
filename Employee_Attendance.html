@@ -5,26 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>員工出勤打卡系統</title>
     <style>
-        :root { --primary: #0d6efd; --bg: #f8f9fa; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 15px; margin: 0; }
-        .card { background: #fff; width: 100%; max-width: 350px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { text-align: center; font-size: 1.25rem; color: #212529; margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
-        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        input { flex: 1; width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
-        input:focus { outline: none; border-color: var(--primary); }
-        .clock { text-align: center; font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: #212529; font-variant-numeric: tabular-nums; }
-        .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { flex: 1; padding: 15px; border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
-        .btn-in { background: #198754; }
-        .btn-out { background: #6c757d; }
-        button:active { transform: scale(0.96); }
-        .log-box { max-height: 160px; overflow-y: auto; font-size: 0.85rem; border-top: 1px solid #eee; padding-top: 10px; }
-        .log-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: flex-start; }
-        .log-info { color: #6c757d; font-size: 0.75rem; margin-bottom: 3px; }
-        .badge { padding: 3px 6px; border-radius: 4px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-left: 5px; }
-        .status-ok { background: #198754; }
-        .status-late { background: #dc3545; }
-        .status-early { background: #fd7e14; }
+        body { font-family: -apple-system, sans-serif; background: #eef2f5; display: flex; justify-content: center; padding: 15px; margin: 0; }
+        .card { background: white; width: 100%; max-width: 350px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #2c3e50; font-size: 1.2rem; margin-top: 0; border-bottom: 2px solid #007AFF; padding-bottom: 10px; }
+        .input-group { margin-bottom: 15px; display: flex; gap: 10px; }
+        .input-box { flex: 1; }
+        .input-box input[type="text"] { width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
+        .input-box input[type="text"]:focus { outline: none; border-color: #007AFF; }
+        .shift-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .shift-label { display: block; padding: 12px; border: 1px solid #ddd; border-radius: 6px; text-align: center; cursor: pointer; font-size: 0.9rem; font-weight: bold; color: #555; background: #fafafa; transition: 0.2s; }
+        .shift-options input[type="radio"] { display: none; }
+        .shift-options input[type="radio"]:checked + .shift-label { background: #e3f2fd; border-color: #007AFF; color: #0056b3; }
+        .time-display { text-align: center; font-size: 2rem; font-weight: bold; margin: 15px 0; color: #2c3e50; font-variant-numeric: tabular-nums; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .btn-in { background-color: #34C759; }
+        .btn-out { background-color: #6c757d; }
+        .log-area { max-height: 150px; overflow-y: auto; font-size: 0.8rem; border-top: 1px solid #eee; padding-top: 10px; }
+        .log-item { padding: 8px 0; border-bottom: 1px dashed #ddd; color: #444; line-height: 1.4; }
+        .log-info { color: #888; font-size: 0.75rem; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -32,20 +31,39 @@
 <div class="card">
     <h2>員工出勤打卡系統</h2>
     
-    <div class="input-row">
-        <input type="text" id="empId" placeholder="員工工號" oninput="saveEmpProfile()">
-        <input type="text" id="empName" placeholder="員工姓名" oninput="saveEmpProfile()">
+    <div class="input-group">
+        <div class="input-box">
+            <input type="text" id="empId" placeholder="工號" oninput="saveEmpProfile()">
+        </div>
+        <div class="input-box">
+            <input type="text" id="empName" placeholder="姓名" oninput="saveEmpProfile()">
+        </div>
     </div>
-
-    <div id="clock" class="clock">00:00:00</div>
     
-    <div class="btn-row">
-        <button class="btn-in" onclick="saveEmpRecord('上班')">上班打卡</button>
-        <button class="btn-out" onclick="saveEmpRecord('下班')">下班打卡</button>
+    <div class="shift-options">
+        <label>
+            <input type="radio" name="shift" value="早班" checked>
+            <span class="shift-label">早班 (08:30—17:30)</span>
+        </label>
+        <label>
+            <input type="radio" name="shift" value="中班">
+            <span class="shift-label">中班 (16:30—00:30)</span>
+        </label>
+        <label>
+            <input type="radio" name="shift" value="晚班">
+            <span class="shift-label">晚班 (00:30—08:30)</span>
+        </label>
     </div>
 
-    <div style="font-weight:bold; font-size:0.85rem; color:#495057; margin-bottom:5px;">個人打卡紀錄 (本機)</div>
-    <div id="logHistory" class="log-box"></div>
+    <div id="clock" class="time-display">00:00:00</div>
+    
+    <div class="btn-group">
+        <button class="btn-in" onclick="saveEmpRecord('上班')">上班</button>
+        <button class="btn-out" onclick="saveEmpRecord('下班')">下班</button>
+    </div>
+
+    <div style="font-weight:bold; font-size:0.85rem; margin-bottom:5px; color:#555;">本機紀錄 (最新5筆)</div>
+    <div id="logHistory" class="log-area">等待打卡...</div>
 </div>
 
 <script>
@@ -63,44 +81,30 @@
     function saveEmpRecord(type) {
         const id = document.getElementById('empId').value || "未填工號";
         const name = document.getElementById('empName').value || "未填姓名";
+        const shift = document.querySelector('input[name="shift"]:checked').value;
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('zh-TW', {hour12: false});
-        const dateStr = `${now.getMonth()+1}/${now.getDate()}`;
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.toLocaleTimeString('zh-TW', {hour12: false})}`;
         
-        let status = "正常";
-        let badgeClass = "status-ok";
-        const timeHHMM = timeStr.substring(0, 5);
-
-        // 考勤判定邏輯 (08:30 / 17:30)
-        if (type === '上班' && timeHHMM > '08:30') {
-            status = "遲到";
-            badgeClass = "status-late";
-        } else if (type === '下班' && timeHHMM < '17:30') {
-            status = "早退";
-            badgeClass = "status-early";
-        }
-
-        const entry = { id, name, type, dateStr, timeStr, status, badgeClass };
+        const entry = { id, name, shift, type, time: timeStr };
         
-        let logs = JSON.parse(localStorage.getItem('empLogs')) || [];
+        let logs = JSON.parse(localStorage.getItem('empShiftLogs')) || [];
         logs.unshift(entry);
         if (logs.length > 5) logs.pop(); 
         
-        localStorage.setItem('empLogs', JSON.stringify(logs));
+        localStorage.setItem('empShiftLogs', JSON.stringify(logs));
         renderEmpLogs();
     }
     
     function renderEmpLogs() {
-        const logs = JSON.parse(localStorage.getItem('empLogs')) || [];
+        const logs = JSON.parse(localStorage.getItem('empShiftLogs')) || [];
         const container = document.getElementById('logHistory');
+        
+        if (logs.length === 0) return;
         
         container.innerHTML = logs.map(log => `
             <div class="log-item">
-                <div>
-                    <div class="log-info">工號:${log.id} | 姓名:${log.name}</div>
-                    <strong>${log.type}</strong> ${log.dateStr} ${log.timeStr}
-                </div>
-                <span class="badge ${log.badgeClass}">${log.status}</span>
+                <div class="log-info">[${log.shift}] 工號:${log.id} | 姓名:${log.name}</div>
+                <strong style="color:${log.type==='上班'?'#34C759':'#6c757d'};">${log.type}</strong> - ${log.time}
             </div>
         `).join('');
     }
