@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>台灣精銳臨時打卡系統</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --primary-color: #0056b3; --bg-color: #f0f2f5; }
         body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg-color); display: flex; justify-content: center; padding: 15px; margin: 0; }
@@ -13,24 +15,22 @@
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-size: 0.85rem; color: #495057; margin-bottom: 5px; font-weight: 600; }
         input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0,86,179,0.1); }
         .date-display { text-align: center; color: #6c757d; font-size: 0.9rem; }
         .time-display { text-align: center; font-size: 2.2rem; font-weight: 700; margin-bottom: 20px; color: #212529; font-variant-numeric: tabular-nums; }
         .btn-group { display: flex; gap: 12px; margin-bottom: 20px; }
         button { flex: 1; padding: 16px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s; }
         .btn-in { background-color: #28a745; }
         .btn-out { background-color: #dc3545; }
-        button:active { transform: scale(0.96); }
-        .log-header { font-size: 0.85rem; font-weight: bold; color: #495057; margin-bottom: 8px; }
-        .log-container { max-height: 180px; overflow-y: auto; background: #fff; border-radius: 8px; }
+        .log-container { max-height: 180px; overflow-y: auto; background: #fff; }
         .log-item { font-size: 0.8rem; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .log-user { color: #6c757d; font-size: 0.75rem; margin-bottom: 2px; }
+        .sync-status { text-align: center; font-size: 0.7rem; color: #28a745; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div class="system-title">台灣精銳臨時打卡系統</div>
+    <div id="syncStatus" class="sync-status">● 雲端已同步</div>
 
     <div class="info-section">
         <div class="input-group">
@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <div id="fullDate" class="date-display">2026年3月6日 (星期五)</div>
+    <div id="fullDate" class="date-display">載入中...</div>
     <div id="clock" class="time-display">00:00:00</div>
     
     <div class="btn-group">
@@ -51,13 +51,24 @@
         <button class="btn-out" onclick="logTime('下班')">下班</button>
     </div>
 
-    <div class="log-header">打卡流水紀錄</div>
+    <div style="font-size:0.85rem; font-weight:bold; margin-bottom:8px;">打卡流水紀錄</div>
     <div id="logHistory" class="log-container"></div>
-    
-    <button style="width:100%; background:none; color:#adb5bd; font-size:0.75rem; margin-top:15px; text-decoration:underline; border:none; cursor:pointer;" onclick="clearLogs()">清除本機快取紀錄</button>
 </div>
 
 <script>
+    // 1. 初始化 Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
+        authDomain: "factor-security-d1965.firebaseapp.com",
+        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+        projectId: "factor-security-d1965",
+        storageBucket: "factor-security-d1965.firebasestorage.app",
+        messagingSenderId: "864846943143",
+        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
     window.onload = function() {
@@ -74,8 +85,7 @@
 
     function updateClock() {
         const now = new Date();
-        const w = weekDays[now.getDay()];
-        document.getElementById('fullDate').innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 (星期${w})`;
+        document.getElementById('fullDate').innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 (星期${weekDays[now.getDay()]})`;
         document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', { hour12: false });
     }
     setInterval(updateClock, 1000);
@@ -84,15 +94,25 @@
         const name = document.getElementById('userName').value || "未填";
         const id = document.getElementById('userId').value || "未填";
         const now = new Date();
-        const w = weekDays[now.getDay()];
-        const timeStr = `${now.getMonth()+1}/${now.getDate()}(${w}) ${now.toLocaleTimeString('zh-TW', {hour12:false})}`;
+        const timestamp = now.getTime();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()}(${weekDays[now.getDay()]}) ${now.toLocaleTimeString('zh-TW', {hour12:false})}`;
         
-        const entry = { type, time: timeStr, name, id };
+        const entry = { type, time: timeStr, name, id, timestamp };
+
+        // A. 存入本地
         let history = JSON.parse(localStorage.getItem('punchLogs')) || [];
         history.unshift(entry);
         localStorage.setItem('punchLogs', JSON.stringify(history));
-        
         renderLogs();
+
+        // B. 同步到 Firebase (Factor 後端)
+        database.ref('punch_logs/' + timestamp).set(entry)
+            .then(() => {
+                const status = document.getElementById('syncStatus');
+                status.style.display = 'block';
+                setTimeout(() => { status.style.display = 'none'; }, 2000);
+            })
+            .catch((error) => console.error("同步失敗:", error));
     }
 
     function renderLogs() {
@@ -100,17 +120,10 @@
         const container = document.getElementById('logHistory');
         container.innerHTML = history.map(item => `
             <div class="log-item">
-                <div class="log-user">[${item.id}] ${item.name}</div>
+                <div style="color:#6c757d; font-size:0.75rem;">[${item.id}] ${item.name}</div>
                 <b style="color:${item.type==='上班'?'#28a745':'#dc3545'}">${item.type}打卡</b> - ${item.time}
             </div>
         `).join('');
-    }
-
-    function clearLogs() {
-        if(confirm('小黑哥，要清空「台灣精銳」的本機打卡紀錄嗎？')) {
-            localStorage.removeItem('punchLogs');
-            renderLogs();
-        }
     }
 </script>
 
