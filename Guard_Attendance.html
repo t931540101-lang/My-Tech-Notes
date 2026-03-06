@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>警衛勤務打卡系統</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f2f2f7; display: flex; justify-content: center; padding: 15px; margin: 0; }
+        .card { background: white; width: 100%; max-width: 350px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #333; font-size: 1.2rem; margin-top: 0; border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        .time-display { text-align: center; font-size: 1.8rem; font-weight: bold; margin: 15px 0; color: #0056b3; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-in { background-color: #28a745; }
+        .btn-out { background-color: #dc3545; }
+        .log-area { max-height: 150px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.85rem; }
+        .log-item { padding: 5px 0; border-bottom: 1px dashed #ddd; color: #444; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>警衛勤務打卡系統</h2>
+    
+    <div class="form-group">
+        <label>警衛姓名</label>
+        <input type="text" id="guardName" placeholder="請輸入姓名">
+    </div>
+    
+    <div class="form-group">
+        <label>勤務班別</label>
+        <select id="guardShift">
+            <option value="日班 (07:00-19:00)">警衛日班 07:00—19:00</option>
+            <option value="中班 (17:00-05:00)">警衛中班 17:00—05:00</option>
+            <option value="晚班 (19:00-07:00)">警衛晚班 19:00—07:00</option>
+        </select>
+    </div>
+
+    <div id="clock" class="time-display">00:00:00</div>
+    
+    <div class="btn-group">
+        <button class="btn-in" onclick="saveRecord('上班')">上班打卡</button>
+        <button class="btn-out" onclick="saveRecord('下班')">下班打卡</button>
+    </div>
+
+    <div style="font-weight:bold; font-size:0.85rem; margin-bottom:5px;">本機紀錄 (最新5筆)</div>
+    <div id="logHistory" class="log-area"></div>
+</div>
+
+<script>
+    function updateTime() {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('zh-TW', {hour12: false});
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    function saveRecord(type) {
+        const name = document.getElementById('guardName').value || "未填寫";
+        const shift = document.getElementById('guardShift').value;
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.toLocaleTimeString('zh-TW', {hour12: false})}`;
+        
+        const record = `[${shift}] ${name} - ${type} ${timeStr}`;
+        let logs = JSON.parse(localStorage.getItem('guardLogs')) || [];
+        logs.unshift(record);
+        if (logs.length > 5) logs.pop(); // 僅保留最近5筆顯示
+        
+        localStorage.setItem('guardLogs', JSON.stringify(logs));
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const logs = JSON.parse(localStorage.getItem('guardLogs')) || [];
+        document.getElementById('logHistory').innerHTML = logs.map(log => `<div class="log-item">${log}</div>`).join('');
+    }
+    renderLogs();
+</script>
+
+</body>
+</html>
