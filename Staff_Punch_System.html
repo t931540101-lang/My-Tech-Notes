@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>職員打卡系統</title>
+    <style>
+        :root { --primary-color: #007AFF; --bg-color: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); display: flex; justify-content: center; padding: 15px; margin: 0; }
+        .card { background: white; width: 100%; max-width: 360px; padding: 20px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .info-section { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 12px; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .date-display { text-align: center; color: #8e8e93; font-size: 0.85rem; }
+        .time-display { text-align: center; font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--primary-color); }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-in { background-color: #34C759; }
+        .btn-out { background-color: #FF3B30; }
+        .log-container { max-height: 200px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 10px; }
+        .log-item { font-size: 0.8rem; padding: 8px 0; border-bottom: 1px solid #f2f2f7; line-height: 1.4; }
+        .log-user { color: #888; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="info-section">
+        <div class="input-group">
+            <label>打卡人姓名</label>
+            <input type="text" id="userName" placeholder="例如：小黑哥" oninput="saveInfo()">
+        </div>
+        <div class="input-group">
+            <label>工號 (Staff ID)</label>
+            <input type="text" id="userId" placeholder="例如：A001" oninput="saveInfo()">
+        </div>
+    </div>
+
+    <div id="fullDate" class="date-display">2026年3月6日 (星期五)</div>
+    <div id="clock" class="time-display">00:00:00</div>
+    
+    <div class="btn-group">
+        <button class="btn-in" onclick="logTime('上班')">上班</button>
+        <button class="btn-out" onclick="logTime('下班')">下班</button>
+    </div>
+
+    <div id="logHistory" class="log-container"></div>
+    
+    <button style="width:100%; background:none; color:#bbb; font-size:0.7rem; margin-top:10px; text-decoration:underline; border:none;" onclick="clearLogs()">清除所有紀錄</button>
+</div>
+
+<script>
+    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+    // 載入時自動填充姓名與工號
+    window.onload = function() {
+        document.getElementById('userName').value = localStorage.getItem('p_name') || '';
+        document.getElementById('userId').value = localStorage.getItem('p_id') || '';
+        renderLogs();
+        updateClock();
+    };
+
+    function saveInfo() {
+        localStorage.setItem('p_name', document.getElementById('userName').value);
+        localStorage.setItem('p_id', document.getElementById('userId').value);
+    }
+
+    function updateClock() {
+        const now = new Date();
+        const w = weekDays[now.getDay()];
+        document.getElementById('fullDate').innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 (星期${w})`;
+        document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+
+    function logTime(type) {
+        const name = document.getElementById('userName').value || "未填寫";
+        const id = document.getElementById('userId').value || "未填寫";
+        const now = new Date();
+        const w = weekDays[now.getDay()];
+        
+        // 組合存檔格式
+        const timeStr = `${now.getMonth()+1}/${now.getDate()}(${w}) ${now.toLocaleTimeString('zh-TW', {hour12:false})}`;
+        const entry = { type, time: timeStr, name, id };
+
+        let history = JSON.parse(localStorage.getItem('punchLogs')) || [];
+        history.unshift(entry);
+        localStorage.setItem('punchLogs', JSON.stringify(history));
+        
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const history = JSON.parse(localStorage.getItem('punchLogs')) || [];
+        const container = document.getElementById('logHistory');
+        container.innerHTML = history.map(item => `
+            <div class="log-item">
+                <div class="log-user">工號: ${item.id} | 姓名: ${item.name}</div>
+                <b style="color:${item.type==='上班'?'#34C759':'#FF3B30'}">${item.type}</b> - ${item.time}
+            </div>
+        `).join('');
+    }
+
+    function clearLogs() {
+        if(confirm('小黑哥，確定要清除所有打卡紀錄嗎？')) {
+            localStorage.removeItem('punchLogs');
+            renderLogs();
+        }
+    }
+</script>
+
+</body>
+</html>
