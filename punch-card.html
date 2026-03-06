@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作打卡系統</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 350px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .time-display { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #007AFF; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-in { background-color: #34C759; }
+        .btn-out { background-color: #FF3B30; }
+        .log-container { border-top: 1px solid #ddd; padding-top: 10px; max-height: 200px; overflow-y: auto; }
+        .log-item { font-size: 0.9rem; padding: 5px 0; border-bottom: 1px dashed #eee; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>上班打卡</h2>
+    <div id="clock" class="time-display">00:00:00</div>
+    
+    <div class="btn-group">
+        <button class="btn-in" onclick="logTime('上班')">上班打卡</button>
+        <button class="btn-out" onclick="logTime('下班')">下班打卡</button>
+    </div>
+
+    <div class="log-container" id="logHistory">
+        </div>
+    <button style="width:100%; background:#8e8e93; margin-top:10px;" onclick="clearLogs()">清除紀錄</button>
+</div>
+
+<script>
+    // 即時時鐘
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+
+    // 儲存打卡資訊
+    function logTime(type) {
+        const now = new Date();
+        const timeStr = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        const entry = { type, time: timeStr };
+
+        let history = JSON.parse(localStorage.getItem('punchLogs')) || [];
+        history.unshift(entry); // 新的在前
+        localStorage.setItem('punchLogs', JSON.stringify(history));
+        
+        renderLogs();
+    }
+
+    // 渲染紀錄
+    function renderLogs() {
+        const history = JSON.parse(localStorage.getItem('punchLogs')) || [];
+        const container = document.getElementById('logHistory');
+        container.innerHTML = history.map(item => 
+            `<div class="log-item"><strong>${item.type}</strong>: ${item.time}</div>`
+        ).join('');
+    }
+
+    function clearLogs() {
+        if(confirm('確定要清除所有打卡紀錄嗎？')) {
+            localStorage.removeItem('punchLogs');
+            renderLogs();
+        }
+    }
+
+    // 初始化載入
+    renderLogs();
+    updateClock();
+</script>
+
+</body>
+</html>
