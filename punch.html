@@ -2,109 +2,82 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security 獨立差勤系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Security 差勤管理後台</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --bg: #f4f7f9;
-            --primary: #1e3a8a;
-            --card-bg: #ffffff;
-            --success: #10b981;
+            --hq-primary: #00e5ff;
+            --hq-bg: #0f172a;
+            --hq-card: #1e293b;
+            --hq-border: #334155;
             --danger: #ef4444;
+            --success: #10b981;
             --warning: #f59e0b;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--hq-bg); color: #f8fafc; margin: 0; padding: 20px; }
 
-        /* 頂部導航 */
-        .header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-panel { display: flex; justify-content: space-between; align-items: center; background: var(--hq-card); padding: 20px 30px; border-radius: 12px; border: 1.5px solid var(--hq-border); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .title-area h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 2px; color: white; }
+        .title-area p { margin: 5px 0 0 0; color: var(--hq-primary); font-weight: bold; font-size: 14px; letter-spacing: 1px; }
 
-        .container { padding: 15px; }
+        .btn-export { background: var(--hq-primary); color: #0f172a; padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2); }
+        .btn-export:hover { background: white; box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4); transform: translateY(-2px); }
+        .btn-export:active { transform: translateY(0); }
 
-        /* 卡片共用設定 */
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .card-title { font-size: 14px; color: var(--primary); font-weight: 900; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
-
-        /* 輸入框與選項 */
-        .input-group { margin-bottom: 15px; }
-        .input-label { display: block; font-size: 12px; font-weight: bold; color: var(--text-sub); margin-bottom: 5px; }
-        .input-field { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
-        .input-field:focus { border-color: var(--primary); }
-
-        .shift-selector { display: flex; gap: 10px; }
-        .shift-btn { flex: 1; padding: 10px; border: 1.5px solid #cbd5e1; background: transparent; border-radius: 8px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
-        .shift-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* 時鐘與打卡按鈕 */
-        .clock-display { text-align: center; font-size: 48px; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; margin: 10px 0 20px 0; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-punch { padding: 20px 0; border: none; border-radius: 12px; font-size: 20px; font-weight: 900; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-        .btn-punch:active { transform: translateY(4px); box-shadow: none; }
-        .btn-in { background: var(--success); }
-        .btn-out { background: var(--danger); }
-        .btn-punch span { font-size: 12px; font-weight: normal; opacity: 0.9; }
-
-        /* 打卡紀錄清單 */
-        .log-list { max-height: 200px; overflow-y: auto; }
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
-        .log-item:last-child { border-bottom: none; }
-        .log-time { font-family: monospace; font-weight: bold; font-size: 16px; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
+        .table-container { background: var(--hq-card); border-radius: 12px; border: 1.5px solid var(--hq-border); overflow-x: auto; padding: 1px; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { padding: 15px 10px; border-bottom: 1px solid var(--hq-border); font-size: 15px; }
+        th { background: rgba(0,0,0,0.3); color: var(--hq-primary); font-weight: 900; letter-spacing: 1px; position: sticky; top: 0; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; display: inline-block; }
         .badge-in { background: var(--success); }
-        .badge-out { background: var(--danger); }
-        .badge-late { background: var(--warning); color: #000; margin-left: 5px; }
+        .badge-out { background: #64748b; }
+        .badge-late { background: var(--warning); color: #000; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+        .badge-normal { background: transparent; color: var(--success); border: 1px solid var(--success); }
 
+        /* 備註輸入框 */
+        .reason-input { width: 100%; max-width: 250px; background: #0f172a; border: 1px solid var(--hq-border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s; }
+        .reason-input:focus { border-color: var(--warning); box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
+        .reason-input::placeholder { color: #475569; }
+
+        .empty-state { padding: 50px; text-align: center; color: #64748b; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="header">台灣精銳 差勤系統</div>
-
-    <div class="container">
-        <div class="card">
-            <h3 class="card-title">🧑‍✈️ 值勤人員登錄</h3>
-            <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;">
-                    <span class="input-label">姓名</span>
-                    <input type="text" id="empName" class="input-field" placeholder="請輸入姓名" onchange="saveProfile()">
-                </div>
-                <div class="input-group" style="flex: 1;">
-                    <span class="input-label">工號</span>
-                    <input type="text" id="empId" class="input-field" placeholder="如 D01762" onchange="saveProfile()">
-                </div>
-            </div>
-            
-            <span class="input-label">選擇今日班別</span>
-            <div class="shift-selector">
-                <button class="shift-btn active" id="shift-early" onclick="setShift('early')">早班<br><small>07-19</small></button>
-                <button class="shift-btn" id="shift-mid" onclick="setShift('mid')">中班<br><small>17-05</small></button>
-                <button class="shift-btn" id="shift-night" onclick="setShift('night')">晚班<br><small>19-07</small></button>
-            </div>
+    <div class="header-panel">
+        <div class="title-area">
+            <h1>台灣精銳</h1>
+            <p>M-Security 差勤管理後台</p>
         </div>
+        <button class="btn-export" onclick="exportToExcel()">📊 一鍵匯出 EXCEL</button>
+    </div>
 
-        <div class="card">
-            <h3 class="card-title" style="text-align: center;">⏱️ 系統對時與打卡</h3>
-            <div class="clock-display" id="clockDisplay">00:00:00</div>
-            <div class="btn-grid">
-                <button class="btn-punch btn-in" onclick="executePunch('IN')">上班打卡<span>CLOCK IN</span></button>
-                <button class="btn-punch btn-out" onclick="executePunch('OUT')">下班打卡<span>CLOCK OUT</span></button>
-            </div>
-            <p style="text-align: center; font-size: 12px; color: var(--text-sub); margin-top: 15px; font-weight: bold;">
-                狀態：🟢 已連線至 HQ 雲端差勤庫
-            </p>
-        </div>
-
-        <div class="card">
-            <h3 class="card-title">📋 本機打卡日誌 (自動同步 HQ)</h3>
-            <div class="log-list" id="logList">
-                <div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">尚無今日紀錄</div>
-            </div>
-        </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>班別</th>
+                    <th>姓名</th>
+                    <th>工號</th>
+                    <th>打卡類型</th>
+                    <th>打卡時間</th>
+                    <th>狀態</th>
+                    <th style="width: 25%;">後台備註 (事假/遲到原因)</th>
+                </tr>
+            </thead>
+            <tbody id="logBody">
+                <tr>
+                    <td colspan="8" class="empty-state">正在連線至雲端差勤庫...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -113,123 +86,98 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // === 2. 變數與時鐘 ===
-        let currentShift = 'early'; // 預設早班
-        const shiftTimes = {
-            'early': { name: '早班', limitStr: '07:00' },
-            'mid': { name: '中班', limitStr: '17:00' },
-            'night': { name: '晚班', limitStr: '19:00' }
-        };
+        let attendanceData = []; // 用於暫存給匯出功能使用
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clockDisplay').innerText = 
-                `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        }
-        setInterval(updateClock, 1000); updateClock();
+        // === 2. 監聽差勤資料庫 ===
+        db.ref('attendance_logs').on('value', (snapshot) => {
+            const tbody = document.getElementById('logBody');
+            tbody.innerHTML = '';
+            attendanceData = [];
 
-        // === 3. 本機資料記憶 (姓名、工號) ===
-        window.onload = function() {
-            document.getElementById('empName').value = localStorage.getItem('punch_name') || '';
-            document.getElementById('empId').value = localStorage.getItem('punch_id') || '';
-            renderLogs();
-        };
-
-        function saveProfile() {
-            localStorage.setItem('punch_name', document.getElementById('empName').value.trim());
-            localStorage.setItem('punch_id', document.getElementById('empId').value.trim());
-        }
-
-        function setShift(shift) {
-            currentShift = shift;
-            document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('shift-' + shift).classList.add('active');
-        }
-
-        // === 4. 遲到判定邏輯 ===
-        function checkLate(nowHour, nowMin) {
-            let isLate = false;
-            if (currentShift === 'early' && (nowHour > 7 || (nowHour === 7 && nowMin > 0))) isLate = true;
-            if (currentShift === 'mid' && (nowHour > 17 || (nowHour === 17 && nowMin > 0))) isLate = true;
-            if (currentShift === 'night' && (nowHour > 19 || (nowHour === 19 && nowMin > 0))) isLate = true;
-            return isLate;
-        }
-
-        // === 5. 執行打卡 (儲存本機 + 傳送 Firebase) ===
-        function executePunch(type) {
-            const name = document.getElementById('empName').value.trim();
-            const empId = document.getElementById('empId').value.trim();
-            
-            if(!name || !empId) return alert("⚠️ 請先輸入【姓名】與【工號】再進行打卡！");
-
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')}`;
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            // 只有「上班打卡」才判斷遲到
-            let isLate = false;
-            if (type === 'IN') {
-                isLate = checkLate(now.getHours(), now.getMinutes());
-            }
-
-            const actionName = type === 'IN' ? '上班' : '下班';
-            const confirmMsg = isLate ? 
-                `⚠️ 系統判定超過 ${shiftTimes[currentShift].limitStr}，將標記為【遲到】。\n確定要記錄 ${actionName} 嗎？` : 
-                `確定要記錄【${actionName}】時間：${timeStr} 嗎？`;
-
-            if(confirm(confirmMsg)) {
-                const logData = {
-                    name: name,
-                    empId: empId,
-                    date: dateStr,
-                    time: timeStr,
-                    type: type, // IN 或 OUT
-                    shift: shiftTimes[currentShift].name,
-                    isLate: isLate,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
-
-                // 1. 上傳 HQ Firebase 雲端差勤庫 (attendance_logs)
-                db.ref('attendance_logs').push(logData).then(() => {
-                    // 2. 成功後寫入本機 LocalStorage 顯示在畫面上
-                    const localLogs = JSON.parse(localStorage.getItem('punch_logs')) || [];
-                    localLogs.push(logData);
-                    localStorage.setItem('punch_logs', JSON.stringify(localLogs));
-                    renderLogs();
-                    alert(`✅ 打卡成功！資料已同步至 HQ 後台。`);
-                }).catch(err => {
-                    alert("連線失敗，請檢查網路狀態！");
-                });
-            }
-        }
-
-        // === 6. 渲染本機紀錄 ===
-        function renderLogs() {
-            const logs = JSON.parse(localStorage.getItem('punch_logs')) || [];
-            const listEl = document.getElementById('logList');
-            listEl.innerHTML = '';
-
-            if (logs.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">尚無今日紀錄</div>';
+            if (!snapshot.exists()) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">目前尚無任何打卡紀錄</td></tr>';
                 return;
             }
 
-            logs.slice().reverse().forEach(log => {
-                const badgeClass = log.type === 'IN' ? 'badge-in' : 'badge-out';
-                const badgeText = log.type === 'IN' ? '上班' : '下班';
-                const lateBadge = log.isLate ? '<span class="badge badge-late">遲到</span>' : '';
-                
-                listEl.innerHTML += `
-                    <div class="log-item">
-                        <div>
-                            <span class="badge ${badgeClass}">${badgeText}</span>
-                            ${lateBadge}
-                            <span style="font-size:12px; color:#64748b; margin-left:8px;">${log.shift}</span>
-                        </div>
-                        <div class="log-time">${log.time}</div>
-                    </div>
-                `;
+            // 將物件轉為陣列並按時間反向排序 (最新的在最上面)
+            snapshot.forEach(child => {
+                attendanceData.push({ key: child.key, ...child.val() });
             });
+            attendanceData.sort((a, b) => b.timestamp - a.timestamp);
+
+            // 渲染表格
+            attendanceData.forEach(log => {
+                const tr = document.createElement('tr');
+                
+                const typeBadge = log.type === 'IN' ? '<span class="badge badge-in">上班</span>' : '<span class="badge badge-out">下班</span>';
+                const statusBadge = log.isLate ? '<span class="badge badge-late">⚠️ 遲到</span>' : '<span class="badge badge-normal">🟢 正常</span>';
+                const reasonText = log.reason || '';
+
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-weight: bold;">${log.date}</td>
+                    <td style="color: #94a3b8; font-weight: bold;">${log.shift}</td>
+                    <td style="font-weight: 900; color: white;">${log.name}</td>
+                    <td style="font-family: monospace; color: var(--hq-primary);">${log.empId}</td>
+                    <td>${typeBadge}</td>
+                    <td style="font-family: monospace; font-size: 18px; font-weight: bold;">${log.time}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <input type="text" class="reason-input" 
+                            placeholder="${log.isLate ? '請填寫遲到原因...' : '點此新增備註...'}" 
+                            value="${reasonText}" 
+                            onchange="updateReason('${log.key}', this.value)">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // === 3. 更新備註 (自動存入 Firebase) ===
+        function updateReason(key, newReason) {
+            db.ref('attendance_logs/' + key).update({ reason: newReason }).then(() => {
+                console.log("備註已更新:", newReason);
+                // 視覺提示可以在這裡加，但因為 Firebase on('value') 會自動重繪，所以其實不用做額外動作
+            });
+        }
+
+        // === 4. 📊 匯出為 Excel (CSV) ===
+        function exportToExcel() {
+            if (attendanceData.length === 0) return alert("目前沒有資料可以匯出！");
+
+            let csv = "\ufeff"; // UTF-8 BOM，確保中文不亂碼
+            
+            // 表頭
+            csv += "日期,班別,姓名,工號,打卡類型,打卡時間,狀態,後台備註\n";
+
+            // 內容
+            attendanceData.forEach(log => {
+                const typeStr = log.type === 'IN' ? '上班' : '下班';
+                const statusStr = log.isLate ? '遲到' : '正常';
+                const reasonStr = log.reason ? `"${log.reason}"` : ""; // 用雙引號包起來防逗號衝突
+
+                let row = [
+                    log.date,
+                    log.shift,
+                    log.name,
+                    log.empId,
+                    typeStr,
+                    log.time,
+                    statusStr,
+                    reasonStr
+                ];
+                csv += row.join(",") + "\n";
+            });
+
+            // 下載動作
+            const now = new Date();
+            const filename = `台灣精銳_打卡紀錄表_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.csv`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
