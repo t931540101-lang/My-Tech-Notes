@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HQ_Link_v1.0</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #0b0e11; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #e9edef; }
+        
+        /* 標題欄：點擊可清空 */
+        header { background: #202c33; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #374045; cursor: pointer; }
+        
+        /* 對話區域 */
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* 氣泡樣式 */
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 15px; line-height: 1.4; position: relative; }
+        .msg-me { align-self: flex-end; background: #005c4b; color: #fff; }
+        .msg-other { align-self: flex-start; background: #202c33; color: #e9edef; }
+        .time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: right; }
+
+        /* 輸入區域 */
+        .input-area { background: #202c33; padding: 10px; display: flex; gap: 10px; align-items: center; }
+        input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 8px; color: #fff; font-size: 15px; outline: none; }
+        button { background: #00a884; border: none; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header onclick="clearChat()">🛡️ HQ_LINK_SECURE_CHANNEL</header>
+
+<div id="chat-box">
+    <div class="msg msg-other">系統：秘密頻道已建立，等待通訊中...<div class="time">15:18</div></div>
+</div>
+
+<div class="input-area">
+    <input type="text" id="msg-input" placeholder="輸入訊息..." autocomplete="off">
+    <button onclick="send()">送出</button>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    const msgInput = document.getElementById('msg-input');
+
+    // 監聽 Enter 鍵（針對神器鍵盤優化）
+    msgInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            send();
+        }
+    });
+
+    function send() {
+        const text = msgInput.value.trim();
+        if (text === "") return;
+
+        // 建立我的訊息氣泡
+        addMessage(text, 'me');
+        msgInput.value = "";
+
+        // 模擬自動回覆 (這部分未來會接 Firebase)
+        setTimeout(() => {
+            if (text.includes("柔")) {
+                addMessage("小黑哥，我在！通訊盒測試正常。", 'other');
+            }
+        }, 800);
+    }
+
+    function addMessage(text, type) {
+        const time = new Date().toLocaleTimeString('zh-TW', {hour12:false, hour:'2-digit', minute:'2-digit'});
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg msg-${type}`;
+        msgDiv.innerHTML = `${text}<div class="time">${time}</div>`;
+        chatBox.appendChild(msgDiv);
+        
+        // 自動滾動到底部
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function clearChat() {
+        if(confirm("確定要清空所有加密通訊紀錄嗎？")) {
+            chatBox.innerHTML = '<div class="msg msg-other">系統：紀錄已銷毀，頻道重置成功。<div class="time">NOW</div></div>';
+        }
+    }
+</script>
+</body>
+</html>
