@@ -16,14 +16,11 @@
             --success: #10b981;
             --warning: #f59e0b;
         }
-
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
             background-color: var(--hq-bg); color: #f8fafc; margin: 0; padding: 20px; 
         }
-
-        /* 頂部戰略條 */
         .header-panel { 
             display: flex; justify-content: space-between; align-items: center; 
             background: var(--hq-card); padding: 20px; border-radius: 12px; 
@@ -32,39 +29,27 @@
         }
         .title-group h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
         .title-group p { margin: 5px 0 0 0; color: var(--hq-cyan); font-size: 13px; font-weight: bold; }
-
         .btn-export { 
             background: var(--hq-cyan); color: #0f172a; padding: 12px 25px; 
             border: none; border-radius: 8px; font-weight: 900; cursor: pointer; 
             transition: 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
         }
-        .btn-export:hover { background: white; transform: scale(1.05); }
-
-        /* 戰情表格 */
         .table-container { 
             background: var(--hq-card); border-radius: 12px; 
             border: 1.5px solid var(--hq-border); overflow-x: auto; 
         }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { padding: 15px; border-bottom: 1px solid var(--hq-border); text-align: center; }
-        th { background: rgba(0,0,0,0.3); color: var(--hq-cyan); font-weight: 900; font-size: 14px; }
-        
-        /* 狀態標籤 */
+        th { background: rgba(0,0,0,0.3); color: var(--hq-cyan); font-weight: 900; }
         .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .badge-in { background: var(--success); color: white; }
         .badge-out { background: #64748b; color: white; }
-        .badge-late { background: var(--warning); color: black; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+        .badge-late { background: var(--warning); color: black; }
         .badge-ok { border: 1px solid var(--success); color: var(--success); }
-
-        /* 編輯備註區 */
         .reason-input { 
             width: 100%; background: #0f172a; border: 1px solid var(--hq-border); 
             color: white; padding: 8px; border-radius: 4px; outline: none; 
-            transition: 0.3s;
         }
-        .reason-input:focus { border-color: var(--warning); background: #1e293b; }
-
-        .loading-msg { padding: 50px; text-align: center; color: var(--hq-cyan); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -92,35 +77,28 @@
                 </tr>
             </thead>
             <tbody id="attendanceBody">
-                <tr><td colspan="8" class="loading-msg">📡 正在同步雲端數據中...</td></tr>
+                <tr><td colspan="8" style="padding:50px; text-align:center;">📡 正在同步雲端數據中...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // === 1. Firebase 完整金鑰 (與前線同步) ===
+        // === 1. Firebase 金鑰 (已修正格式) ===
         const firebaseConfig = {
-            // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
-  authDomain: "black-obsidian-project.firebaseapp.com",
-  projectId: "black-obsidian-project",
-  storageBucket: "black-obsidian-project.firebasestorage.app",
-  messagingSenderId: "438491554810",
-  appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+            apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
+            authDomain: "black-obsidian-project.firebaseapp.com",
+            databaseURL: "https://black-obsidian-project-default-rtdb.firebaseio.com",
+            projectId: "black-obsidian-project",
+            storageBucket: "black-obsidian-project.firebasestorage.app",
+            messagingSenderId: "438491554810",
+            appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
         };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
+        // 初始化
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
         let allLogs = [];
 
         // === 2. 實時數據監聽 ===
@@ -137,6 +115,7 @@ const app = initializeApp(firebaseConfig);
             snapshot.forEach(child => {
                 allLogs.push({ key: child.key, ...child.val() });
             });
+            
             // 最新的排在最上面
             allLogs.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -146,12 +125,12 @@ const app = initializeApp(firebaseConfig);
                 const statusBadge = log.isLate ? '<span class="badge badge-late">⚠️ 遲到</span>' : '<span class="badge badge-ok">🟢 正常</span>';
                 
                 tr.innerHTML = `
-                    <td style="font-family:monospace;">${log.date}</td>
-                    <td style="color:var(--hq-cyan); font-weight:bold;">${log.shift}</td>
-                    <td style="font-weight:bold;">${log.name}</td>
-                    <td style="font-family:monospace;">${log.empId}</td>
+                    <td style="font-family:monospace;">${log.date || '---'}</td>
+                    <td style="color:var(--hq-cyan); font-weight:bold;">${log.shift || '---'}</td>
+                    <td style="font-weight:bold;">${log.name || '---'}</td>
+                    <td style="font-family:monospace;">${log.empId || '---'}</td>
                     <td>${typeBadge}</td>
-                    <td style="font-size:16px; font-weight:bold;">${log.time}</td>
+                    <td style="font-size:16px; font-weight:bold;">${log.time || '---'}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <input type="text" class="reason-input" 
@@ -164,24 +143,22 @@ const app = initializeApp(firebaseConfig);
             });
         });
 
-        // === 3. 備註即時更新函數 ===
+        // === 3. 備註即時更新 ===
         function updateNote(key, val) {
             db.ref('attendance_logs/' + key).update({ reason: val }).then(() => {
-                console.log("備註已存檔");
+                console.log("備註已更新");
             });
         }
 
-        // === 4. 📊 報表匯出引擎 ===
+        // === 4. 📊 報表匯出 ===
         function exportAttendance() {
             if (allLogs.length === 0) return alert("無資料可匯出");
-
             let csv = "\ufeff日期,班別,姓名,工號,類型,時間,狀態,後台備註\n";
             allLogs.forEach(l => {
                 const type = l.type === 'IN' ? '上班' : '下班';
                 const status = l.isLate ? '遲到' : '正常';
                 csv += `${l.date},${l.shift},${l.name},${l.empId},${type},${l.time},${status},"${l.reason || ''}"\n`;
             });
-
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
