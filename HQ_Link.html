@@ -3,67 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HQ_Link_v1.0</title>
+    <title>HQ_LINK_TERMINAL</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: #0b0e11; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #e9edef; }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { font-family: 'Courier New', Courier, monospace; background: #0b0e11; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #00ff41; overflow: hidden; }
         
-        /* 標題欄：點擊可清空 */
-        header { background: #202c33; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #374045; cursor: pointer; }
+        /* 頂部狀態欄 */
+        header { background: #1a1a1a; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00ff41; box-shadow: 0 0 10px rgba(0,255,65,0.2); }
+        .status-dot { height: 10px; width: 10px; background: #00ff41; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px #00ff41; }
         
-        /* 對話區域 */
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* 氣泡樣式 */
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 15px; line-height: 1.4; position: relative; }
-        .msg-me { align-self: flex-end; background: #005c4b; color: #fff; }
-        .msg-other { align-self: flex-start; background: #202c33; color: #e9edef; }
-        .time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: right; }
+        /* 訊息顯示區 */
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.9); }
+        #chat-box.blur { filter: blur(15px); pointer-events: none; }
 
-        /* 輸入區域 */
-        .input-area { background: #202c33; padding: 10px; display: flex; gap: 10px; align-items: center; }
-        input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 8px; color: #fff; font-size: 15px; outline: none; }
-        button { background: #00a884; border: none; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        /* 訊息氣泡 */
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 4px; font-size: 14px; position: relative; border: 1px solid rgba(0,255,65,0.3); }
+        .msg-me { align-self: flex-end; background: rgba(0,255,65,0.1); color: #00ff41; border-right: 4px solid #00ff41; }
+        .msg-other { align-self: flex-start; background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid #888; }
+        .time { font-size: 9px; opacity: 0.5; margin-top: 5px; text-align: right; }
+
+        /* 快捷功能列 */
+        .quick-actions { background: #1a1a1a; padding: 8px; display: flex; gap: 8px; border-top: 1px solid #333; overflow-x: auto; }
+        .q-btn { background: #333; border: 1px solid #555; color: #ccc; padding: 5px 12px; border-radius: 4px; font-size: 11px; white-space: nowrap; cursor: pointer; }
+        .q-btn:hover { background: #00ff41; color: #000; }
+
+        /* 輸入區域：針對手機/平板工具列優化 */
+        .input-area { background: #1a1a1a; padding: 15px 15px 35px 15px; display: flex; gap: 10px; border-top: 2px solid #00ff41; }
+        input { flex: 1; background: #000; border: 1px solid #00ff41; padding: 12px; color: #00ff41; font-family: monospace; outline: none; border-radius: 4px; }
+        .send-btn { background: #00ff41; border: none; color: #000; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<header onclick="clearChat()">🛡️ HQ_LINK_SECURE_CHANNEL</header>
+<header>
+    <div><span class="status-dot"></span> HQ_LINK_SECURE_v2.0</div>
+    <div style="font-size: 12px; cursor: pointer;" onclick="toggleStealth()">[ 🤫 STEALTH ]</div>
+</header>
 
 <div id="chat-box">
-    <div class="msg msg-other">系統：秘密頻道已建立，等待通訊中...<div class="time">15:18</div></div>
+    <div class="msg msg-other">TERMINAL: 加密隧道已建立。等待指令...<div class="time">SYSTEM</div></div>
+</div>
+
+<div class="quick-actions">
+    <div class="q-btn" onclick="quickSend('柔，回報狀態')">📋 回報狀態</div>
+    <div class="q-btn" onclick="quickSend('啟動黑曜石計畫')">💎 黑曜石計畫</div>
+    <div class="q-btn" onclick="quickSend('目前的勤務位置：')">📍 定位傳送</div>
+    <div class="q-btn" onclick="location.reload()">🔄 重啟頻道</div>
 </div>
 
 <div class="input-area">
-    <input type="text" id="msg-input" placeholder="輸入訊息..." autocomplete="off">
-    <button onclick="send()">送出</button>
+    <input type="text" id="msg-input" placeholder="ENTER COMMAND..." autocomplete="off">
+    <button class="send-btn" onclick="send()">SEND</button>
 </div>
 
 <script>
     const chatBox = document.getElementById('chat-box');
     const msgInput = document.getElementById('msg-input');
 
-    // 監聽 Enter 鍵（針對神器鍵盤優化）
-    msgInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            send();
-        }
+    // 鍵盤監聽：Enter 送出, Esc 模糊
+    msgInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") send();
+        if (e.key === "Escape") toggleStealth();
     });
 
     function send() {
         const text = msgInput.value.trim();
-        if (text === "") return;
-
-        // 建立我的訊息氣泡
+        if (!text) return;
         addMessage(text, 'me');
         msgInput.value = "";
 
-        // 模擬自動回覆 (這部分未來會接 Firebase)
+        // 模擬柔的自動回覆
         setTimeout(() => {
             if (text.includes("柔")) {
-                addMessage("小黑哥，我在！通訊盒測試正常。", 'other');
+                addMessage("小黑哥，系統運作正常，隨時待命。", "other");
             }
-        }, 800);
+        }, 1000);
+    }
+
+    function quickSend(val) {
+        msgInput.value = val;
+        msgInput.focus();
     }
 
     function addMessage(text, type) {
@@ -72,15 +91,13 @@
         msgDiv.className = `msg msg-${type}`;
         msgDiv.innerHTML = `${text}<div class="time">${time}</div>`;
         chatBox.appendChild(msgDiv);
-        
-        // 自動滾動到底部
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function clearChat() {
-        if(confirm("確定要清空所有加密通訊紀錄嗎？")) {
-            chatBox.innerHTML = '<div class="msg msg-other">系統：紀錄已銷毀，頻道重置成功。<div class="time">NOW</div></div>';
-        }
+    function toggleStealth() {
+        chatBox.classList.toggle('blur');
+        const headerText = document.querySelector('header div:last-child');
+        headerText.innerText = chatBox.classList.contains('blur') ? '[ 🔓 RESTORE ]' : '[ 🤫 STEALTH ]';
     }
 </script>
 </body>
