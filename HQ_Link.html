@@ -3,55 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Task_Notes</title>
+    <title>Sweet_Diary</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f5f7f9; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #333; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #fff5f8; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #7a5c5c; }
         
-        /* 頂部導航：偽裝成記事本標題 */
-        header { background: #fff; padding: 12px 18px; display: flex; justify-content: space-between; border-bottom: 1px solid #e0e6ed; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .title { font-size: 14px; font-weight: 600; color: #5c6b73; }
+        /* 頂部導航：粉嫩粉紅 */
+        header { background: #ffb7c5; padding: 15px; display: flex; justify-content: space-between; border-bottom: 3px solid #ffdae0; box-shadow: 0 2px 5px rgba(255,183,197,0.3); }
+        .title { font-size: 16px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
         
         /* 訊息顯示區 */
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        #chat-box.blur { filter: blur(20px); opacity: 0.1; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); /* 增加一點底紋感 */ }
+        #chat-box.blur { filter: contrast(0.1) brightness(1.5) blur(15px); }
 
-        /* 氣泡樣式：平民筆記風格 */
-        .msg { font-size: 14px; line-height: 1.6; padding: 10px 14px; border-radius: 12px; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .msg-me { align-self: flex-end; background: #e3f2fd; color: #1e88e5; border-bottom-right-radius: 2px; }
-        .msg-other { align-self: flex-start; background: #fff; color: #555; border-bottom-left-radius: 2px; }
-        .time { font-size: 10px; color: #adb5bd; margin-top: 5px; text-align: right; }
+        /* 氣泡樣式：圓滾滾棉花糖 */
+        .msg { font-size: 15px; line-height: 1.5; padding: 12px 18px; border-radius: 25px; max-width: 80%; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
+        .msg-me { align-self: flex-end; background: #ffdae0; color: #d63384; border-bottom-right-radius: 5px; }
+        .msg-other { align-self: flex-start; background: #e0f4ff; color: #0077b6; border-bottom-left-radius: 5px; }
+        .time { font-size: 11px; color: #c9bbc2; margin-top: 5px; text-align: right; }
 
-        /* 快捷列：像是筆記標籤 */
-        .quick-actions { background: #fff; padding: 8px; display: flex; gap: 8px; overflow-x: auto; border-top: 1px solid #eee; }
-        .q-btn { background: #f8f9fa; border: 1px solid #dee2e6; color: #6c757d; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+        /* 快捷列：像彩色貼圖按鈕 */
+        .quick-actions { background: #fff; padding: 10px; display: flex; gap: 10px; overflow-x: auto; border-top: 1px solid #ffe4e9; }
+        .q-btn { background: #fff; border: 2px solid #ffdae0; color: #ff8fab; padding: 6px 15px; border-radius: 18px; font-size: 13px; white-space: nowrap; cursor: pointer; font-weight: bold; }
+        .q-btn:hover { background: #ffdae0; color: #fff; }
 
-        /* 輸入區域：針對手機/平板優化 */
-        .input-area { background: #fff; padding: 10px 15px 40px 15px; display: flex; gap: 10px; border-top: 1px solid #eee; }
-        input { flex: 1; background: #f1f3f5; border: none; padding: 12px 15px; color: #333; font-size: 14px; outline: none; border-radius: 20px; }
-        .send-btn { background: #1e88e5; border: none; color: #fff; padding: 0 20px; cursor: pointer; font-size: 13px; font-weight: bold; border-radius: 20px; }
+        /* 輸入區域：針對平板優化 */
+        .input-area { background: #fff; padding: 10px 15px 45px 15px; display: flex; gap: 10px; border-top: 2px solid #ffdae0; }
+        input { flex: 1; background: #fff9fb; border: 2px solid #ffdae0; padding: 12px 20px; color: #7a5c5c; font-size: 15px; outline: none; border-radius: 30px; }
+        .send-btn { background: #ff8fab; border: none; color: #fff; padding: 0 25px; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 30px; box-shadow: 0 3px 0 #e6738f; }
+        .send-btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="title">📋 工作備忘錄 / 通訊頻道</div>
-    <div style="cursor: pointer; font-size: 16px;" onclick="toggleStealth()">🤫</div>
+    <div class="title">🌸 妞妞與狗狗的快樂日記 🐾</div>
+    <div style="cursor: pointer; font-size: 20px;" onclick="toggleStealth()">🛡️</div>
 </header>
 
 <div id="chat-box">
-    <div class="msg msg-other">系統提示：安全通訊已建立，所有內容將保存在本地。<div class="time">15:35</div></div>
+    <div class="msg msg-other">🐾 系統提示：小黑哥你好！今天要紀錄什麼開心的事呢？<div class="time">15:40</div></div>
 </div>
 
 <div class="quick-actions">
-    <div class="q-btn" onclick="quickSend('柔，請回報目前系統狀態')">📝 狀態確認</div>
-    <div class="q-btn" onclick="quickSend('啟動安全備份程序')">💾 存檔紀錄</div>
-    <div class="q-btn" onclick="quickSend('回傳當前巡邏位置：')">📍 位置回報</div>
-    <div class="q-btn" onclick="location.reload()">🔄 重新載入</div>
+    <div class="q-btn" onclick="quickSend('柔～今天狗狗們都很乖喔！')">🐶 狗狗報平安</div>
+    <div class="q-btn" onclick="quickSend('妞妞今天心情超好～')">🐕 妞妞日記</div>
+    <div class="q-btn" onclick="quickSend('已完成安全巡邏，回報位置：')">🌈 巡邏紀錄</div>
+    <div class="q-btn" onclick="toggleStealth()">✨ 隱藏畫面</div>
 </div>
 
 <div class="input-area">
-    <input type="text" id="msg-input" placeholder="撰寫筆記或訊息..." autocomplete="off">
+    <input type="text" id="msg-input" placeholder="寫點好玩的事情吧..." autocomplete="off">
     <button class="send-btn" onclick="send()">送出</button>
 </div>
 
@@ -59,7 +61,6 @@
     const chatBox = document.getElementById('chat-box');
     const msgInput = document.getElementById('msg-input');
 
-    // 鍵盤支援
     msgInput.addEventListener("keydown", function(e) {
         if (e.key === "Enter") send();
         if (e.key === "Escape") toggleStealth();
@@ -73,7 +74,7 @@
         
         setTimeout(() => {
             if (text.includes("柔")) {
-                addMessage("小黑哥，訊息已收到，我會在後台幫你監控。", "other");
+                addMessage("柔回覆：收到！小黑哥最棒了～(๑•̀ㅂ•́)و✧", "other");
             }
         }, 800);
     }
