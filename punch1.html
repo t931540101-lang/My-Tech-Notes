@@ -99,13 +99,23 @@
     <script>
         // === 1. Firebase 完整初始化 (解決 iOS Safari 阻擋問題) ===
         const firebaseConfig = {
-            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
-            authDomain: "factor-security-d1965.firebaseapp.com",
-            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-            projectId: "factor-security-d1965",
-            storageBucket: "factor-security-d1965.firebasestorage.app",
-            messagingSenderId: "864846943143",
-            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+            // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
+  authDomain: "black-obsidian-project.firebaseapp.com",
+  projectId: "black-obsidian-project",
+  storageBucket: "black-obsidian-project.firebasestorage.app",
+  messagingSenderId: "438491554810",
+  appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
