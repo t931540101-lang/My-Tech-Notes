@@ -3,6 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sweet_Cloud_Diary</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #fff5f8; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #7a5c5c; }
+        header { background: #ffb7c5; padding: 15px; display: flex; justify-content: space-between; border-bottom: 3px solid #ffdae0; box-shadow: 0 2px 5px rgba(255,183,197,0.3); }
+        .title { font-size: 16px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); }
+        #chat-box.blur { filter: contrast(0.1) brightness(1.5) blur(15px); }
+        .msg { font-size: 15px; line-height: 1.5; padding: 12px 18px; border-radius: 25px; max-width: 80%; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
+        .msg-me { align-self: flex-end; background: #ffdae0; color: #d63384; border-bottom-right-radius: 5px; }
+        .msg-other { align-self: flex-start; background: #e0f4ff; color: #0077b6; border-bottom-left-radius: 5px; }
+        .time { font-size: 11px; color: #c9bbc2; margin-top: 5px; text-align: right; }
+        .input-area { background: #fff; padding: 10px 15px 45px 15px; display: flex; gap: 10px; border-top: 2px solid #ffdae0; }
+        input { flex: 1; background: #fff9fb; border: 2px solid #ffdae0; padding: 12px 20px; color: #7a5c5c; font-size: 15px; outline: none; border-radius: 30px; }
+        .send-btn { background: #ff8fab; border: none; color: #fff; padding: 0 25px; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 30px; box-shadow: 0 3px 0 #e6738f; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="title">🌸 雲端同步日記 🐾</div>
+    <div style="cursor: pointer; font-size: 20px;" onclick="toggleStealth()">🛡️</div>
+</header>
+
+<div id="chat-box" id="chat-box">
+    </div>
+
+<div class="input-area">
+    <input type="text" id="msg-input" placeholder="同步中..." autocomplete="off">
+    <button class="send-btn" onclick="send()">送出</button>
+</div>
+
+<script>
+    // Firebase 配置 (小黑哥提供的金鑰)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
+      authDomain: "black-obsidian-project.firebaseapp.com",
+      databaseURL: "https://black-obsidian-project-default-rtdb.firebaseio.com",
+      projectId: "black-obsidian-project",
+      storageBucket: "black-obsidian-project.firebasestorage.app",
+      messagingSenderId: "438491554810",
+      appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const chatRef = database.ref("messages");
+
+    const chatBox = document.getElementById('chat-box');
+    const msgInput = document.getElementById('msg-input');
+
+    // 監聽雲端資料庫
+    chatRef.on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        // 判斷是誰發的訊息 (簡單用一個 ID 區分)
+        const type = data.sender === "XiaoHei" ? 'me' : 'other';
+        renderMessage(data.text, type, data.time);
+    });
+
+    function send() {
+        const text = msgInput.value.trim();
+        if (!text) return;
+
+        // 推送到雲端
+        const time = new Date().toLocaleTimeString('zh-TW', {hour12:false, hour:'2-digit', minute:'2-digit'});
+        chatRef.push({
+            sender: "XiaoHei",
+            text: text,
+            time: time
+        });
+        msgInput.value = "";
+    }
+
+    function renderMessage(text, type, time) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg msg-${type}`;
+        msgDiv.innerHTML = `${text}<div class="time">${time}</div>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+    function toggleStealth() { chatBox.classList.toggle('blur'); }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sweet_Diary</title>
     <style>
         * { box-sizing: border-box; }
