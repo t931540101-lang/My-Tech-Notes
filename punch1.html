@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Security 警衛人員打卡系統</title>
+    <title>M-Security 打卡系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -12,42 +12,28 @@
             --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --text-main: #1e293b; --text-sub: #64748b;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); }
-
-        .header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 2px; }
         .container { padding: 15px; }
-
         .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .card-title { font-size: 14px; color: var(--primary); font-weight: 900; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
-
-        .input-group { margin-bottom: 15px; }
+        .card-title { font-size: 14px; color: var(--primary); font-weight: 900; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .input-label { display: block; font-size: 12px; font-weight: bold; color: var(--text-sub); margin-bottom: 5px; }
         .input-field { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
-        .input-field:focus { border-color: var(--primary); }
-
-        .shift-selector { display: flex; gap: 10px; }
-        .shift-btn { flex: 1; padding: 10px; border: 1.5px solid #cbd5e1; background: transparent; border-radius: 8px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
+        .shift-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .shift-btn { flex: 1; padding: 10px; border: 1.5px solid #cbd5e1; background: transparent; border-radius: 8px; font-weight: bold; color: var(--text-sub); cursor: pointer; }
         .shift-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .clock-display { text-align: center; font-size: 48px; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; margin: 10px 0 20px 0; }
+        .clock-display { text-align: center; font-size: 48px; font-weight: 900; color: var(--primary); margin: 10px 0; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-punch { padding: 20px 0; border: none; border-radius: 12px; font-size: 20px; font-weight: 900; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-        .btn-punch:active { transform: translateY(4px); box-shadow: none; }
+        .btn-punch { padding: 20px 0; border: none; border-radius: 12px; font-size: 20px; font-weight: 900; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
         .btn-in { background: var(--success); }
         .btn-out { background: var(--danger); }
-        .btn-punch span { font-size: 12px; font-weight: normal; opacity: 0.9; }
-
-        .log-list { max-height: 200px; overflow-y: auto; }
+        .log-list { max-height: 150px; overflow-y: auto; }
         .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
-        .log-item:last-child { border-bottom: none; }
-        .log-time { font-family: monospace; font-weight: bold; font-size: 16px; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
         .badge-in { background: var(--success); }
         .badge-out { background: var(--danger); }
         .badge-late { background: var(--warning); color: #000; margin-left: 5px; }
-
     </style>
 </head>
 <body>
@@ -58,84 +44,60 @@
         <div class="card">
             <h3 class="card-title">🧑‍✈️ 值勤人員登錄</h3>
             <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;">
-                    <span class="input-label">姓名</span>
-                    <input type="text" id="empName" class="input-field" placeholder="請輸入姓名" onchange="saveProfile()">
-                </div>
-                <div class="input-group" style="flex: 1;">
-                    <span class="input-label">工號</span>
-                    <input type="text" id="empId" class="input-field" placeholder="如 D01762" onchange="saveProfile()">
-                </div>
+                <div style="flex: 1;"><span class="input-label">姓名</span><input type="text" id="empName" class="input-field" placeholder="姓名" onchange="saveProfile()"></div>
+                <div style="flex: 1;"><span class="input-label">工號</span><input type="text" id="empId" class="input-field" placeholder="工號" onchange="saveProfile()"></div>
             </div>
-            
-            <span class="input-label">選擇今日班別</span>
+            <span class="input-label" style="margin-top:15px;">班別選擇</span>
             <div class="shift-selector">
-                <button class="shift-btn active" id="shift-early" onclick="setShift('early')">早班<br><small>07-19</small></button>
-                <button class="shift-btn" id="shift-mid" onclick="setShift('mid')">中班<br><small>17-05</small></button>
-                <button class="shift-btn" id="shift-night" onclick="setShift('night')">晚班<br><small>19-07</small></button>
+                <button class="shift-btn active" id="shift-early" onclick="setShift('early')">早班</button>
+                <button class="shift-btn" id="shift-mid" onclick="setShift('mid')">中班</button>
+                <button class="shift-btn" id="shift-night" onclick="setShift('night')">晚班</button>
             </div>
         </div>
 
         <div class="card">
-            <h3 class="card-title" style="text-align: center;">⏱️ 系統對時與打卡</h3>
+            <h3 class="card-title" style="text-align: center;">⏱️ 系統對時</h3>
             <div class="clock-display" id="clockDisplay">00:00:00</div>
             <div class="btn-grid">
-                <button class="btn-punch btn-in" onclick="executePunch('IN')">上班打卡<span>CLOCK IN</span></button>
-                <button class="btn-punch btn-out" onclick="executePunch('OUT')">下班打卡<span>CLOCK OUT</span></button>
+                <button class="btn-punch btn-in" onclick="executePunch('IN')">上班打卡</button>
+                <button class="btn-punch btn-out" onclick="executePunch('OUT')">下班打卡</button>
             </div>
-            <p style="text-align: center; font-size: 12px; color: var(--text-sub); margin-top: 15px; font-weight: bold;">
-                狀態：🟢 已連線至 HQ 雲端差勤庫
-            </p>
+            <p style="text-align: center; font-size: 12px; color: var(--text-sub); margin-top: 10px;">🟢 已連線至 HQ 雲端差勤庫</p>
         </div>
 
         <div class="card">
-            <h3 class="card-title">📋 本機打卡日誌 (自動同步 HQ)</h3>
-            <div class="log-list" id="logList">
-                <div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">尚無今日紀錄</div>
-            </div>
+            <h3 class="card-title">📋 本機打卡日誌 (同步 HQ)</h3>
+            <div class="log-list" id="logList"></div>
         </div>
     </div>
 
     <script>
-        // === 1. Firebase 完整初始化 (解決 iOS Safari 阻擋問題) ===
+        // === 1. Firebase 初始化 (修正格式) ===
         const firebaseConfig = {
-            // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
-  authDomain: "black-obsidian-project.firebaseapp.com",
-  projectId: "black-obsidian-project",
-  storageBucket: "black-obsidian-project.firebasestorage.app",
-  messagingSenderId: "438491554810",
-  appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+            apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
+            authDomain: "black-obsidian-project.firebaseapp.com",
+            databaseURL: "https://black-obsidian-project-default-rtdb.firebaseio.com",
+            projectId: "black-obsidian-project",
+            storageBucket: "black-obsidian-project.firebasestorage.app",
+            messagingSenderId: "438491554810",
+            appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // === 2. 變數與時鐘 ===
-        let currentShift = 'early'; 
+        let currentShift = 'early';
         const shiftTimes = {
-            'early': { name: '早班', limitStr: '07:00' },
-            'mid': { name: '中班', limitStr: '17:00' },
-            'night': { name: '晚班', limitStr: '19:00' }
+            'early': { name: '早班', limit: 7 },
+            'mid': { name: '中班', limit: 17 },
+            'night': { name: '晚班', limit: 19 }
         };
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('clockDisplay').innerText = 
-                `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('clockDisplay').innerText = now.toLocaleTimeString('zh-TW', {hour12:false});
         }
-        setInterval(updateClock, 1000); updateClock();
+        setInterval(updateClock, 1000);
 
-        // === 3. 本機資料記憶 (姓名、工號) ===
         window.onload = function() {
             document.getElementById('empName').value = localStorage.getItem('punch_name') || '';
             document.getElementById('empId').value = localStorage.getItem('punch_id') || '';
@@ -153,86 +115,47 @@ const app = initializeApp(firebaseConfig);
             document.getElementById('shift-' + shift).classList.add('active');
         }
 
-        // === 4. 遲到判定邏輯 ===
-        function checkLate(nowHour, nowMin) {
-            let isLate = false;
-            if (currentShift === 'early' && (nowHour > 7 || (nowHour === 7 && nowMin > 0))) isLate = true;
-            if (currentShift === 'mid' && (nowHour > 17 || (nowHour === 17 && nowMin > 0))) isLate = true;
-            if (currentShift === 'night' && (nowHour > 19 || (nowHour === 19 && nowMin > 0))) isLate = true;
-            return isLate;
-        }
-
-        // === 5. 執行打卡 ===
         function executePunch(type) {
             const name = document.getElementById('empName').value.trim();
             const empId = document.getElementById('empId').value.trim();
-            
-            if(!name || !empId) return alert("⚠️ 請先輸入【姓名】與【工號】再進行打卡！");
+            if(!name || !empId) return alert("⚠️ 請輸入姓名與工號！");
 
             const now = new Date();
-            const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')}`;
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            let isLate = false;
-            if (type === 'IN') { isLate = checkLate(now.getHours(), now.getMinutes()); }
+            const timeStr = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+            const isLate = type === 'IN' && (now.getHours() > shiftTimes[currentShift].limit || (now.getHours() === shiftTimes[currentShift].limit && now.getMinutes() > 0));
 
-            const actionName = type === 'IN' ? '上班' : '下班';
-            const confirmMsg = isLate ? 
-                `⚠️ 系統判定超過 ${shiftTimes[currentShift].limitStr}，將標記為【遲到】。\n確定要記錄 ${actionName} 嗎？` : 
-                `確定要記錄【${actionName}】時間：${timeStr} 嗎？`;
-
-            if(confirm(confirmMsg)) {
+            if(confirm(`確認記錄【${type==='IN'?'上班':'下班'}】？`)) {
                 const logData = {
-                    name: name,
-                    empId: empId,
-                    date: dateStr,
+                    name, empId, isLate, type,
+                    date: now.toLocaleDateString('zh-TW'),
                     time: timeStr,
-                    type: type,
                     shift: shiftTimes[currentShift].name,
-                    isLate: isLate,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
 
-                // 上傳 HQ Firebase 雲端差勤庫
                 db.ref('attendance_logs').push(logData).then(() => {
-                    const localLogs = JSON.parse(localStorage.getItem('punch_logs')) || [];
+                    let localLogs = JSON.parse(localStorage.getItem('punch_logs')) || [];
                     localLogs.push(logData);
                     localStorage.setItem('punch_logs', JSON.stringify(localLogs));
                     renderLogs();
-                    alert(`✅ 打卡成功！資料已同步至 HQ 後台。`);
-                }).catch(err => {
-                    // 如果再失敗，顯示具體原因
-                    alert("連線失敗！錯誤原因：" + err.message);
+                    alert("✅ 打卡成功！");
                 });
             }
         }
 
-        // === 6. 渲染本機紀錄 ===
         function renderLogs() {
             const logs = JSON.parse(localStorage.getItem('punch_logs')) || [];
             const listEl = document.getElementById('logList');
-            listEl.innerHTML = '';
-
-            if (logs.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">尚無今日紀錄</div>';
-                return;
-            }
-
+            listEl.innerHTML = logs.length ? '' : '<div style="text-align:center;color:#94a3b8;font-size:13px;">尚無今日紀錄</div>';
             logs.slice().reverse().forEach(log => {
-                const badgeClass = log.type === 'IN' ? 'badge-in' : 'badge-out';
-                const badgeText = log.type === 'IN' ? '上班' : '下班';
-                const lateBadge = log.isLate ? '<span class="badge badge-late">遲到</span>' : '';
-                
                 listEl.innerHTML += `
                     <div class="log-item">
                         <div>
-                            <span class="badge ${badgeClass}">${badgeText}</span>
-                            ${lateBadge}
-                            <span style="font-size:12px; color:#64748b; margin-left:8px;">${log.shift}</span>
+                            <span class="badge ${log.type==='IN'?'badge-in':'badge-out'}">${log.type==='IN'?'上班':'下班'}</span>
+                            ${log.isLate ? '<span class="badge badge-late">遲到</span>' : ''}
                         </div>
-                        <div class="log-time">${log.time}</div>
-                    </div>
-                `;
+                        <div style="font-family:monospace; font-weight:bold;">${log.time}</div>
+                    </div>`;
             });
         }
     </script>
