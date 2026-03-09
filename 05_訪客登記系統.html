@@ -1,174 +1,581 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title> 訪客登記系統 | 雲端同步 V1.1</title>
-    <link rel="icon" href="IMG_0968.png">
-<link rel="apple-touch-icon" href="IMG_0968.png">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; --danger: #e74c3c; }
-        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* 個人資訊顯示 */
-        .user-info { background: #1e293b; color: white; width: 100%; padding: 8px 15px; font-size: 12px; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
-        
-        h2 { text-align: center; color: var(--primary); margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        label { font-size: 0.85rem; color: #666; font-weight: bold; }
-        input, textarea { 
-            width: 100%; padding: 10px; margin: 5px 0 12px 0; border: 1px solid #ddd; 
-            border-radius: 6px; box-sizing: border-box; font-size: 16px; 
-        }
-        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn-submit:active { background: var(--accent); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>訪客登記系統 V2</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="訪客登記">
+  <meta name="theme-color" content="#1e293b">
 
-        .log-item { background: #fff; border-left: 5px solid var(--accent); padding: 12px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; position: relative; }
-        .log-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 5px; padding-right: 50px; }
-        .del-btn { position: absolute; top: 10px; right: 10px; color: var(--danger); font-size: 11px; cursor: pointer; padding: 3px 6px; border: 1px solid #ffeded; border-radius: 4px; }
-        
-        /* 簽退按鈕 */
-        .checkout-btn { margin-top: 10px; background: #fff; color: var(--accent); border: 1px solid var(--accent); padding: 8px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 13px; }
-        .checkout-btn:active { background: var(--accent); color: white; }
-    </style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --accent: #27ae60;
+      --bg: #f4f7f6;
+      --danger: #e74c3c;
+      --warn: #f39c12;
+      --border: #dde3e7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Microsoft JhengHei", sans-serif;
+      background: var(--bg); min-height: 100vh;
+    }
+
+    /* ── 登入頁 ── */
+    #login-page {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 24px; gap: 14px;
+    }
+    .login-logo { font-size: 52px; }
+    .login-title { font-size: 20px; font-weight: bold; color: var(--primary); }
+    .login-sub { font-size: 13px; color: #999; }
+    .login-input {
+      width: 100%; max-width: 360px; padding: 13px 16px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 15px; outline: none; font-family: inherit;
+      transition: border .2s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%; max-width: 360px; padding: 14px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .login-btn:active { opacity: .8; }
+    .login-err { color: var(--danger); font-size: 13px; min-height: 18px; }
+
+    /* ── 主頁 ── */
+    #main-page { display: none; }
+
+    .top-bar {
+      background: #1e293b; color: #fff;
+      padding: 10px 16px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px;
+    }
+    .top-bar-user { display: flex; gap: 16px; }
+    .logout-btn {
+      background: rgba(255,255,255,0.15); border: none; color: #fff;
+      padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    }
+
+    .tabs {
+      display: flex; background: #fff;
+      border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .tab {
+      flex: 1; padding: 13px; text-align: center;
+      font-size: 14px; font-weight: bold; color: #999;
+      cursor: pointer; border-bottom: 3px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
+
+    /* ── 卡片 ── */
+    .card {
+      background: #fff; border-radius: 12px;
+      padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      color: var(--primary); font-size: 16px; font-weight: bold;
+      border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 14px;
+    }
+
+    /* ── 表單 ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .full { grid-column: span 2; }
+    label { font-size: 12px; color: #666; font-weight: bold; display: block; margin-bottom: 4px; }
+    .field-wrap { margin-bottom: 2px; }
+    input[type=text], input[type=tel], input[type=number], input[type=date], textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 15px; font-family: inherit; outline: none;
+      transition: border .2s; background: #fafafa;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+    input.err { border-color: var(--danger); }
+
+    .btn-submit {
+      width: 100%; padding: 14px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: bold; cursor: pointer;
+      margin-top: 6px; transition: opacity .15s;
+    }
+    .btn-submit:active { opacity: .8; }
+    .btn-submit.green { background: var(--accent); }
+
+    /* ── 登記清單 ── */
+    .filter-row {
+      display: flex; gap: 8px; margin-bottom: 14px; align-items: center;
+    }
+    .filter-row input[type=date] { flex: 1; font-size: 14px; }
+    .filter-btn {
+      padding: 9px 14px; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px; font-size: 13px; cursor: pointer;
+    }
+    .filter-btn.outline {
+      background: #fff; color: var(--primary);
+      border: 1.5px solid var(--border);
+    }
+
+    .log-item {
+      background: #fff; border-left: 5px solid var(--accent);
+      padding: 12px 14px; margin-bottom: 10px; border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 13px;
+      position: relative;
+    }
+    .log-item.out { opacity: .65; border-left-color: #bbb; }
+    .log-header {
+      display: flex; justify-content: space-between;
+      font-weight: bold; color: var(--primary);
+      margin-bottom: 6px; padding-right: 52px;
+    }
+    .status-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      font-weight: bold;
+    }
+    .status-badge.in { background: #d4edda; color: #155724; }
+    .status-badge.out { background: #e2e3e5; color: #383d41; }
+
+    .log-body { color: #555; line-height: 1.7; }
+    .log-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .action-btn {
+      flex: 1; padding: 8px; border-radius: 7px;
+      font-size: 13px; font-weight: bold; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .action-btn:active { opacity: .7; }
+    .checkout-btn-item { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+    .del-btn-item { background: #fff5f5; color: var(--danger); border: 1.5px solid #ffc8c8; }
+
+    .empty-msg { text-align: center; color: #bbb; padding: 32px; font-size: 14px; }
+
+    /* ── 統計 ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .stat-card {
+      background: #fff; border-radius: 10px; padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center;
+    }
+    .stat-num { font-size: 28px; font-weight: bold; color: var(--accent); }
+    .stat-label { font-size: 12px; color: #999; margin-top: 4px; }
+  </style>
+
 </head>
 <body>
 
-<div class="container">
-    <div class="user-info">
-        <span onclick="changeName()">姓名：<span id="userNameDisplay">未設定</span> ✎</span>
-        <span onclick="changeID()">工號：<span id="userIDDisplay">未設定</span> ✎</span>
-    </div>
-    
-    <div class="card">
-        <h2>訪客登記入廠</h2>
-        <div class="form-grid">
-            <div class="full-width"><label>訪客姓名</label><input type="text" id="vName"></div>
-            <div><label>來訪人數</label><input type="number" id="vCount" value="1"></div>
-            <div><label>電話</label><input type="tel" id="vPhone"></div>
-            <div class="full-width"><label>公司行號</label><input type="text" id="vComp"></div>
-            <div class="full-width"><label>受訪人員</label><input type="text" id="vTarget"></div>
-            <div class="full-width"><label>事由</label><textarea id="vReason" rows="1"></textarea></div>
-        </div>
-        <button class="btn-submit" onclick="submitLog()">送出登記並同步雲端</button>
-    </div>
+<!-- ===== 登入頁 ===== -->
 
-    <div id="logList">
-        <h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單</h3>
+<div id="login-page">
+  <div class="login-logo">📋</div>
+  <div class="login-title">訪客登記系統</div>
+  <div class="login-sub">請輸入您的工號與姓名登入</div>
+  <input class="login-input" id="loginID" placeholder="工號（例如：G001）" maxlength="20">
+  <input class="login-input" id="loginName" placeholder="您的姓名" maxlength="20">
+  <input class="login-input" id="loginPin" placeholder="系統通行碼" type="password" maxlength="30">
+  <div class="login-err" id="loginErr"></div>
+  <button class="login-btn" onclick="doLogin()">登入系統</button>
+</div>
+
+<!-- ===== 主頁 ===== -->
+
+<div id="main-page">
+  <div class="top-bar">
+    <div class="top-bar-user">
+      <span>👤 <span id="displayName"></span></span>
+      <span>🔖 <span id="displayID"></span></span>
     </div>
+    <button class="logout-btn" onclick="doLogout()">登出</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('register')">📝 登記入廠</div>
+    <div class="tab" onclick="switchTab('list')">📋 查詢清單</div>
+    <div class="tab" onclick="switchTab('stats')">📊 統計</div>
+  </div>
+
+  <!-- 登記表單 -->
+
+  <div id="tab-register" class="tab-content active">
+    <div class="card">
+      <h2>訪客入廠登記</h2>
+      <div class="form-grid">
+        <div class="field-wrap full">
+          <label>訪客姓名 *</label>
+          <input type="text" id="vName" placeholder="請輸入訪客姓名">
+        </div>
+        <div class="field-wrap">
+          <label>來訪人數 *</label>
+          <input type="number" id="vCount" value="1" min="1" max="99">
+        </div>
+        <div class="field-wrap">
+          <label>聯絡電話</label>
+          <input type="tel" id="vPhone" placeholder="選填">
+        </div>
+        <div class="field-wrap full">
+          <label>公司行號 *</label>
+          <input type="text" id="vComp" placeholder="請輸入公司名稱">
+        </div>
+        <div class="field-wrap full">
+          <label>受訪人員 *</label>
+          <input type="text" id="vTarget" placeholder="拜訪哪位同仁">
+        </div>
+        <div class="field-wrap full">
+          <label>來訪事由</label>
+          <textarea id="vReason" rows="2" placeholder="選填"></textarea>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitLog()">✅ 送出登記並同步雲端</button>
+    </div>
+  </div>
+
+  <!-- 查詢清單 -->
+
+  <div id="tab-list" class="tab-content">
+    <div class="card">
+      <div class="filter-row">
+        <input type="date" id="filterDate">
+        <button class="filter-btn" onclick="loadLogs()">查詢</button>
+        <button class="filter-btn outline" onclick="resetFilter()">今天</button>
+      </div>
+      <div id="logList"><div class="empty-msg">請選擇日期查詢</div></div>
+    </div>
+  </div>
+
+  <!-- 統計 -->
+
+  <div id="tab-stats" class="tab-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="statToday">-</div>
+        <div class="stat-label">今日訪客人數</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statIn">-</div>
+        <div class="stat-label">目前在場人數</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">-</div>
+        <div class="stat-label">本月總訪客</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statRecords">-</div>
+        <div class="stat-label">今日登記筆數</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>今日登記人員</h2>
+      <div id="statRecorder" style="font-size:13px; color:#555; line-height:2;"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
-        authDomain: "factor-security-d1965.firebaseapp.com",
-        databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-        projectId: "factor-security-d1965",
-        storageBucket: "factor-security-d1965.firebasestorage.app",
-        messagingSenderId: "864846943143",
-        appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
-    };
+// ══════════════════════════════════════
+//  Firebase 設定
+//  ⚠️ 請到 Firebase Console 設定規則：
+//  { "rules": { ".read": true, ".write": true } }
+//  正式環境建議改為需要 auth
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI9O7S1YdCWor48",
+  authDomain: "factor-security-d1965.firebaseapp.com",
+  databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+  projectId: "factor-security-d1965",
+  storageBucket: "factor-security-d1965.firebasestorage.app",
+  messagingSenderId: "864846943143",
+  appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+};
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // 身分記憶邏輯
-    let userName = localStorage.getItem('guardName') || "";
-    let userID = localStorage.getItem('guardID') || "";
+// ── 系統通行碼（請自行修改）──
+const SYSTEM_PIN = "visitor2024";
 
-    function updateUserInfo() {
-        document.getElementById('userNameDisplay').innerText = userName || "未設定";
-        document.getElementById('userIDDisplay').innerText = userID || "未設定";
-    }
+// ── 狀態 ──
+let currentUser = { name: '', id: '' };
 
-    function changeName() {
-        const n = prompt("請輸入您的姓名", userName);
-        if(n) { userName = n; localStorage.setItem('guardName', n); updateUserInfo(); }
-    }
+// ══════════════════════
+//  登入 / 登出
+// ══════════════════════
+function doLogin() {
+  const id   = document.getElementById('loginID').value.trim();
+  const name = document.getElementById('loginName').value.trim();
+  const pin  = document.getElementById('loginPin').value.trim();
+  const err  = document.getElementById('loginErr');
 
-    function changeID() {
-        const id = prompt("請輸入您的工號", userID);
-        if(id) { userID = id; localStorage.setItem('guardID', id); updateUserInfo(); }
-    }
+  if (!id)   return err.textContent = '請輸入工號';
+  if (!name) return err.textContent = '請輸入姓名';
+  if (pin !== SYSTEM_PIN) return err.textContent = '通行碼錯誤！';
 
-    window.onload = updateUserInfo;
+  currentUser = { name, id };
+  err.textContent = '';
 
-    function submitLog() {
-        if(!userName) return alert("請先點擊上方設定「姓名」！");
-        
-        const now = new Date();
-        const timeIn = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        
-        const logData = {
-            date: now.toISOString().split('T')[0],
-            name: document.getElementById('vName').value,
-            count: document.getElementById('vCount').value,
-            phone: document.getElementById('vPhone').value,
-            company: document.getElementById('vComp').value,
-            target: document.getElementById('vTarget').value,
-            timeIn: timeIn,
-            leaveTime: "",
-            recorder: userName,
-            reason: document.getElementById('vReason').value,
-            timestamp: Date.now()
-        };
+  document.getElementById('displayName').textContent = name;
+  document.getElementById('displayID').textContent = id;
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('main-page').style.display = 'block';
 
-        if(!logData.name) return alert("請輸入訪客姓名");
+  // 預設今天日期
+  const today = todayStr();
+  document.getElementById('filterDate').value = today;
+  loadLogs();
+  loadStats();
+}
 
-        db.ref('visitor_logs').push(logData).then(() => {
-            alert("登記成功！");
-            document.getElementById('vName').value = ""; 
-        });
-    }
+document.getElementById('loginPin').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
 
-    // 簽離邏輯：支援自由修改時間
-    function checkout(key) {
-        const now = new Date();
-        const defaultTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const leaveTime = prompt("請確認/修改出廠時間：", defaultTime);
-        
-        if(leaveTime) {
-            db.ref('visitor_logs/' + key).update({ leaveTime: leaveTime });
-        }
-    }
+function doLogout() {
+  if (!confirm('確定要登出嗎？')) return;
+  currentUser = { name: '', id: '' };
+  document.getElementById('main-page').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('loginPin').value = '';
+}
 
-    function deleteRecord(key) {
-        if(confirm("確定要刪除這筆紀錄嗎？")) db.ref('visitor_logs/' + key).remove();
-    }
+// ══════════════════════
+//  分頁切換
+// ══════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['register', 'list', 'stats'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'stats') loadStats();
+}
 
-    // 即時監聽
-    db.ref('visitor_logs').limitToLast(10).on('value', (snapshot) => {
-        const listDiv = document.getElementById('logList');
-        listDiv.innerHTML = '<h3 style="text-align:center; color:#666; font-size: 14px;">實時登記清單</h3>';
-        
-        const data = snapshot.val();
-        if (data) {
-            Object.keys(data).reverse().forEach(key => {
-                const item = data[key];
-                const isOut = item.leaveTime !== "";
-                listDiv.innerHTML += `
-                    <div class="log-item" style="${isOut ? 'opacity: 0.6; border-left-color: #ccc;' : ''}">
-                        <span class="del-btn" onclick="deleteRecord('${key}')">刪除</span>
-                        <div class="log-header">
-                            <span>${item.name} (${item.count}人)</span>
-                            <span style="color: ${isOut ? '#999' : '#27ae60'}">${isOut ? '已出廠' : '在場中'}</span>
-                        </div>
-                        <div style="color:#555; line-height: 1.5;">
-                            公司：${item.company}<br>
-                            拜訪：${item.target} | 入廠：${item.timeIn}<br>
-                            ${isOut ? '<b>出廠時間：' + item.leaveTime + '</b>' : ''}
-                        </div>
-                        ${!isOut ? `<button class="checkout-btn" onclick="checkout('${key}')">簽退離開 (補填時間)</button>` : ''}
-                    </div>
-                `;
-            });
-        }
+// ══════════════════════
+//  登記送出
+// ══════════════════════
+function submitLog() {
+  const name   = document.getElementById('vName').value.trim();
+  const count  = parseInt(document.getElementById('vCount').value) || 1;
+  const phone  = document.getElementById('vPhone').value.trim();
+  const comp   = document.getElementById('vComp').value.trim();
+  const target = document.getElementById('vTarget').value.trim();
+  const reason = document.getElementById('vReason').value.trim();
+
+  // 驗證
+  let valid = true;
+  [['vName', name], ['vComp', comp], ['vTarget', target]].forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!val) { el.classList.add('err'); valid = false; }
+    else el.classList.remove('err');
+  });
+  if (!valid) return alert('請填寫必填欄位（標 * 的欄位）');
+  if (count < 1 || count > 99) return alert('來訪人數請填 1～99');
+
+  const now = new Date();
+  const timeIn = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  const logData = {
+    date:      todayStr(),
+    name,
+    count,
+    phone,
+    company:   comp,
+    target,
+    reason,
+    timeIn,
+    leaveTime: '',
+    recorder:  currentUser.name,
+    recorderID: currentUser.id,
+    timestamp: Date.now()
+  };
+
+  db.ref('visitor_logs').push(logData).then(() => {
+    alert(`✅ 登記成功！\n訪客：${name}（${count}人）\n入廠時間：${timeIn}`);
+    // 清空所有欄位
+    ['vName','vPhone','vComp','vTarget','vReason'].forEach(id => {
+      document.getElementById(id).value = '';
     });
+    document.getElementById('vCount').value = 1;
+  }).catch(() => alert('⚠️ 雲端同步失敗，請檢查網路連線'));
+}
+
+// ══════════════════════
+//  查詢清單
+// ══════════════════════
+function loadLogs() {
+  const date = document.getElementById('filterDate').value;
+  if (!date) return;
+
+  const listDiv = document.getElementById('logList');
+  listDiv.innerHTML = '<div class="empty-msg">載入中…</div>';
+
+  db.ref('visitor_logs')
+    .orderByChild('date')
+    .equalTo(date)
+    .once('value', snap => {
+      listDiv.innerHTML = '';
+      const data = snap.val();
+      if (!data) {
+        listDiv.innerHTML = '<div class="empty-msg">這天沒有登記紀錄</div>';
+        return;
+      }
+
+      // 由新到舊排序
+      const entries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+      entries.forEach(([key, item]) => renderLogItem(listDiv, key, item));
+    });
+}
+
+function resetFilter() {
+  document.getElementById('filterDate').value = todayStr();
+  loadLogs();
+}
+
+function renderLogItem(container, key, item) {
+  const isOut = !!item.leaveTime;
+
+  const div = document.createElement('div');
+  div.className = 'log-item' + (isOut ? ' out' : '');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'log-header';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = `${item.name}（${item.count}人）`;
+
+  const badge = document.createElement('span');
+  badge.className = 'status-badge ' + (isOut ? 'out' : 'in');
+  badge.textContent = isOut ? '已出廠' : '在場中';
+
+  header.appendChild(nameSpan);
+  header.appendChild(badge);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'log-body';
+
+  const lines = [
+    `🏢 ${item.company}`,
+    `👤 拜訪：${item.target}　⏰ 入廠：${item.timeIn}`,
+    item.reason ? `📝 ${item.reason}` : '',
+    isOut ? `🚪 出廠：${item.leaveTime}` : '',
+    `📌 登記：${item.recorder}（${item.recorderID || ''}）`
+  ].filter(Boolean);
+
+  lines.forEach(line => {
+    const p = document.createElement('div');
+    p.textContent = line; // ✅ textContent 防 XSS
+    body.appendChild(p);
+  });
+
+  div.appendChild(header);
+  div.appendChild(body);
+
+  // 按鈕區
+  const actions = document.createElement('div');
+  actions.className = 'log-actions';
+
+  if (!isOut) {
+    const checkoutBtn = document.createElement('button');
+    checkoutBtn.className = 'action-btn checkout-btn-item';
+    checkoutBtn.textContent = '🚪 簽退出廠';
+    checkoutBtn.onclick = () => checkout(key);
+    actions.appendChild(checkoutBtn);
+  }
+
+  // 只有本人登記的紀錄才能刪除
+  if (item.recorderID === currentUser.id) {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'action-btn del-btn-item';
+    delBtn.textContent = '🗑️ 刪除';
+    delBtn.onclick = () => deleteRecord(key);
+    actions.appendChild(delBtn);
+  }
+
+  if (actions.children.length > 0) div.appendChild(actions);
+  container.appendChild(div);
+}
+
+// ══════════════════════
+//  簽退 / 刪除
+// ══════════════════════
+function checkout(key) {
+  const now = new Date();
+  const def = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const leaveTime = prompt('請確認/修改出廠時間：', def);
+  if (!leaveTime) return;
+
+  // 簡單時間格式驗證
+  if (!/^\d{2}:\d{2}$/.test(leaveTime)) return alert('時間格式錯誤，請輸入 HH:MM（例如 14:30）');
+
+  db.ref('visitor_logs/' + key).update({ leaveTime }).then(loadLogs);
+}
+
+function deleteRecord(key) {
+  if (!confirm('確定要刪除這筆紀錄嗎？此操作無法還原！')) return;
+  db.ref('visitor_logs/' + key).remove().then(loadLogs);
+}
+
+// ══════════════════════
+//  統計
+// ══════════════════════
+function loadStats() {
+  const today = todayStr();
+  const thisMonth = today.slice(0, 7); // YYYY-MM
+
+  db.ref('visitor_logs').orderByChild('date').equalTo(today).once('value', snap => {
+    const data = snap.val() || {};
+    const entries = Object.values(data);
+
+    const totalVisitors = entries.reduce((s, e) => s + (parseInt(e.count) || 1), 0);
+    const inCount = entries.filter(e => !e.leaveTime).reduce((s, e) => s + (parseInt(e.count) || 1), 0);
+    const records = entries.length;
+
+    document.getElementById('statToday').textContent = totalVisitors;
+    document.getElementById('statIn').textContent = inCount;
+    document.getElementById('statRecords').textContent = records;
+
+    // 今日登記人員
+    const recorders = [...new Set(entries.map(e => `${e.recorder}（${e.recorderID || ''}）`))];
+    const recEl = document.getElementById('statRecorder');
+    recEl.textContent = recorders.length ? recorders.join('、') : '今天還沒有人登記';
+  });
+
+  // 本月統計
+  db.ref('visitor_logs').orderByChild('date')
+    .startAt(thisMonth + '-01')
+    .endAt(thisMonth + '-31')
+    .once('value', snap => {
+      const data = snap.val() || {};
+      const total = Object.values(data).reduce((s, e) => s + (parseInt(e.count) || 1), 0);
+      document.getElementById('statTotal').textContent = total;
+    });
+}
+
+// ══════════════════════
+//  工具
+// ══════════════════════
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+}
 </script>
 
 </body>
