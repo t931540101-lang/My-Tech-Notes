@@ -3,34 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sweet_Cloud_Diary</title>
+    <title>HQ_Multi_Link</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: #fff5f8; margin: 0; display: flex; flex-direction: column; height: 100vh; color: #7a5c5c; }
+        
         header { background: #ffb7c5; padding: 15px; display: flex; justify-content: space-between; border-bottom: 3px solid #ffdae0; box-shadow: 0 2px 5px rgba(255,183,197,0.3); }
-        .title { font-size: 16px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .title { font-size: 16px; font-weight: bold; color: #fff; }
+
+        /* 房間切換列 */
+        .room-bar { background: #fff; display: flex; overflow-x: auto; border-bottom: 1px solid #ffdae0; padding: 5px; gap: 8px; }
+        .room-btn { padding: 8px 15px; background: #f8f9fa; border: 1.5px solid #ffdae0; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; color: #ff8fab; font-weight: bold; }
+        .room-btn.active { background: #ff8fab; color: #fff; }
+
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); }
         #chat-box.blur { filter: contrast(0.1) brightness(1.5) blur(15px); }
-        .msg { font-size: 15px; line-height: 1.5; padding: 12px 18px; border-radius: 25px; max-width: 80%; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
-        .msg-me { align-self: flex-end; background: #ffdae0; color: #d63384; border-bottom-right-radius: 5px; }
-        .msg-other { align-self: flex-start; background: #e0f4ff; color: #0077b6; border-bottom-left-radius: 5px; }
-        .time { font-size: 11px; color: #c9bbc2; margin-top: 5px; text-align: right; }
-        .input-area { background: #fff; padding: 10px 15px 45px 15px; display: flex; gap: 10px; border-top: 2px solid #ffdae0; }
-        input { flex: 1; background: #fff9fb; border: 2px solid #ffdae0; padding: 12px 20px; color: #7a5c5c; font-size: 15px; outline: none; border-radius: 30px; }
-        .send-btn { background: #ff8fab; border: none; color: #fff; padding: 0 25px; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 30px; box-shadow: 0 3px 0 #e6738f; }
+        .msg { font-size: 15px; line-height: 1.5; padding: 10px 15px; border-radius: 20px; max-width: 80%; }
+        .msg-me { align-self: flex-end; background: #ffdae0; color: #d63384; border-bottom-right-radius: 2px; }
+        .msg-other { align-self: flex-start; background: #e0f4ff; color: #0077b6; border-bottom-left-radius: 2px; }
+        .time { font-size: 10px; opacity: 0.6; margin-top: 5px; text-align: right; }
+        
+        .input-area { background: #fff; padding: 10px 15px 40px 15px; display: flex; gap: 10px; border-top: 2px solid #ffdae0; }
+        input { flex: 1; background: #fff9fb; border: 2px solid #ffdae0; padding: 10px 15px; border-radius: 25px; outline: none; }
+        .send-btn { background: #ff8fab; border: none; color: #fff; padding: 10px 20px; border-radius: 25px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="title">🌸 雲端同步日記 🐾</div>
-    <div style="cursor: pointer; font-size: 20px;" onclick="toggleStealth()">🛡️</div>
+    <div class="title">🌸 雲端指揮中心 🐾</div>
+    <div style="cursor: pointer; font-size: 18px;" onclick="toggleStealth()">🛡️</div>
 </header>
 
-<div id="chat-box" id="chat-box">
-    </div>
+<div class="room-bar" id="roomBar">
+    <button class="room-btn active" onclick="switchRoom('General')">🏢 勤務總處</button>
+    <button class="room-btn" onclick="switchRoom('Pets')">🐶 狗狗日記</button>
+    <button class="room-btn" onclick="switchRoom('Secret')">🤫 機密頻道</button>
+</div>
+
+<div id="chat-box"></div>
 
 <div class="input-area">
     <input type="text" id="msg-input" placeholder="同步中..." autocomplete="off">
@@ -38,7 +51,6 @@
 </div>
 
 <script>
-    // Firebase 配置 (小黑哥提供的金鑰)
     const firebaseConfig = {
       apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
       authDomain: "black-obsidian-project.firebaseapp.com",
@@ -49,29 +61,45 @@
       appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
     };
 
-    // 初始化 Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const chatRef = database.ref("messages");
+    
+    let currentRoom = 'General';
+    let currentRef = null;
 
     const chatBox = document.getElementById('chat-box');
     const msgInput = document.getElementById('msg-input');
 
-    // 監聽雲端資料庫
-    chatRef.on("child_added", (snapshot) => {
-        const data = snapshot.val();
-        // 判斷是誰發的訊息 (簡單用一個 ID 區分)
-        const type = data.sender === "XiaoHei" ? 'me' : 'other';
-        renderMessage(data.text, type, data.time);
-    });
+    // === 切換房間功能 ===
+    function switchRoom(roomName) {
+        currentRoom = roomName;
+        
+        // 更新 UI 按鈕顏色
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.includes(roomName)) btn.classList.add('active');
+        });
+
+        // 清空畫面並重新監聽 Firebase
+        chatBox.innerHTML = `<div style="text-align:center; color:#ffb7c5; font-size:12px;">-- 已進入 ${roomName} 頻道 --</div>`;
+        
+        // 移除舊的監聽，開啟新的監聽
+        if (currentRef) currentRef.off();
+        currentRef = database.ref("rooms/" + currentRoom + "/messages");
+        
+        currentRef.on("child_added", (snapshot) => {
+            const data = snapshot.val();
+            const type = data.sender === "XiaoHei" ? 'me' : 'other';
+            renderMessage(data.text, type, data.time);
+        });
+    }
 
     function send() {
         const text = msgInput.value.trim();
-        if (!text) return;
+        if (!text || !currentRef) return;
 
-        // 推送到雲端
         const time = new Date().toLocaleTimeString('zh-TW', {hour12:false, hour:'2-digit', minute:'2-digit'});
-        chatRef.push({
+        currentRef.push({
             sender: "XiaoHei",
             text: text,
             time: time
@@ -89,6 +117,9 @@
 
     msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
     function toggleStealth() { chatBox.classList.toggle('blur'); }
+
+    // 初始化進入第一個房間
+    switchRoom('General');
 </script>
 </body>
 </html>
