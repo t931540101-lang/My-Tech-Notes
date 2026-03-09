@@ -1,174 +1,487 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HQ_Obsidian_Matrix</title>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <style>
-        :root { --bg: #fff5f8; --header: #ffb7c5; --accent: #ff8fab; --me: #ffdae0; --other: #e0f4ff; }
-        * { box-sizing: border-box; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; color: #7a5c5c; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>黑曜石通訊矩陣</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="黑曜石">
+  <meta name="theme-color" content="#ffb7c5">
 
-        header { background: var(--header); padding: 15px; display: flex; align-items: center; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; justify-content: space-between; }
-        .header-left { display: flex; align-items: center; }
-        .back-btn { display: none; margin-right: 15px; cursor: pointer; font-size: 20px; }
-        .title { font-weight: bold; font-size: 18px; }
-        .setting-btn { display: none; cursor: pointer; font-size: 20px; }
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
 
-        /* 列表頁 */
-        #list-page { height: calc(100vh - 55px); overflow-y: auto; background: #fff; }
-        .chat-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #fdf0f3; cursor: pointer; position: relative; }
-        .chat-item:active { background: #fff0f3; }
-        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--me); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 12px; }
-        .chat-name { font-weight: bold; font-size: 15px; }
-        .lock-icon { margin-left: auto; font-size: 14px; opacity: 0.5; }
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
-        /* 對話頁 */
-        #chat-page { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; flex-direction: column; z-index: 20; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); }
-        .msg { font-size: 14px; padding: 8px 12px; border-radius: 15px; max-width: 80%; }
-        .msg-me { align-self: flex-end; background: var(--me); color: #d63384; border-bottom-right-radius: 2px; }
-        .msg-other { align-self: flex-start; background: var(--other); color: #0077b6; border-bottom-left-radius: 2px; }
-        .time { font-size: 9px; opacity: 0.4; margin-top: 4px; text-align: right; }
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
 
-        .input-area { background: #fff; padding: 10px 15px 35px 15px; display: flex; gap: 8px; border-top: 1px solid #ffdae0; }
-        input { flex: 1; background: #fef9fa; border: 1.5px solid #ffdae0; padding: 8px 15px; border-radius: 20px; outline: none; }
-        .send-btn { background: var(--accent); border: none; color: #fff; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
-    </style>
+  <style>
+    :root {
+      --bg: #fff5f8;
+      --header: #ffb7c5;
+      --accent: #ff8fab;
+      --me: #ffdae0;
+      --other: #e0f4ff;
+      --text-main: #7a5c5c;
+      --border: #ffdae0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      overflow: hidden;
+      height: 100vh;
+      color: var(--text-main);
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--header);
+      padding: 12px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      display: flex; align-items: center; justify-content: space-between;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      position: relative; z-index: 10;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn { display: none; cursor: pointer; font-size: 22px; padding: 2px 6px; border-radius: 8px; transition: background .15s; }
+    .back-btn:active { background: rgba(255,255,255,0.25); }
+    .title { font-weight: bold; font-size: 17px; }
+    .setting-btn { display: none; cursor: pointer; font-size: 20px; padding: 4px; border-radius: 8px; transition: background .15s; }
+    .setting-btn:active { background: rgba(255,255,255,0.25); }
+
+    /* ── 登入畫面 ── */
+    #login-page {
+      height: calc(100vh - 52px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 32px;
+    }
+    #login-page .logo { font-size: 56px; }
+    #login-page h2 { font-size: 20px; font-weight: bold; color: var(--accent); }
+    #login-page p { font-size: 13px; color: #bbb; text-align: center; }
+    .login-input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: 16px;
+      font-size: 15px; outline: none; background: #fff;
+      font-family: inherit; color: var(--text-main);
+      transition: border .2s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 16px;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .login-btn:active { opacity: .8; }
+    .err-msg { color: #e74c3c; font-size: 13px; min-height: 18px; }
+
+    /* ── 房間列表 ── */
+    #list-page {
+      height: calc(100vh - 52px);
+      overflow-y: auto; background: #fff;
+      display: none;
+    }
+    .chat-item {
+      display: flex; align-items: center;
+      padding: 14px 16px; border-bottom: 1px solid #fdf0f3;
+      cursor: pointer; transition: background .1s;
+    }
+    .chat-item:active { background: #fff0f3; }
+    .avatar {
+      width: 46px; height: 46px; border-radius: 14px;
+      background: var(--me); display: flex; align-items: center;
+      justify-content: center; font-size: 17px; font-weight: bold;
+      margin-right: 13px; flex-shrink: 0; color: var(--accent);
+    }
+    .chat-name { font-weight: bold; font-size: 15px; }
+    .chat-sub { font-size: 12px; color: #ccc; margin-top: 2px; }
+
+    /* ── 對話頁 ── */
+    #chat-page {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: none; flex-direction: column;
+      z-index: 20;
+    }
+    #chat-box {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .msg-row { display: flex; flex-direction: column; }
+    .msg-row.me { align-items: flex-end; }
+    .msg-row.other { align-items: flex-start; }
+
+    .sender-name { font-size: 11px; color: #bbb; margin-bottom: 3px; padding: 0 4px; }
+
+    .msg {
+      font-size: 14px; padding: 9px 13px;
+      border-radius: 16px; max-width: 78%; line-height: 1.5;
+      word-break: break-word;
+    }
+    .msg.me { background: var(--me); color: #d63384; border-bottom-right-radius: 3px; }
+    .msg.other { background: var(--other); color: #0077b6; border-bottom-left-radius: 3px; }
+    .msg-time { font-size: 10px; color: #ccc; margin-top: 3px; padding: 0 4px; }
+
+    /* typing indicator */
+    .typing { display: flex; gap: 4px; padding: 10px 14px; background: var(--other); border-radius: 16px; border-bottom-left-radius: 3px; width: fit-content; }
+    .dot { width: 6px; height: 6px; background: #a0c4e0; border-radius: 50%; animation: bounce .9s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+    /* ── 輸入區 ── */
+    .input-area {
+      background: #fff;
+      padding: 10px 12px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex; gap: 8px; align-items: flex-end;
+      border-top: 1px solid var(--border);
+    }
+    .msg-input {
+      flex: 1; background: #fef9fa;
+      border: 1.5px solid var(--border); padding: 9px 14px;
+      border-radius: 20px; outline: none; font-family: inherit;
+      font-size: 14px; color: var(--text-main);
+      transition: border .2s; resize: none; max-height: 80px; line-height: 1.5;
+    }
+    .msg-input:focus { border-color: var(--accent); }
+    .send-btn {
+      background: var(--accent); border: none; color: #fff;
+      width: 40px; height: 40px; border-radius: 50%;
+      font-size: 16px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .15s, transform .1s;
+    }
+    .send-btn:active { opacity: .8; transform: scale(.92); }
+
+    /* ── 設定 Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 100;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; width: 100%; border-radius: 24px 24px 0 0;
+      padding: 24px 20px 36px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .modal h3 { font-size: 17px; font-weight: bold; color: var(--text-main); text-align: center; }
+    .modal-btn {
+      width: 100%; padding: 13px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 14px; font-size: 15px; font-family: inherit;
+      color: var(--text-main); cursor: pointer; text-align: left;
+      transition: background .15s;
+    }
+    .modal-btn:active { background: var(--me); }
+    .modal-btn.danger { color: #e74c3c; border-color: #ffc8c8; background: #fff5f5; }
+    .modal-close {
+      width: 100%; padding: 13px; background: none; border: none;
+      font-size: 15px; color: #bbb; font-family: inherit; cursor: pointer;
+    }
+  </style>
+
 </head>
 <body>
 
 <header>
-    <div class="header-left">
-        <div class="back-btn" id="backBtn" onclick="goBack()">⬅</div>
-        <div class="title" id="headerTitle">黑曜石通訊矩陣</div>
-    </div>
-    <div class="setting-btn" id="settingBtn" onclick="openSettings()">⚙️</div>
+  <div class="header-left">
+    <div class="back-btn" id="backBtn" onclick="goBack()">‹</div>
+    <div class="title" id="headerTitle">黑曜石通訊矩陣</div>
+  </div>
+  <div class="setting-btn" id="settingBtn" onclick="openModal()">⚙️</div>
 </header>
 
-<div id="list-page">
-    </div>
+<!-- 登入頁 -->
 
-<div id="chat-page">
-    <div id="chat-box"></div>
-    <div class="input-area">
-        <input type="text" id="msg-input" placeholder="傳送訊息..." autocomplete="off">
-        <button class="send-btn" onclick="send()">送出</button>
-    </div>
+<div id="login-page">
+  <div class="logo">🖤</div>
+  <h2>黑曜石通訊矩陣</h2>
+  <p>請輸入你的代號進入系統</p>
+  <input class="login-input" id="nicknameInput" placeholder="你的代號（例如：小黑）" maxlength="12">
+  <input class="login-input" id="pinInput" placeholder="系統通行碼" type="password" maxlength="20">
+  <div class="err-msg" id="loginErr"></div>
+  <button class="login-btn" onclick="doLogin()">進入矩陣</button>
+</div>
+
+<!-- 房間列表 -->
+
+<div id="list-page"></div>
+
+<!-- 對話頁 -->
+
+<div id="chat-page" style="display:none">
+  <div id="chat-box"></div>
+  <div class="input-area">
+    <textarea class="msg-input" id="msgInput" placeholder="傳送訊息…" rows="1"
+      oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    <button class="send-btn" onclick="sendMsg()">▶</button>
+  </div>
+</div>
+
+<!-- 設定 Modal -->
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="modalTitle">頻道設定</h3>
+    <button class="modal-btn" onclick="promptRename()">✏️ 更改頻道名稱</button>
+    <button class="modal-btn" onclick="promptPassword()">🔑 更改頻道密碼</button>
+    <button class="modal-btn danger" onclick="clearMessages()">🗑️ 清除所有訊息</button>
+    <button class="modal-close" onclick="closeModal()">取消</button>
+  </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
-      authDomain: "black-obsidian-project.firebaseapp.com",
-      databaseURL: "https://black-obsidian-project-default-rtdb.firebaseio.com/",
-      projectId: "black-obsidian-project",
-      storageBucket: "black-obsidian-project.firebasestorage.app",
-      messagingSenderId: "438491554810",
-      appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
-    };
+// ═══════════════════════════════════════════
+//  Firebase 設定（請在 Firebase Console 設定
+//  Realtime Database 規則限制讀寫權限）
+// ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAOGNz_ac-9DsJH-xi8-viSXIPSjAZ7mDs",
+  authDomain: "black-obsidian-project.firebaseapp.com",
+  databaseURL: "https://black-obsidian-project-default-rtdb.firebaseio.com/",
+  projectId: "black-obsidian-project",
+  storageBucket: "black-obsidian-project.firebasestorage.app",
+  messagingSenderId: "438491554810",
+  appId: "1:438491554810:web:cdc782c7d4df031f8d3a43"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    let currentRoomId = '';
-    let currentRef = null;
-    let roomsConfig = {};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-    // 初始化 8 間房的 ID
-    const roomIds = ['R1','R2','R3','R4','R5','R6','R7','R8'];
+// ── 系統通行碼（前端第一道門）──
+// ⚠️ 建議之後改為 Firebase Auth 做真正的身份驗證
+const SYSTEM_PIN = "obsidian2024";
 
-    // 監聽房間設定 (名字與密碼)
-    db.ref("rooms_config").on("value", (snapshot) => {
-        roomsConfig = snapshot.val() || {};
-        renderRoomList();
-    });
+// ── 狀態 ──
+let myNickname = '';
+let currentRoomId = '';
+let currentRef = null;
+let roomsConfig = {};
+const roomIds = ['R1','R2','R3','R4','R5','R6','R7','R8'];
 
-    function renderRoomList() {
-        const listPage = document.getElementById('list-page');
-        listPage.innerHTML = '';
-        roomIds.forEach(id => {
-            const config = roomsConfig[id] || { name: `頻道 ${id}`, psw: "" };
-            const item = document.createElement('div');
-            item.className = 'chat-item';
-            item.onclick = () => tryEnterRoom(id, config);
-            item.innerHTML = `
-                <div class="avatar">${id}</div>
-                <div class="chat-info">
-                    <div class="chat-name">${config.name}</div>
-                    <div style="font-size:12px; color:#ccc;">${config.psw ? '🔒 已加密' : '🔓 公開頻道'}</div>
-                </div>
-            `;
-            listPage.appendChild(item);
-        });
+// ══════════════════════
+//  登入
+// ══════════════════════
+function doLogin() {
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  const pin = document.getElementById('pinInput').value.trim();
+  const errEl = document.getElementById('loginErr');
+
+  if (!nickname) return errEl.textContent = '請輸入代號';
+  if (pin !== SYSTEM_PIN) return errEl.textContent = '通行碼錯誤！';
+
+  myNickname = nickname;
+  errEl.textContent = '';
+
+  // 匿名登入 Firebase（安全性提升）
+  auth.signInAnonymously().then(() => {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('list-page').style.display = 'block';
+    loadRooms();
+  }).catch(() => {
+    // 若 Firebase Auth 未開啟，直接進入（降級處理）
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('list-page').style.display = 'block';
+    loadRooms();
+  });
+}
+
+document.getElementById('pinInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ══════════════════════
+//  房間列表
+// ══════════════════════
+function loadRooms() {
+  db.ref("rooms_config").on("value", snap => {
+    roomsConfig = snap.val() || {};
+    renderRoomList();
+  });
+}
+
+function renderRoomList() {
+  const listPage = document.getElementById('list-page');
+  listPage.innerHTML = '';
+  roomIds.forEach(id => {
+    const cfg = roomsConfig[id] || { name: `頻道 ${id}`, psw: "" };
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.onclick = () => tryEnterRoom(id, cfg);
+
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.textContent = id;
+
+    const info = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'chat-name';
+    name.textContent = cfg.name;
+    const sub = document.createElement('div');
+    sub.className = 'chat-sub';
+    sub.textContent = cfg.psw ? '🔒 已加密' : '🔓 公開頻道';
+    info.appendChild(name);
+    info.appendChild(sub);
+
+    item.appendChild(av);
+    item.appendChild(info);
+    listPage.appendChild(item);
+  });
+}
+
+// ══════════════════════
+//  進入房間
+// ══════════════════════
+function tryEnterRoom(id, cfg) {
+  if (cfg.psw) {
+    const input = prompt("請輸入頻道授權碼：");
+    if (input === null) return;
+    if (input !== cfg.psw) { alert("授權失敗！"); return; }
+  }
+  enterChat(id, cfg.name);
+}
+
+function enterChat(id, name) {
+  currentRoomId = id;
+
+  document.getElementById('headerTitle').textContent = name;
+  document.getElementById('backBtn').style.display = 'block';
+  document.getElementById('settingBtn').style.display = 'block';
+  document.getElementById('list-page').style.display = 'none';
+  document.getElementById('chat-page').style.display = 'flex';
+
+  const chatBox = document.getElementById('chat-box');
+  chatBox.innerHTML = '';
+
+  if (currentRef) currentRef.off();
+  currentRef = db.ref("rooms_data/" + id + "/messages");
+
+  // 只載入最近 100 筆，避免資料無限增長造成效能問題
+  currentRef.limitToLast(100).on("child_added", snap => {
+    const d = snap.val();
+    if (d && d.text && d.sender && d.time) {
+      renderMessage(d.text, d.sender, d.time);
     }
+  });
+}
 
-    function tryEnterRoom(id, config) {
-        if (config.psw) {
-            const input = prompt("請輸入頻道授權碼：");
-            if (input !== config.psw) return alert("授權失敗！");
-        }
-        enterChat(id, config.name);
-    }
+function goBack() {
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('settingBtn').style.display = 'none';
+  document.getElementById('headerTitle').textContent = '黑曜石通訊矩陣';
+  document.getElementById('list-page').style.display = 'block';
+  document.getElementById('chat-page').style.display = 'none';
+  if (currentRef) { currentRef.off(); currentRef = null; }
+}
 
-    function enterChat(id, name) {
-        currentRoomId = id;
-        document.getElementById('headerTitle').innerText = name;
-        document.getElementById('backBtn').style.display = 'block';
-        document.getElementById('settingBtn').style.display = 'block';
-        document.getElementById('list-page').style.display = 'none';
-        document.getElementById('chat-page').style.display = 'flex';
-        
-        const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = '';
-        
-        if (currentRef) currentRef.off();
-        currentRef = db.ref("rooms_data/" + id + "/messages");
-        currentRef.on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            renderMessage(data.text, data.sender === "XiaoHei" ? 'me' : 'other', data.time);
-        });
-    }
+// ══════════════════════
+//  訊息
+// ══════════════════════
+function sendMsg() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || !currentRef) return;
 
-    function goBack() {
-        document.getElementById('backBtn').style.display = 'none';
-        document.getElementById('settingBtn').style.display = 'none';
-        document.getElementById('headerTitle').innerText = '黑曜石通訊矩陣';
-        document.getElementById('list-page').style.display = 'block';
-        document.getElementById('chat-page').style.display = 'none';
-        if (currentRef) currentRef.off();
-    }
+  const now = new Date();
+  const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
-    function openSettings() {
-        const newName = prompt("更改頻道名稱：", document.getElementById('headerTitle').innerText);
-        const newPsw = prompt("更改頻道密碼 (留空則不設限)：", roomsConfig[currentRoomId]?.psw || "");
-        if (newName) {
-            db.ref("rooms_config/" + currentRoomId).update({ name: newName, psw: newPsw });
-            document.getElementById('headerTitle').innerText = newName;
-        }
-    }
+  // 寫入 Firebase（用 textContent 邏輯，資料庫只存純文字）
+  currentRef.push({ sender: myNickname, text: text, time: time });
+  input.value = '';
+  input.style.height = 'auto';
+  input.focus();
+}
 
-    function send() {
-        const input = document.getElementById('msg-input');
-        const text = input.value.trim();
-        if (!text) return;
-        const time = new Date().toLocaleTimeString('zh-TW', {hour12:false, hour:'2-digit', minute:'2-digit'});
-        currentRef.push({ sender: "XiaoHei", text: text, time: time });
-        input.value = "";
-    }
+function renderMessage(text, sender, time) {
+  const chatBox = document.getElementById('chat-box');
+  const isMe = sender === myNickname;
 
-    function renderMessage(text, type, time) {
-        const chatBox = document.getElementById('chat-box');
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `msg msg-${type}`;
-        msgDiv.innerHTML = `${text}<div class="time">${time}</div>`;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+  const row = document.createElement('div');
+  row.className = `msg-row ${isMe ? 'me' : 'other'}`;
 
-    document.getElementById('msg-input').addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+  // 顯示對方名字
+  if (!isMe) {
+    const nameEl = document.createElement('div');
+    nameEl.className = 'sender-name';
+    nameEl.textContent = sender; // ✅ textContent 防止 XSS
+    row.appendChild(nameEl);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = `msg ${isMe ? 'me' : 'other'}`;
+  bubble.textContent = text; // ✅ textContent 防止 XSS
+
+  const timeEl = document.createElement('div');
+  timeEl.className = 'msg-time';
+  timeEl.textContent = time;
+
+  row.appendChild(bubble);
+  row.appendChild(timeEl);
+  chatBox.appendChild(row);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ══════════════════════
+//  設定 Modal
+// ══════════════════════
+function openModal() {
+  document.getElementById('modalTitle').textContent =
+    roomsConfig[currentRoomId]?.name || currentRoomId;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+function promptRename() {
+  closeModal();
+  const cur = roomsConfig[currentRoomId]?.name || '';
+  const newName = prompt("更改頻道名稱：", cur);
+  if (newName && newName.trim()) {
+    db.ref("rooms_config/" + currentRoomId).update({ name: newName.trim() });
+    document.getElementById('headerTitle').textContent = newName.trim();
+  }
+}
+
+function promptPassword() {
+  closeModal();
+  const newPsw = prompt("更改頻道密碼（留空則移除密碼）：", roomsConfig[currentRoomId]?.psw || "");
+  if (newPsw !== null) {
+    db.ref("rooms_config/" + currentRoomId).update({ psw: newPsw.trim() });
+  }
+}
+
+function clearMessages() {
+  if (!confirm("確定要清除所有訊息嗎？此操作無法還原！")) return;
+  closeModal();
+  db.ref("rooms_data/" + currentRoomId + "/messages").remove();
+}
+
+// ══════════════════════
+//  工具函式
+// ══════════════════════
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
 </script>
+
 </body>
 </html>
