@@ -128,27 +128,28 @@ word-break:break-word; box-shadow:0 1px 2px rgba(0,0,0,0.1);
 /* ===== INPUT ===== */
 .input-area {
 background:#fff; border-top:1px solid var(–border);
-padding:8px 10px;
+padding:8px 8px;
 padding-bottom: calc(8px + env(safe-area-inset-bottom));
+flex-shrink:0;
 }
 .emoji-tray { display:none; flex-wrap:wrap; gap:2px; padding:6px 0 4px; }
 .emoji-tray.open { display:flex; }
 .ep { background:none; border:none; font-size:24px; cursor:pointer; padding:3px; border-radius:6px; }
 .ep:active { background:#f0f0f0; }
 
-.input-row { display:flex; align-items:flex-end; gap:8px; }
-.ia-btn { background:none; border:none; font-size:22px; cursor:pointer; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#666; flex-shrink:0; }
+.input-row { display:flex; align-items:flex-end; gap:4px; width:100%; }
+.ia-btn { background:none; border:none; font-size:20px; cursor:pointer; width:32px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#666; flex-shrink:0; }
 .ia-btn:active { background:#f0f0f0; }
 .ia-btn.on { color:var(–green); }
 
-.inp-wrap { flex:1; background:#f5f5f5; border:1.5px solid #e0e0e0; border-radius:22px;
-padding:8px 14px; display:flex; align-items:center; transition:border .2s; min-height:40px; }
+.inp-wrap { flex:1; min-width:0; background:#f5f5f5; border:1.5px solid #e0e0e0; border-radius:22px;
+padding:8px 12px; display:flex; align-items:center; transition:border .2s; min-height:40px; }
 .inp-wrap:focus-within { border-color:var(–green); background:#fff; }
-.inp { flex:1; border:none; outline:none; background:transparent; font-family:inherit; font-size:14px; resize:none; max-height:90px; line-height:1.5; color:var(–text); }
+.inp { flex:1; min-width:0; border:none; outline:none; background:transparent; font-family:inherit; font-size:14px; resize:none; max-height:90px; line-height:1.5; color:var(–text); }
 .inp::placeholder { color:#bbb; }
 
-.send { width:40px; height:40px; border-radius:50%; background:var(–green); border:none;
-display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff;
+.send { width:38px; height:38px; border-radius:50%; background:var(–green); border:none;
+display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff;
 cursor:pointer; flex-shrink:0; transition:background .15s, transform .1s; }
 .send:active { background:var(–green-dark); transform:scale(.9); }
 
