@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HQ_Messenger</title>
+    <title>HQ_Obsidian_Matrix</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
@@ -11,69 +11,50 @@
         * { box-sizing: border-box; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; color: #7a5c5c; }
 
-        /* 頂部標題 */
-        header { background: var(--header); padding: 15px; display: flex; align-items: center; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
+        header { background: var(--header); padding: 15px; display: flex; align-items: center; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; }
         .back-btn { display: none; margin-right: 15px; cursor: pointer; font-size: 20px; }
         .title { font-weight: bold; font-size: 18px; }
+        .setting-btn { display: none; cursor: pointer; font-size: 20px; }
 
-        /* 聊天列表頁面 */
+        /* 列表頁 */
         #list-page { height: calc(100vh - 55px); overflow-y: auto; background: #fff; }
-        .chat-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #fdf0f3; cursor: pointer; }
+        .chat-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #fdf0f3; cursor: pointer; position: relative; }
         .chat-item:active { background: #fff0f3; }
-        .avatar { width: 50px; height: 50px; border-radius: 18px; background: var(--me); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; }
-        .chat-info { flex: 1; }
-        .chat-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-        .chat-preview { font-size: 13px; color: #adb5bd; }
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--me); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 12px; }
+        .chat-name { font-weight: bold; font-size: 15px; }
+        .lock-icon { margin-left: auto; font-size: 14px; opacity: 0.5; }
 
-        /* 聊天對話頁面 (預設隱藏) */
+        /* 對話頁 */
         #chat-page { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; flex-direction: column; z-index: 20; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); }
-        .msg { font-size: 15px; padding: 10px 15px; border-radius: 18px; max-width: 80%; line-height: 1.4; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: url('https://www.transparenttextures.com/patterns/cubes.png'); }
+        .msg { font-size: 14px; padding: 8px 12px; border-radius: 15px; max-width: 80%; }
         .msg-me { align-self: flex-end; background: var(--me); color: #d63384; border-bottom-right-radius: 2px; }
         .msg-other { align-self: flex-start; background: var(--other); color: #0077b6; border-bottom-left-radius: 2px; }
-        .time { font-size: 10px; opacity: 0.5; margin-top: 4px; text-align: right; }
+        .time { font-size: 9px; opacity: 0.4; margin-top: 4px; text-align: right; }
 
-        /* 輸入區 */
-        .input-area { background: #fff; padding: 10px 15px 35px 15px; display: flex; gap: 10px; border-top: 1px solid #ffdae0; }
-        input { flex: 1; background: #fef9fa; border: 1.5px solid #ffdae0; padding: 10px 15px; border-radius: 20px; outline: none; }
-        .send-btn { background: var(--accent); border: none; color: #fff; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+        .input-area { background: #fff; padding: 10px 15px 35px 15px; display: flex; gap: 8px; border-top: 1px solid #ffdae0; }
+        input { flex: 1; background: #fef9fa; border: 1.5px solid #ffdae0; padding: 8px 15px; border-radius: 20px; outline: none; }
+        .send-btn { background: var(--accent); border: none; color: #fff; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header id="main-header">
-    <div class="back-btn" id="backBtn" onclick="goBack()">⬅</div>
-    <div class="title" id="headerTitle">HQ_Messenger</div>
+<header>
+    <div class="header-left">
+        <div class="back-btn" id="backBtn" onclick="goBack()">⬅</div>
+        <div class="title" id="headerTitle">黑曜石通訊矩陣</div>
+    </div>
+    <div class="setting-btn" id="settingBtn" onclick="openSettings()">⚙️</div>
 </header>
 
 <div id="list-page">
-    <div class="chat-item" onclick="enterChat('General', '🏢 勤務總處')">
-        <div class="avatar">🏢</div>
-        <div class="chat-info">
-            <div class="chat-name">🏢 勤務總處</div>
-            <div class="chat-preview">點擊進入公務頻道...</div>
-        </div>
     </div>
-    <div class="chat-item" onclick="enterChat('Pets', '🐶 狗狗與妞妞')">
-        <div class="avatar">🐶</div>
-        <div class="chat-info">
-            <div class="chat-name">🐶 狗狗與妞妞</div>
-            <div class="chat-preview">今天妞妞心情好嗎？</div>
-        </div>
-    </div>
-    <div class="chat-item" onclick="enterChat('Secret', '🤫 機密室')">
-        <div class="avatar">🤫</div>
-        <div class="chat-info">
-            <div class="chat-name">🤫 機密室</div>
-            <div class="chat-preview">只限架構師進入。</div>
-        </div>
-    </div>
-</div>
 
 <div id="chat-page">
     <div id="chat-box"></div>
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="說點什麼..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="傳送訊息..." autocomplete="off">
         <button class="send-btn" onclick="send()">送出</button>
     </div>
 </div>
@@ -90,56 +71,96 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.database();
     
-    let currentRoom = '';
+    let currentRoomId = '';
     let currentRef = null;
+    let roomsConfig = {};
 
-    const listPage = document.getElementById('list-page');
-    const chatPage = document.getElementById('chat-page');
-    const backBtn = document.getElementById('backBtn');
-    const headerTitle = document.getElementById('headerTitle');
-    const chatBox = document.getElementById('chat-box');
-    const msgInput = document.getElementById('msg-input');
+    // 初始化 8 間房的 ID
+    const roomIds = ['R1','R2','R3','R4','R5','R6','R7','R8'];
 
-    // 進入聊天室
-    function enterChat(roomId, roomName) {
-        currentRoom = roomId;
-        headerTitle.innerText = roomName;
-        backBtn.style.display = 'block';
-        listPage.style.display = 'none';
-        chatPage.style.display = 'flex';
-        
-        chatBox.innerHTML = ''; // 清空舊訊息
-        
-        if (currentRef) currentRef.off(); // 移除舊監聽
-        currentRef = database.ref("rooms/" + currentRoom + "/messages");
-        
-        currentRef.on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            const type = data.sender === "XiaoHei" ? 'me' : 'other';
-            renderMessage(data.text, type, data.time);
+    // 監聽房間設定 (名字與密碼)
+    db.ref("rooms_config").on("value", (snapshot) => {
+        roomsConfig = snapshot.val() || {};
+        renderRoomList();
+    });
+
+    function renderRoomList() {
+        const listPage = document.getElementById('list-page');
+        listPage.innerHTML = '';
+        roomIds.forEach(id => {
+            const config = roomsConfig[id] || { name: `頻道 ${id}`, psw: "" };
+            const item = document.createElement('div');
+            item.className = 'chat-item';
+            item.onclick = () => tryEnterRoom(id, config);
+            item.innerHTML = `
+                <div class="avatar">${id}</div>
+                <div class="chat-info">
+                    <div class="chat-name">${config.name}</div>
+                    <div style="font-size:12px; color:#ccc;">${config.psw ? '🔒 已加密' : '🔓 公開頻道'}</div>
+                </div>
+            `;
+            listPage.appendChild(item);
         });
     }
 
-    // 返回列表
+    function tryEnterRoom(id, config) {
+        if (config.psw) {
+            const input = prompt("請輸入頻道授權碼：");
+            if (input !== config.psw) return alert("授權失敗！");
+        }
+        enterChat(id, config.name);
+    }
+
+    function enterChat(id, name) {
+        currentRoomId = id;
+        document.getElementById('headerTitle').innerText = name;
+        document.getElementById('backBtn').style.display = 'block';
+        document.getElementById('settingBtn').style.display = 'block';
+        document.getElementById('list-page').style.display = 'none';
+        document.getElementById('chat-page').style.display = 'flex';
+        
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = '';
+        
+        if (currentRef) currentRef.off();
+        currentRef = db.ref("rooms_data/" + id + "/messages");
+        currentRef.on("child_added", (snapshot) => {
+            const data = snapshot.val();
+            renderMessage(data.text, data.sender === "XiaoHei" ? 'me' : 'other', data.time);
+        });
+    }
+
     function goBack() {
-        backBtn.style.display = 'none';
-        headerTitle.innerText = 'HQ_Messenger';
-        listPage.style.display = 'block';
-        chatPage.style.display = 'none';
+        document.getElementById('backBtn').style.display = 'none';
+        document.getElementById('settingBtn').style.display = 'none';
+        document.getElementById('headerTitle').innerText = '黑曜石通訊矩陣';
+        document.getElementById('list-page').style.display = 'block';
+        document.getElementById('chat-page').style.display = 'none';
         if (currentRef) currentRef.off();
     }
 
+    function openSettings() {
+        const newName = prompt("更改頻道名稱：", document.getElementById('headerTitle').innerText);
+        const newPsw = prompt("更改頻道密碼 (留空則不設限)：", roomsConfig[currentRoomId]?.psw || "");
+        if (newName) {
+            db.ref("rooms_config/" + currentRoomId).update({ name: newName, psw: newPsw });
+            document.getElementById('headerTitle').innerText = newName;
+        }
+    }
+
     function send() {
-        const text = msgInput.value.trim();
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
         if (!text) return;
         const time = new Date().toLocaleTimeString('zh-TW', {hour12:false, hour:'2-digit', minute:'2-digit'});
         currentRef.push({ sender: "XiaoHei", text: text, time: time });
-        msgInput.value = "";
+        input.value = "";
     }
 
     function renderMessage(text, type, time) {
+        const chatBox = document.getElementById('chat-box');
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg msg-${type}`;
         msgDiv.innerHTML = `${text}<div class="time">${time}</div>`;
@@ -147,7 +168,7 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+    document.getElementById('msg-input').addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
 </script>
 </body>
 </html>
