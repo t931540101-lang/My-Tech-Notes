@@ -198,7 +198,26 @@ background:none; border:none; cursor:pointer; font-size:22px; }
   <div class="messages" id="messages"></div>
   <div class="input-area">
     <div class="emoji-tray" id="emojiTray">
-      ${['😀','😂','🥰','😎','😭','🤔','👍','❤️','🔥','🎉','😅','🙏','💪','✨','🤣','😊','👏','🥳','😤','🫶'].map(e=>`<button class="ep" onclick="insertEmoji('${e}')">${e}</button>`).join('')}
+      <button class="ep" onclick="insertEmoji('😀')">😀</button>
+      <button class="ep" onclick="insertEmoji('😂')">😂</button>
+      <button class="ep" onclick="insertEmoji('🥰')">🥰</button>
+      <button class="ep" onclick="insertEmoji('😎')">😎</button>
+      <button class="ep" onclick="insertEmoji('😭')">😭</button>
+      <button class="ep" onclick="insertEmoji('🤔')">🤔</button>
+      <button class="ep" onclick="insertEmoji('👍')">👍</button>
+      <button class="ep" onclick="insertEmoji('❤️')">❤️</button>
+      <button class="ep" onclick="insertEmoji('🔥')">🔥</button>
+      <button class="ep" onclick="insertEmoji('🎉')">🎉</button>
+      <button class="ep" onclick="insertEmoji('😅')">😅</button>
+      <button class="ep" onclick="insertEmoji('🙏')">🙏</button>
+      <button class="ep" onclick="insertEmoji('💪')">💪</button>
+      <button class="ep" onclick="insertEmoji('✨')">✨</button>
+      <button class="ep" onclick="insertEmoji('🤣')">🤣</button>
+      <button class="ep" onclick="insertEmoji('😊')">😊</button>
+      <button class="ep" onclick="insertEmoji('👏')">👏</button>
+      <button class="ep" onclick="insertEmoji('🥳')">🥳</button>
+      <button class="ep" onclick="insertEmoji('😤')">😤</button>
+      <button class="ep" onclick="insertEmoji('🫶')">🫶</button>
     </div>
     <div class="input-row">
       <button class="ia-btn" id="emojiToggle" onclick="toggleEmoji()">😊</button>
@@ -315,18 +334,49 @@ function appendBubble(msg, anim=true) {
   const msgs = document.getElementById('messages');
   const big = /^[\p{Emoji}\s]+$/u.test(msg.text) && msg.text.trim().length <= 4;
   const row = document.createElement('div');
-  row.className = `msg-row ${msg.me?'me':''}`;
-  row.innerHTML = `
-    ${!msg.me?`<div class="msg-av ${current.cls}">${current.emoji}</div>`:''}
-    <div class="msg-col">
-      ${!msg.me && msg.name?`<div class="msg-sender">${msg.name}</div>`:''}
-      <div class="bubble ${msg.me?'me':'them'}${big?' big':''}">${msg.text}</div>
-      <div class="msg-meta">
-        ${msg.me?`<span class="read">已讀</span>`:''}
-        <span class="msg-time">${msg.time}</span>
-      </div>
-    </div>
-  `;
+  row.className = 'msg-row' + (msg.me ? ' me' : '');
+
+  // Avatar (only for other person)
+  if (!msg.me) {
+    const av = document.createElement('div');
+    av.className = 'msg-av ' + current.cls;
+    av.textContent = current.emoji;
+    row.appendChild(av);
+  }
+
+  const col = document.createElement('div');
+  col.className = 'msg-col';
+
+  // Sender name (group chats)
+  if (!msg.me && msg.name) {
+    const sn = document.createElement('div');
+    sn.className = 'msg-sender';
+    sn.textContent = msg.name;
+    col.appendChild(sn);
+  }
+
+  // Bubble
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (msg.me ? 'me' : 'them') + (big ? ' big' : '');
+  bubble.textContent = msg.text;
+  col.appendChild(bubble);
+
+  // Meta (time + read)
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  if (msg.me) {
+    const read = document.createElement('span');
+    read.className = 'read';
+    read.textContent = '已讀';
+    meta.appendChild(read);
+  }
+  const time = document.createElement('span');
+  time.className = 'msg-time';
+  time.textContent = msg.time;
+  meta.appendChild(time);
+  col.appendChild(meta);
+
+  row.appendChild(col);
   msgs.appendChild(row);
   if(anim) msgs.scrollTop = msgs.scrollHeight;
 }
