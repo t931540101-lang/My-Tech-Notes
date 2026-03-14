@@ -2,333 +2,121 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>車輛進出登記系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>車輛管制登記簿 - 黑曜石計畫</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        * { box-sizing: border-box; }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-        input, select { border: 1px solid #c0c0c0; border-radius: 4px; padding: 10px 12px; font-size: 16px; width: 100%; background: white; }
-        input:focus, select:focus { outline: 2px solid #1a56a0; border-color: #1a56a0; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background-color: #1a56a0; color: white; padding: 8px 4px; text-align: center; font-size: 13px; }
-        td { border: 1px solid #d0d0d0; padding: 8px 4px; text-align: center; }
-        tr:nth-child(even) { background-color: #f0f4fa; }
-        .still-in { background-color: #fff9e6 !important; }
-        .nav-btn { touch-action: manipulation; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f4f4; color: #333; }
+        .container { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #2c3e50; padding-bottom: 5px; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-weight: bold; font-size: 0.9rem; margin-bottom: 3px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 4px; color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-save { background: #27ae60; }
+        .btn-clear { background: #e74c3c; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.8rem; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        th { background: #2c3e50; color: #white; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
     </style>
 </head>
 <body>
 
-    <!-- 頁首 -->
-    <div style="background-color:#1a56a0;" class="text-white px-4 py-3">
-        <div class="text-xs text-blue-200 tracking-widest mb-1">VEHICLE ENTRY / EXIT REGISTRATION</div>
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold">車輛進出登記系統</h1>
-                <div class="text-blue-200 text-xs mt-1" id="todayDisplay"></div>
-            </div>
-            <div class="text-right">
-                <div class="text-3xl font-bold tabular-nums" id="currentTime"></div>
-            </div>
+<div class="container">
+    <h2>🚚 車輛進出管制</h2>
+    
+    <div class="form-group">
+        <label>月/日</label>
+        <input type="text" id="date" placeholder="如: 3.14">
+    </div>
+    <div class="form-group">
+        <label>公司行號</label>
+        <input type="text" id="company">
+    </div>
+    <div class="form-group">
+        <label>姓名</label>
+        <input type="text" id="name">
+    </div>
+    <div class="form-group">
+        <label>車號</label>
+        <input type="text" id="carId">
+    </div>
+    <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+            <label>進貨時間</label>
+            <input type="time" id="inTime">
+        </div>
+        <div class="form-group" style="flex:1;">
+            <label>出貨時間</label>
+            <input type="time" id="outTime">
         </div>
     </div>
 
-    <!-- 日期切換 -->
-    <div class="bg-blue-50 border-b border-blue-200 px-4 py-2 flex justify-between items-center">
-        <button onclick="changeDate(-1)" class="nav-btn px-3 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold text-sm">◀ 前一天</button>
-        <span id="dateDisplay" class="font-bold text-blue-800 text-sm"></span>
-        <button onclick="changeDate(1)" class="nav-btn px-3 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold text-sm">後一天 ▶</button>
+    <div class="btn-group">
+        <button class="btn-save" onclick="saveData()">新增登記</button>
+        <button class="btn-clear" onclick="clearAll()">清空列表</button>
     </div>
 
-    <div class="p-4 space-y-4 max-w-2xl mx-auto">
+    <table id="recordTable">
+        <thead>
+            <tr>
+                <th>日期</th>
+                <th>進/出時間</th>
+                <th>公司/車號</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
 
-        <!-- 登記表單 -->
-        <div class="bg-white border border-gray-300 rounded shadow-sm">
-            <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center gap-2">
-                <div class="w-1 h-5 bg-blue-700 rounded"></div>
-                <span class="font-bold text-gray-700 text-sm">車輛入場登記</span>
-            </div>
-            <div class="p-4 space-y-3">
+<script>
+    // 初始化日期
+    const now = new Date();
+    document.getElementById('date').value = (now.getMonth() + 1) + '.' + now.getDate();
 
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- 車牌 -->
-                    <div>
-                        <label class="text-xs text-gray-500 font-bold mb-1 block">車牌號碼 *</label>
-                        <select id="plateSelect" onchange="handlePlateChange(this.value)">
-                            <option value="">-- 選擇常用車牌 --</option>
-                            <option value="CUSTOM">手動輸入</option>
-                        </select>
-                        <input type="text" id="customPlate" placeholder="輸入車牌" class="mt-2 hidden" oninput="this.value = this.value.toUpperCase()">
-                    </div>
-
-                    <!-- 廠商 -->
-                    <div>
-                        <label class="text-xs text-gray-500 font-bold mb-1 block">廠商名稱 *</label>
-                        <select id="vendorSelect" onchange="handleVendorChange(this.value)">
-                            <option value="俊丰">俊丰</option>
-                            <option value="祥箐">祥箐</option>
-                            <option value="CUSTOM">自定義</option>
-                        </select>
-                        <input type="text" id="customVendor" placeholder="輸入廠商" class="mt-2 hidden">
-                    </div>
-                </div>
-
-                <!-- 司機姓名 -->
-                <div>
-                    <label class="text-xs text-gray-500 font-bold mb-1 block">司機姓名 *</label>
-                    <input type="text" id="driverName" placeholder="請輸入司機姓名">
-                </div>
-
-                <!-- 進入時間 -->
-                <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2 flex justify-between items-center">
-                    <span class="text-blue-600 text-sm font-bold">入場時間</span>
-                    <span id="entryTimeDisplay" class="text-blue-800 font-black text-lg tabular-nums"></span>
-                </div>
-
-                <button id="submitBtn" onclick="addEntry()"
-                    class="w-full py-3 rounded font-bold text-white text-base"
-                    style="background-color:#1a56a0;">
-                    確認入場登記 ▶
-                </button>
-            </div>
-        </div>
-
-        <!-- 記錄表格 -->
-        <div class="bg-white border border-gray-300 rounded shadow-sm">
-            <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-1 h-5 bg-blue-700 rounded"></div>
-                    <span class="font-bold text-gray-700 text-sm" id="tableHeader">載入中...</span>
-                </div>
-                <span id="totalCount" class="text-xs text-gray-500"></span>
-            </div>
-
-            <!-- 圖例 -->
-            <div class="flex gap-3 px-4 py-2 border-b border-gray-200 text-xs">
-                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded" style="background:#fff9e6;border:1px solid #d0d0d0;"></span>尚未出場</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded" style="background:white;border:1px solid #d0d0d0;"></span>已出場</span>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>車牌</th>
-                            <th>廠商</th>
-                            <th>司機</th>
-                            <th>入場</th>
-                            <th>出場</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-            <div id="tableFoot" class="border-t border-gray-200 px-4 py-2 bg-gray-50 text-right text-sm text-gray-500"></div>
-        </div>
-
-        <div class="text-center text-xs text-gray-400 py-2">車輛進出登記系統 © 2026</div>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
-            authDomain: "factor-security-d1965.firebaseapp.com",
-            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-            projectId: "factor-security-d1965",
-            storageBucket: "factor-security-d1965.firebasestorage.app",
-            messagingSenderId: "864846943143",
-            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+    function saveData() {
+        const data = {
+            date: document.getElementById('date').value,
+            inTime: document.getElementById('inTime').value,
+            outTime: document.getElementById('outTime').value,
+            company: document.getElementById('company').value,
+            name: document.getElementById('name').value,
+            carId: document.getElementById('carId').value
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let currentListenerRef = null;
-        let viewDate = new Date();
-        const weekDays = ['日','一','二','三','四','五','六'];
 
-        // 時鐘
-        function updateClock() {
-            const now = new Date();
-            const hh = String(now.getHours()).padStart(2,'0');
-            const mm = String(now.getMinutes()).padStart(2,'0');
-            const ss = String(now.getSeconds()).padStart(2,'0');
-            document.getElementById('currentTime').innerText = `${hh}:${mm}:${ss}`;
-            document.getElementById('entryTimeDisplay').innerText = `${hh}:${mm}`;
+        if(!data.company || !data.carId) { alert('請填寫公司與車號！'); return; }
+
+        let list = JSON.parse(localStorage.getItem('carLogs') || '[]');
+        list.push(data);
+        localStorage.setItem('carLogs', JSON.stringify(list));
+        renderTable();
+        
+        // 清空輸入框（保留日期）
+        ['company', 'name', 'carId', 'inTime', 'outTime'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function renderTable() {
+        const list = JSON.parse(localStorage.getItem('carLogs') || '[]');
+        const body = document.getElementById('tableBody');
+        body.innerHTML = list.map(item => `
+            <tr>
+                <td>${item.date}</td>
+                <td>${item.inTime}<br>${item.outTime}</td>
+                <td>${item.company}<br>${item.carId}</td>
+            </tr>
+        `).reverse().join(''); // 最新顯示在最上面
+    }
+
+    function clearAll() {
+        if(confirm('確定要清空所有登記資料嗎？')) {
+            localStorage.removeItem('carLogs');
+            renderTable();
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+    }
 
-        function setTodayDisplay() {
-            const now = new Date();
-            document.getElementById('todayDisplay').innerText =
-                `${now.getFullYear()} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日　星期${weekDays[now.getDay()]}`;
-        }
-        setTodayDisplay();
+    window.onload = renderTable;
+</script>
 
-        window.onload = () => { updateView(); loadPlates(); };
-
-        function formatDate(d) {
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        function changeDate(offset) {
-            viewDate.setDate(viewDate.getDate() + offset);
-            updateView();
-        }
-
-        function updateView() {
-            const y = viewDate.getFullYear();
-            const m = String(viewDate.getMonth()+1).padStart(2,'0');
-            const d = String(viewDate.getDate()).padStart(2,'0');
-            const w = weekDays[viewDate.getDay()];
-            document.getElementById('dateDisplay').innerText = `${y} 年 ${m} 月 ${d} 日　星期${w}`;
-            document.getElementById('tableHeader').innerText = `${y}/${m}/${d} 進出記錄`;
-            listenToDate(formatDate(viewDate));
-        }
-
-        function listenToDate(dateStr) {
-            if (currentListenerRef) currentListenerRef.off();
-            currentListenerRef = db.ref(`vehicleLog/${dateStr}`);
-            currentListenerRef.on('value', (snapshot) => {
-                const dataObj = snapshot.val();
-                const list = dataObj ? Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] })) : [];
-                list.sort((a, b) => a.enterTime.localeCompare(b.enterTime));
-                renderTable(list, dateStr);
-            });
-        }
-
-        function handlePlateChange(val) {
-            document.getElementById('customPlate').classList.toggle('hidden', val !== 'CUSTOM');
-        }
-
-        function handleVendorChange(val) {
-            document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
-        }
-
-        function addEntry() {
-            const plateSelect = document.getElementById('plateSelect').value;
-            let plate = (plateSelect === 'CUSTOM' || plateSelect === '')
-                ? document.getElementById('customPlate').value.trim()
-                : plateSelect;
-            const vendorSelect = document.getElementById('vendorSelect').value;
-            let vendor = vendorSelect === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : vendorSelect;
-            const driver = document.getElementById('driverName').value.trim();
-
-            if (!plate) return alert("請輸入或選擇車牌號碼！");
-            if (!vendor) return alert("請輸入廠商名稱！");
-            if (!driver) return alert("請輸入司機姓名！");
-
-            const now = new Date();
-            const enterTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            const dateStr = formatDate(now);
-
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "登記中...";
-            btn.disabled = true;
-
-            db.ref(`vehicleLog/${dateStr}`).push({ plate, vendor, driver, enterTime, leaveTime: "" })
-              .then(() => {
-                  savePlate(plate);
-                  document.getElementById('driverName').value = "";
-                  document.getElementById('plateSelect').value = "";
-                  document.getElementById('customPlate').value = "";
-                  document.getElementById('customPlate').classList.add('hidden');
-                  btn.innerText = "確認入場登記 ▶";
-                  btn.disabled = false;
-                  // 切換到今天
-                  viewDate = new Date();
-                  updateView();
-              })
-              .catch((error) => {
-                  alert("寫入失敗！\n錯誤：" + error.message);
-                  btn.innerText = "確認入場登記 ▶";
-                  btn.disabled = false;
-              });
-        }
-
-        // 登記出場時間
-        function markLeave(dateStr, id) {
-            if (!confirm("確定登記此車輛出場？")) return;
-            const now = new Date();
-            const leaveTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            db.ref(`vehicleLog/${dateStr}/${id}`).update({ leaveTime });
-        }
-
-        function savePlate(plate) {
-            const key = plate.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
-            db.ref(`commonPlates/${key}`).set({ plate });
-            loadPlates();
-        }
-
-        function loadPlates() {
-            db.ref('commonPlates').once('value', (snapshot) => {
-                const data = snapshot.val();
-                const select = document.getElementById('plateSelect');
-                select.innerHTML = `<option value="">-- 選擇常用車牌 --</option>`;
-                if (data) {
-                    Object.values(data).forEach(item => {
-                        select.innerHTML += `<option value="${item.plate}">${item.plate}</option>`;
-                    });
-                }
-                select.innerHTML += `<option value="CUSTOM">手動輸入</option>`;
-            });
-        }
-
-        function renderTable(data, dateStr) {
-            const body = document.getElementById('tableBody');
-            const foot = document.getElementById('tableFoot');
-            body.innerHTML = "";
-
-            if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="6" class="py-8 text-gray-400">本日尚無車輛登記記錄</td></tr>`;
-                foot.innerHTML = "";
-                document.getElementById('totalCount').innerText = "";
-                return;
-            }
-
-            let stillIn = 0;
-            data.forEach((item) => {
-                const row = body.insertRow();
-                if (!item.leaveTime) {
-                    row.className = "still-in";
-                    stillIn++;
-                }
-                row.insertCell(0).innerText = item.plate;
-                row.insertCell(1).innerText = item.vendor;
-                row.insertCell(2).innerText = item.driver;
-                row.insertCell(3).innerText = item.enterTime;
-
-                // 出場時間
-                const leaveCell = row.insertCell(4);
-                leaveCell.innerText = item.leaveTime || "---";
-                if (!item.leaveTime) leaveCell.style.color = "#f59e0b";
-
-                // 操作按鈕
-                const opCell = row.insertCell(5);
-                if (!item.leaveTime) {
-                    opCell.innerHTML = `<button onclick="markLeave('${dateStr}','${item.id}')"
-                        class="px-2 py-1 text-xs font-bold text-white rounded"
-                        style="background:#1a56a0;">出場</button>`;
-                } else {
-                    opCell.innerHTML = `<button onclick="deleteItem('${dateStr}','${item.id}')"
-                        class="text-red-400 font-bold px-2">✕</button>`;
-                }
-            });
-
-            document.getElementById('totalCount').innerText = `共 ${data.length} 筆`;
-            foot.innerHTML = `今日共 <span class="font-bold text-blue-700">${data.length}</span> 輛進入，
-                尚有 <span class="font-bold text-yellow-600">${stillIn}</span> 輛在場內`;
-        }
-
-        function deleteItem(date, id) {
-            if (confirm("確定刪除此筆記錄？")) {
-                db.ref(`vehicleLog/${date}/${id}`).remove();
-            }
-        }
-    </script>
 </body>
 </html>
