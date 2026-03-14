@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>送貨車輛登記系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; padding: 15px; }
+        .card { background: white; border: 2px solid #1e293b; border-radius: 12px; box-shadow: 4px 4px 0px #cbd5e1; margin-bottom: 20px; }
+        input, select { border: 2px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 18px; font-weight: bold; width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 2px solid #1e293b; padding: 10px 6px; text-align: center; font-size: 15px; font-weight: bold; }
+        th { background-color: #e2e8f0; }
+        .nav-btn { touch-action: manipulation; transition: transform 0.1s; }
+        .nav-btn:active { transform: scale(0.8); }
+        .success-flash { animation: flashGreen 0.5s ease-out; }
+        @keyframes flashGreen { 0% { background-color: #10b981; transform: scale(0.95); } 100% { background-color: #059669; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <!-- 輸入區 -->
+    <div class="card overflow-hidden">
+        <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+            <button onclick="changeDate(-1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg">◀</button>
+            <div class="text-center">
+                <div class="text-xs text-slate-400 font-bold tracking-widest mb-1">VEHICLE LOG</div>
+                <h2 id="dateDisplay" class="text-2xl font-black tracking-wider"></h2>
+            </div>
+            <button onclick="changeDate(1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg">▶</button>
+        </div>
+
+        <div class="p-5 space-y-4">
+
+            <!-- 車牌 -->
+            <div>
+                <label class="text-slate-500 text-sm font-bold mb-1 block">🚚 車牌號碼</label>
+                <div class="flex gap-2">
+                    <select id="plateSelect" onchange="handlePlateChange(this.value)" class="flex-1">
+                        <option value="">-- 選擇常用車牌 --</option>
+                        <option value="CUSTOM">➕ 手動輸入</option>
+                    </select>
+                </div>
+                <input type="text" id="customPlate" placeholder="請輸入車牌號碼" class="mt-2 hidden" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <!-- 廠商 -->
+            <div>
+                <label class="text-slate-500 text-sm font-bold mb-1 block">🏢 廠商名稱</label>
+                <select id="vendorSelect" onchange="handleVendorChange(this.value)">
+                    <option value="俊丰">俊丰</option>
+                    <option value="祥箐">祥箐</option>
+                    <option value="CUSTOM">➕ 自定義</option>
+                </select>
+                <input type="text" id="customVendor" placeholder="請輸入廠商名稱" class="mt-2 hidden">
+            </div>
+
+            <!-- 駕駛人 -->
+            <div>
+                <label class="text-slate-500 text-sm font-bold mb-1 block">👤 駕駛人姓名</label>
+                <input type="text" id="driverName" placeholder="請輸入駕駛人姓名">
+            </div>
+
+            <!-- 進入時間（自動） -->
+            <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3 border-2 border-slate-200">
+                <span class="text-slate-500 font-bold">🕐 進入時間：</span>
+                <span id="currentTime" class="text-slate-800 font-black text-xl"></span>
+            </div>
+
+            <button id="submitBtn" onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg">
+                登記入場 🚛
+            </button>
+        </div>
+    </div>
+
+    <!-- 記錄表格 -->
+    <div class="card overflow-hidden">
+        <div class="bg-slate-100 p-2 text-center border-b-2 border-slate-800 font-bold text-slate-600" id="tableHeader">載入中...</div>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>車牌</th>
+                        <th>廠商</th>
+                        <th>駕駛</th>
+                        <th>🗑️</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
+            authDomain: "factor-security-d1965.firebaseapp.com",
+            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
+            projectId: "factor-security-d1965",
+            storageBucket: "factor-security-d1965.firebasestorage.app",
+            messagingSenderId: "864846943143",
+            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let currentListenerRef = null;
+        let viewDate = new Date();
+
+        // 時鐘
+        function updateClock() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').innerText = `${hh}:${mm}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        window.onload = () => { updateView(); };
+
+        function formatDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function changeDate(offset) {
+            viewDate.setDate(viewDate.getDate() + offset);
+            updateView();
+        }
+
+        function updateView() {
+            const dateStr = formatDate(viewDate);
+            const display = `${viewDate.getFullYear()} / ${String(viewDate.getMonth()+1).padStart(2,'0')} / ${String(viewDate.getDate()).padStart(2,'0')}`;
+            document.getElementById('dateDisplay').innerText = display;
+            document.getElementById('tableHeader').innerText = `▼ ${display} 車輛記錄 ▼`;
+            listenToDate(dateStr);
+        }
+
+        function listenToDate(dateStr) {
+            if (currentListenerRef) currentListenerRef.off();
+            currentListenerRef = db.ref(`vehicleLog/${dateStr}`);
+            currentListenerRef.on('value', (snapshot) => {
+                const dataObj = snapshot.val();
+                const list = dataObj ? Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] })) : [];
+                list.sort((a, b) => a.enterTime.localeCompare(b.enterTime));
+                renderTable(list, dateStr);
+            });
+        }
+
+        function handlePlateChange(val) {
+            document.getElementById('customPlate').classList.toggle('hidden', val !== 'CUSTOM');
+        }
+
+        function handleVendorChange(val) {
+            document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
+        }
+
+        function addEntry() {
+            const plateSelect = document.getElementById('plateSelect').value;
+            let plate = plateSelect === 'CUSTOM' ? document.getElementById('customPlate').value.trim() : plateSelect;
+            if (!plate) plate = document.getElementById('customPlate').value.trim();
+
+            const vendorSelect = document.getElementById('vendorSelect').value;
+            let vendor = vendorSelect === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : vendorSelect;
+
+            const driver = document.getElementById('driverName').value.trim();
+
+            if (!plate) return alert("請輸入車牌號碼！");
+            if (!vendor) return alert("請輸入廠商名稱！");
+            if (!driver) return alert("請輸入駕駛人姓名！");
+
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const enterTime = `${hh}:${mm}`;
+            const dateStr = formatDate(now);
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "登記中...";
+            btn.disabled = true;
+
+            db.ref(`vehicleLog/${dateStr}`).push({ plate, vendor, driver, enterTime })
+              .then(() => {
+                  // 儲存常用車牌
+                  savePlate(plate);
+                  document.getElementById('driverName').value = "";
+                  btn.innerText = "登記入場 🚛";
+                  btn.disabled = false;
+                  btn.classList.add('success-flash');
+                  setTimeout(() => btn.classList.remove('success-flash'), 500);
+              })
+              .catch((error) => {
+                  alert("寫入失敗！\n錯誤：" + error.message);
+                  btn.innerText = "登記入場 🚛";
+                  btn.disabled = false;
+              });
+        }
+
+        // 儲存常用車牌到 Firebase
+        function savePlate(plate) {
+            db.ref(`commonPlates/${plate}`).set({ plate });
+            loadPlates();
+        }
+
+        // 載入常用車牌
+        function loadPlates() {
+            db.ref('commonPlates').once('value', (snapshot) => {
+                const data = snapshot.val();
+                const select = document.getElementById('plateSelect');
+                const currentVal = select.value;
+                select.innerHTML = `<option value="">-- 選擇常用車牌 --</option>`;
+                if (data) {
+                    Object.values(data).forEach(item => {
+                        select.innerHTML += `<option value="${item.plate}">${item.plate}</option>`;
+                    });
+                }
+                select.innerHTML += `<option value="CUSTOM">➕ 手動輸入</option>`;
+                select.value = currentVal;
+            });
+        }
+
+        function renderTable(data, dateStr) {
+            const body = document.getElementById('tableBody');
+            const foot = document.getElementById('tableFoot');
+            body.innerHTML = "";
+
+            if (data.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="py-10 text-slate-400 font-normal">尚無記錄</td></tr>`;
+                foot.innerHTML = ""; return;
+            }
+
+            data.forEach((item) => {
+                const row = body.insertRow();
+                row.insertCell(0).innerText = item.enterTime;
+                row.insertCell(1).innerText = item.plate;
+                row.insertCell(2).innerText = item.vendor;
+                row.insertCell(3).innerText = item.driver;
+                row.insertCell(4).innerHTML = `<button onclick="deleteItem('${dateStr}', '${item.id}')">❌</button>`;
+            });
+
+            foot.innerHTML = `
+                <tr class="bg-slate-800 text-white">
+                    <td colspan="5">今日共 ${data.length} 輛車進入</td>
+                </tr>
+            `;
+        }
+
+        function deleteItem(date, id) {
+            if (confirm("確定刪除此筆記錄？")) {
+                db.ref(`vehicleLog/${date}/${id}`).remove();
+            }
+        }
+
+        // 初始化載入常用車牌
+        loadPlates();
+    </script>
+</body>
+</html>
