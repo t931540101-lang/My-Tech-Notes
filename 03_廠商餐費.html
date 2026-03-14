@@ -18,16 +18,18 @@
         th, td { border: 2px solid #1e293b; padding: 12px 8px; text-align: center; font-size: 16px; font-weight: bold; }
         th { background-color: #e2e8f0; }
         .period-header { background-color: #1e293b; color: #f8fafc; font-size: 14px; padding: 4px; }
-        .period-subtotal { background-color: #f8fafc; color: #64748b; font-size: 14px; font-style: italic; }
+        .vendor-junfeng { background-color: #dbeafe; }
+        .vendor-xiangqing { background-color: #dcfce7; }
+        .vendor-custom { background-color: #fef9c3; }
         .nav-btn { touch-action: manipulation; transition: transform 0.1s; }
         .nav-btn:active { transform: scale(0.8); }
-        /* 新增寫入成功的動畫 */
         .success-flash { animation: flashGreen 0.5s ease-out; }
         @keyframes flashGreen { 0% { background-color: #10b981; transform: scale(0.95); } 100% { background-color: #059669; transform: scale(1); } }
     </style>
 </head>
 <body>
 
+    <!-- 輸入區 -->
     <div class="card overflow-hidden">
         <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
             <button onclick="changeMonth(-1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">◀</button>
@@ -37,14 +39,15 @@
             </div>
             <button onclick="changeMonth(1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">▶</button>
         </div>
-        
+
         <div class="p-5 space-y-4">
             <div class="flex items-center gap-2">
                 <input type="date" id="entryDate" onchange="updatePeriodHint()">
                 <span id="periodHint" class="whitespace-nowrap px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">前期</span>
             </div>
+
             <div class="flex gap-2">
-                <select id="vendorSelect" onchange="checkVendor(this.value)">
+                <select id="vendorSelect" onchange="handleVendorChange(this.value)">
                     <option value="俊丰">俊丰</option>
                     <option value="祥箐">祥箐</option>
                     <option value="CUSTOM">➕ 自定義</option>
@@ -54,15 +57,33 @@
                     <input type="number" id="quantity" value="1" class="w-16 border-none p-2 text-center">
                 </div>
             </div>
+
             <input type="text" id="customVendor" placeholder="請輸入廠商名稱" class="hidden">
+
+            <!-- 單價顯示+可修改 -->
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 font-bold whitespace-nowrap">單價 $</span>
+                <input type="number" id="unitPrice" value="65" class="text-center">
+                <span class="text-slate-400 text-sm whitespace-nowrap">元／份</span>
+            </div>
+
             <button id="submitBtn" onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-200">
                 寫入帳單 ✍️
             </button>
         </div>
     </div>
 
+    <!-- 表格區 -->
     <div class="card overflow-hidden">
         <div class="bg-slate-100 p-2 text-center border-b-2 border-slate-800 font-bold text-slate-600" id="tableHeader">載入中...</div>
+
+        <!-- 廠商顏色說明 -->
+        <div class="flex gap-3 p-3 border-b-2 border-slate-200 flex-wrap">
+            <span class="px-3 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-700">🔵 俊丰</span>
+            <span class="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">🟢 祥箐</span>
+            <span class="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700">🟡 其他</span>
+        </div>
+
         <div class="overflow-x-auto">
             <table id="mainTable">
                 <thead>
@@ -91,18 +112,26 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let currentListenerRef = null; 
+        let currentListenerRef = null;
         let viewYear = new Date().getFullYear();
         let viewMonth = new Date().getMonth() + 1;
 
+        // 廠商預設單價
+        const vendorPrices = { "俊丰": 65, "祥箐": 65 };
+
+        // 廠商顏色對應
+        function getVendorClass(vendor) {
+            if (vendor === "俊丰") return "vendor-junfeng";
+            if (vendor === "祥箐") return "vendor-xiangqing";
+            return "vendor-custom";
+        }
+
         window.onload = () => { updateView(); };
 
-        // 🌟 修復點 1：用字串切割來判斷日期，避免瀏覽器相容性問題
         function updatePeriodHint() {
-            const dateStr = document.getElementById('entryDate').value; // e.g., "2026-03-15"
+            const dateStr = document.getElementById('entryDate').value;
             if (!dateStr) return;
-            const d = parseInt(dateStr.split('-')[2]); // 直接抓出日期數字
-            
+            const d = parseInt(dateStr.split('-')[2]);
             const hint = document.getElementById('periodHint');
             if (d <= 20) {
                 hint.innerText = "前期 (1-20)";
@@ -110,6 +139,16 @@
             } else {
                 hint.innerText = "後期 (21-末)";
                 hint.className = "whitespace-nowrap px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold";
+            }
+        }
+
+        function handleVendorChange(val) {
+            document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
+            // 自動帶入該廠商的預設單價
+            if (vendorPrices[val] !== undefined) {
+                document.getElementById('unitPrice').value = vendorPrices[val];
+            } else {
+                document.getElementById('unitPrice').value = 65;
             }
         }
 
@@ -146,45 +185,38 @@
             });
         }
 
-        function checkVendor(val) { document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM'); }
-
-        // 🌟 修復點 2：加入 Promise 和防呆機制
         function addEntry() {
             const date = document.getElementById('entryDate').value;
             const select = document.getElementById('vendorSelect');
             let vendor = select.value === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : select.value;
-            
             if (!vendor) return alert("請輸入廠商！");
             if (!date) return alert("日期錯誤，請重新選擇！");
-            
-            const qty = parseInt(document.getElementById('quantity').value) || 0;
-            if (qty > 0) {
-                const entryMonth = date.slice(0, 7);
-                const day = parseInt(date.split('-')[2]); // 同樣用字串切割抓日期
-                const period = day <= 20 ? "A" : "B"; 
-                
-                const btn = document.getElementById('submitBtn');
-                btn.innerText = "寫入中...";
-                btn.disabled = true;
 
-                // 🌟 使用 .then() 確保資料真的寫入 Firebase
-                db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * 65, period })
-                  .then(() => {
-                      // 寫入成功，恢復按鈕狀態並加入閃爍特效
-                      document.getElementById('quantity').value = "1";
-                      btn.innerText = "寫入帳單 ✍️";
-                      btn.disabled = false;
-                      btn.classList.add('success-flash');
-                      setTimeout(() => btn.classList.remove('success-flash'), 500);
-                  })
-                  .catch((error) => {
-                      alert("寫入失敗，請檢查網路或 Firebase 權限！\n錯誤碼：" + error.message);
-                      btn.innerText = "寫入帳單 ✍️";
-                      btn.disabled = false;
-                  });
-            } else {
-                alert("份數必須大於 0");
-            }
+            const qty = parseInt(document.getElementById('quantity').value) || 0;
+            const unitPrice = parseInt(document.getElementById('unitPrice').value) || 65;
+            if (qty <= 0) return alert("份數必須大於 0");
+
+            const entryMonth = date.slice(0, 7);
+            const day = parseInt(date.split('-')[2]);
+            const period = day <= 20 ? "A" : "B";
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "寫入中...";
+            btn.disabled = true;
+
+            db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * unitPrice, unitPrice, period })
+              .then(() => {
+                  document.getElementById('quantity').value = "1";
+                  btn.innerText = "寫入帳單 ✍️";
+                  btn.disabled = false;
+                  btn.classList.add('success-flash');
+                  setTimeout(() => btn.classList.remove('success-flash'), 500);
+              })
+              .catch((error) => {
+                  alert("寫入失敗！\n錯誤：" + error.message);
+                  btn.innerText = "寫入帳單 ✍️";
+                  btn.disabled = false;
+              });
         }
 
         function renderTable(data) {
@@ -211,6 +243,7 @@
                 lastPeriod = item.period;
 
                 const row = body.insertRow();
+                row.className = getVendorClass(item.vendor);
                 row.insertCell(0).innerText = item.date.split('-')[2] + "日";
                 row.insertCell(1).innerText = item.vendor;
                 row.insertCell(2).innerText = `$${item.price}`;
@@ -218,10 +251,16 @@
                 row.insertCell(3).innerHTML = `<button onclick="deleteItem('${viewYear}-${mm}', '${item.id}')">❌</button>`;
             });
 
+            // 廠商分開小計
+            let vendorRows = Object.entries(vendorTotals).map(([v, total]) =>
+                `<tr class="${getVendorClass(v)}"><td colspan="2">　${v} 小計</td><td colspan="2">$${total}</td></tr>`
+            ).join('');
+
             foot.innerHTML = `
-                <tr class="period-subtotal"><td colspan="2">1-20號(前期)小計</td><td colspan="2">$${sumA}</td></tr>
-                <tr class="period-subtotal"><td colspan="2">21-末(後期)小計</td><td colspan="2">$${sumB}</td></tr>
-                <tr class="bg-slate-800 text-white text-lg"><td colspan="2">本月總帳金額</td><td colspan="2">$${sumA + sumB}</td></tr>
+                ${vendorRows}
+                <tr class="bg-slate-100"><td colspan="2">前期小計</td><td colspan="2">$${sumA}</td></tr>
+                <tr class="bg-slate-100"><td colspan="2">後期小計</td><td colspan="2">$${sumB}</td></tr>
+                <tr class="bg-slate-800 text-white text-lg"><td colspan="2">本月總帳</td><td colspan="2">$${sumA + sumB}</td></tr>
             `;
         }
 
