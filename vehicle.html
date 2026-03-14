@@ -2,121 +2,127 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>車輛管制登記簿 - 黑曜石計畫</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>車輛進出管制 - 黑曜石版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f4f4; color: #333; }
-        .container { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2c3e50; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #2c3e50; padding-bottom: 5px; }
-        .form-group { margin-bottom: 10px; }
-        label { display: block; font-weight: bold; font-size: 0.9rem; margin-bottom: 3px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 10px; border: none; border-radius: 4px; color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-save { background: #27ae60; }
-        .btn-clear { background: #e74c3c; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.8rem; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
-        th { background: #2c3e50; color: #white; color: white; }
-        tr:nth-child(even) { background: #f9f9f9; }
+        body { font-family: sans-serif; background-color: #121212; color: #e0e0e0; }
+        .obsidian-input { background: #1e1e1e; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; width: 100%; }
+        .obsidian-input:focus { border-color: #00adb5; outline: none; }
+        .time-badge { background: #00adb5; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; background: #1e1e1e; border-radius: 8px; overflow: hidden; }
+        th { background: #252525; color: #00adb5; padding: 10px; font-size: 13px; border-bottom: 2px solid #333; }
+        td { border-bottom: 1px solid #333; padding: 12px 8px; text-align: center; font-size: 14px; }
+        .btn-action { background: #00adb5; color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; width: 100%; }
     </style>
 </head>
-<body>
+<body class="p-4">
 
-<div class="container">
-    <h2>🚚 車輛進出管制</h2>
-    
-    <div class="form-group">
-        <label>月/日</label>
-        <input type="text" id="date" placeholder="如: 3.14">
+    <div class="mb-6 border-l-4 border-[#00adb5] pl-4">
+        <h1 class="text-2xl font-bold text-white">黑曜石車輛管制</h1>
+        <p class="text-xs text-gray-400">專為黑哥手寫簿設計 (Win10 22H2 戰友版)</p>
     </div>
-    <div class="form-group">
-        <label>公司行號</label>
-        <input type="text" id="company">
-    </div>
-    <div class="form-group">
-        <label>姓名</label>
-        <input type="text" id="name">
-    </div>
-    <div class="form-group">
-        <label>車號</label>
-        <input type="text" id="carId">
-    </div>
-    <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;">
-            <label>進貨時間</label>
-            <input type="time" id="inTime">
+
+    <div class="space-y-4 bg-[#1e1e1e] p-5 rounded-xl border border-[#333] shadow-2xl">
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-xs text-[#00adb5] mb-1 block">日期 (月.日)</label>
+                <input type="text" id="customDate" class="obsidian-input" placeholder="3.14">
+            </div>
+            <div>
+                <label class="text-xs text-[#00adb5] mb-1 block">車牌號碼</label>
+                <input type="text" id="plate" class="obsidian-input" placeholder="ABC-1234" oninput="this.value=this.value.toUpperCase()">
+            </div>
         </div>
-        <div class="form-group" style="flex:1;">
-            <label>出貨時間</label>
-            <input type="time" id="outTime">
+
+        <div>
+            <label class="text-xs text-[#00adb5] mb-1 block">公司行號 (如: 正隆、富盟)</label>
+            <input type="text" id="company" class="obsidian-input" placeholder="請輸入廠商名稱">
+        </div>
+
+        <div>
+            <label class="text-xs text-[#00adb5] mb-1 block">司機姓名</label>
+            <input type="text" id="driver" class="obsidian-input" placeholder="照片上的姓名">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-xs text-[#00adb5] mb-1 block">進貨時間</label>
+                <input type="time" id="inTime" class="obsidian-input">
+            </div>
+            <div>
+                <label class="text-xs text-[#00adb5] mb-1 block">出貨時間</label>
+                <input type="time" id="outTime" class="obsidian-input">
+            </div>
+        </div>
+
+        <button onclick="saveToLocal()" class="btn-action mt-2">新增登記記錄 (存至手機)</button>
+    </div>
+
+    <div class="mt-8">
+        <div class="flex justify-between items-end mb-3">
+            <h2 class="text-lg font-bold">今日進出記錄</h2>
+            <button onclick="clearLocal()" class="text-xs text-red-400 underline">清空暫存</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>進/出時間</th>
+                        <th>公司/車號</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-save" onclick="saveData()">新增登記</button>
-        <button class="btn-clear" onclick="clearAll()">清空列表</button>
-    </div>
+    <script>
+        // 初始化日期與時間
+        const now = new Date();
+        document.getElementById('customDate').value = (now.getMonth() + 1) + '.' + now.getDate();
+        document.getElementById('inTime').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-    <table id="recordTable">
-        <thead>
-            <tr>
-                <th>日期</th>
-                <th>進/出時間</th>
-                <th>公司/車號</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
-</div>
+        function saveToLocal() {
+            const entry = {
+                date: document.getElementById('customDate').value,
+                plate: document.getElementById('plate').value,
+                company: document.getElementById('company').value,
+                driver: document.getElementById('driver').value,
+                inTime: document.getElementById('inTime').value,
+                outTime: document.getElementById('outTime').value
+            };
+            
+            if(!entry.plate || !entry.company) return alert('車牌跟公司要寫喔！');
 
-<script>
-    // 初始化日期
-    const now = new Date();
-    document.getElementById('date').value = (now.getMonth() + 1) + '.' + now.getDate();
-
-    function saveData() {
-        const data = {
-            date: document.getElementById('date').value,
-            inTime: document.getElementById('inTime').value,
-            outTime: document.getElementById('outTime').value,
-            company: document.getElementById('company').value,
-            name: document.getElementById('name').value,
-            carId: document.getElementById('carId').value
-        };
-
-        if(!data.company || !data.carId) { alert('請填寫公司與車號！'); return; }
-
-        let list = JSON.parse(localStorage.getItem('carLogs') || '[]');
-        list.push(data);
-        localStorage.setItem('carLogs', JSON.stringify(list));
-        renderTable();
-        
-        // 清空輸入框（保留日期）
-        ['company', 'name', 'carId', 'inTime', 'outTime'].forEach(id => document.getElementById(id).value = '');
-    }
-
-    function renderTable() {
-        const list = JSON.parse(localStorage.getItem('carLogs') || '[]');
-        const body = document.getElementById('tableBody');
-        body.innerHTML = list.map(item => `
-            <tr>
-                <td>${item.date}</td>
-                <td>${item.inTime}<br>${item.outTime}</td>
-                <td>${item.company}<br>${item.carId}</td>
-            </tr>
-        `).reverse().join(''); // 最新顯示在最上面
-    }
-
-    function clearAll() {
-        if(confirm('確定要清空所有登記資料嗎？')) {
-            localStorage.removeItem('carLogs');
-            renderTable();
+            let logs = JSON.parse(localStorage.getItem('blackLog_car') || '[]');
+            logs.unshift(entry);
+            localStorage.setItem('blackLog_car', JSON.stringify(logs));
+            render();
+            
+            // 清除
+            ['plate', 'company', 'driver', 'outTime'].forEach(id => document.getElementById(id).value = '');
         }
-    }
 
-    window.onload = renderTable;
-</script>
+        function render() {
+            const logs = JSON.parse(localStorage.getItem('blackLog_car') || '[]');
+            const html = logs.map(l => `
+                <tr>
+                    <td class="text-gray-400">${l.date}</td>
+                    <td><span class="text-[#00adb5]">${l.inTime}</span><br><span class="text-gray-500">${l.outTime || '--:--'}</span></td>
+                    <td class="text-left font-medium">${l.company}<br><span class="text-xs text-gray-500">${l.plate} (${l.driver})</span></td>
+                </tr>
+            `).join('');
+            document.getElementById('tableBody').innerHTML = html || '<tr><td colspan="3" class="py-10 text-gray-600">目前尚無記錄</td></tr>';
+        }
 
+        function clearLocal() {
+            if(confirm('確定要清空嗎？')) { localStorage.removeItem('blackLog_car'); render(); }
+        }
+
+        window.onload = render;
+    </script>
 </body>
 </html>
