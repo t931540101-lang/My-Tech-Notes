@@ -10,37 +10,38 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         * { box-sizing: border-box; }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f5; padding: 0; margin: 0; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
         input, select { border: 1px solid #c0c0c0; border-radius: 4px; padding: 10px 12px; font-size: 16px; width: 100%; background: white; }
         input:focus, select:focus { outline: 2px solid #1a56a0; border-color: #1a56a0; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #1a56a0; color: white; padding: 10px 8px; text-align: center; font-size: 14px; font-weight: 500; }
-        td { border: 1px solid #d0d0d0; padding: 10px 8px; text-align: center; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background-color: #1a56a0; color: white; padding: 8px 4px; text-align: center; font-size: 13px; }
+        td { border: 1px solid #d0d0d0; padding: 8px 4px; text-align: center; }
         tr:nth-child(even) { background-color: #f0f4fa; }
+        .still-in { background-color: #fff9e6 !important; }
         .nav-btn { touch-action: manipulation; }
     </style>
 </head>
 <body>
 
     <!-- 頁首 -->
-    <div style="background-color: #1a56a0;" class="text-white px-4 py-3">
-        <div class="text-xs text-blue-200 tracking-widest mb-1">VEHICLE ENTRY REGISTRATION SYSTEM</div>
+    <div style="background-color:#1a56a0;" class="text-white px-4 py-3">
+        <div class="text-xs text-blue-200 tracking-widest mb-1">VEHICLE ENTRY / EXIT REGISTRATION</div>
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold">車輛進出登記系統</h1>
                 <div class="text-blue-200 text-xs mt-1" id="todayDisplay"></div>
             </div>
             <div class="text-right">
-                <div class="text-3xl font-bold" id="currentTime"></div>
+                <div class="text-3xl font-bold tabular-nums" id="currentTime"></div>
             </div>
         </div>
     </div>
 
     <!-- 日期切換 -->
     <div class="bg-blue-50 border-b border-blue-200 px-4 py-2 flex justify-between items-center">
-        <button onclick="changeDate(-1)" class="nav-btn px-4 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold">◀ 前一天</button>
+        <button onclick="changeDate(-1)" class="nav-btn px-3 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold text-sm">◀ 前一天</button>
         <span id="dateDisplay" class="font-bold text-blue-800 text-sm"></span>
-        <button onclick="changeDate(1)" class="nav-btn px-4 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold">後一天 ▶</button>
+        <button onclick="changeDate(1)" class="nav-btn px-3 py-1 bg-white border border-blue-300 rounded text-blue-700 font-bold text-sm">後一天 ▶</button>
     </div>
 
     <div class="p-4 space-y-4 max-w-2xl mx-auto">
@@ -49,7 +50,7 @@
         <div class="bg-white border border-gray-300 rounded shadow-sm">
             <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center gap-2">
                 <div class="w-1 h-5 bg-blue-700 rounded"></div>
-                <span class="font-bold text-gray-700 text-sm">車輛登記</span>
+                <span class="font-bold text-gray-700 text-sm">車輛入場登記</span>
             </div>
             <div class="p-4 space-y-3">
 
@@ -76,22 +77,22 @@
                     </div>
                 </div>
 
-                <!-- 駕駛人 -->
+                <!-- 司機姓名 -->
                 <div>
-                    <label class="text-xs text-gray-500 font-bold mb-1 block">駕駛人姓名 *</label>
-                    <input type="text" id="driverName" placeholder="請輸入駕駛人姓名">
+                    <label class="text-xs text-gray-500 font-bold mb-1 block">司機姓名 *</label>
+                    <input type="text" id="driverName" placeholder="請輸入司機姓名">
                 </div>
 
                 <!-- 進入時間 -->
                 <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2 flex justify-between items-center">
-                    <span class="text-blue-600 text-sm font-bold">登記時間</span>
-                    <span id="entryTimeDisplay" class="text-blue-800 font-black text-lg"></span>
+                    <span class="text-blue-600 text-sm font-bold">入場時間</span>
+                    <span id="entryTimeDisplay" class="text-blue-800 font-black text-lg tabular-nums"></span>
                 </div>
 
                 <button id="submitBtn" onclick="addEntry()"
-                    class="w-full py-3 rounded font-bold text-white text-base transition-all"
-                    style="background-color: #1a56a0;">
-                    確認登記 ▶
+                    class="w-full py-3 rounded font-bold text-white text-base"
+                    style="background-color:#1a56a0;">
+                    確認入場登記 ▶
                 </button>
             </div>
         </div>
@@ -105,15 +106,23 @@
                 </div>
                 <span id="totalCount" class="text-xs text-gray-500"></span>
             </div>
+
+            <!-- 圖例 -->
+            <div class="flex gap-3 px-4 py-2 border-b border-gray-200 text-xs">
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded" style="background:#fff9e6;border:1px solid #d0d0d0;"></span>尚未出場</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded" style="background:white;border:1px solid #d0d0d0;"></span>已出場</span>
+            </div>
+
             <div class="overflow-x-auto">
                 <table>
                     <thead>
                         <tr>
-                            <th>進入時間</th>
-                            <th>車牌號碼</th>
+                            <th>車牌</th>
                             <th>廠商</th>
-                            <th>駕駛人</th>
-                            <th>刪除</th>
+                            <th>司機</th>
+                            <th>入場</th>
+                            <th>出場</th>
+                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -122,10 +131,7 @@
             <div id="tableFoot" class="border-t border-gray-200 px-4 py-2 bg-gray-50 text-right text-sm text-gray-500"></div>
         </div>
 
-        <!-- 頁尾 -->
-        <div class="text-center text-xs text-gray-400 py-2">
-            車輛進出登記系統 © 2026
-        </div>
+        <div class="text-center text-xs text-gray-400 py-2">車輛進出登記系統 © 2026</div>
     </div>
 
     <script>
@@ -142,28 +148,24 @@
         const db = firebase.database();
         let currentListenerRef = null;
         let viewDate = new Date();
+        const weekDays = ['日','一','二','三','四','五','六'];
 
         // 時鐘
         function updateClock() {
             const now = new Date();
-            const hh = String(now.getHours()).padStart(2, '0');
-            const mm = String(now.getMinutes()).padStart(2, '0');
-            const ss = String(now.getSeconds()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2,'0');
+            const mm = String(now.getMinutes()).padStart(2,'0');
+            const ss = String(now.getSeconds()).padStart(2,'0');
             document.getElementById('currentTime').innerText = `${hh}:${mm}:${ss}`;
             document.getElementById('entryTimeDisplay').innerText = `${hh}:${mm}`;
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 今日日期
-        const weekDays = ['日','一','二','三','四','五','六'];
         function setTodayDisplay() {
             const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth()+1).padStart(2,'0');
-            const d = String(now.getDate()).padStart(2,'0');
-            const w = weekDays[now.getDay()];
-            document.getElementById('todayDisplay').innerText = `${y} 年 ${m} 月 ${d} 日　星期${w}`;
+            document.getElementById('todayDisplay').innerText =
+                `${now.getFullYear()} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日　星期${weekDays[now.getDay()]}`;
         }
         setTodayDisplay();
 
@@ -184,7 +186,7 @@
             const d = String(viewDate.getDate()).padStart(2,'0');
             const w = weekDays[viewDate.getDay()];
             document.getElementById('dateDisplay').innerText = `${y} 年 ${m} 月 ${d} 日　星期${w}`;
-            document.getElementById('tableHeader').innerText = `${y}/${m}/${d} 車輛進出記錄`;
+            document.getElementById('tableHeader').innerText = `${y}/${m}/${d} 進出記錄`;
             listenToDate(formatDate(viewDate));
         }
 
@@ -209,7 +211,7 @@
 
         function addEntry() {
             const plateSelect = document.getElementById('plateSelect').value;
-            let plate = plateSelect === 'CUSTOM' || plateSelect === ''
+            let plate = (plateSelect === 'CUSTOM' || plateSelect === '')
                 ? document.getElementById('customPlate').value.trim()
                 : plateSelect;
             const vendorSelect = document.getElementById('vendorSelect').value;
@@ -218,7 +220,7 @@
 
             if (!plate) return alert("請輸入或選擇車牌號碼！");
             if (!vendor) return alert("請輸入廠商名稱！");
-            if (!driver) return alert("請輸入駕駛人姓名！");
+            if (!driver) return alert("請輸入司機姓名！");
 
             const now = new Date();
             const enterTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -228,25 +230,37 @@
             btn.innerText = "登記中...";
             btn.disabled = true;
 
-            db.ref(`vehicleLog/${dateStr}`).push({ plate, vendor, driver, enterTime })
+            db.ref(`vehicleLog/${dateStr}`).push({ plate, vendor, driver, enterTime, leaveTime: "" })
               .then(() => {
                   savePlate(plate);
                   document.getElementById('driverName').value = "";
                   document.getElementById('plateSelect').value = "";
                   document.getElementById('customPlate').value = "";
                   document.getElementById('customPlate').classList.add('hidden');
-                  btn.innerText = "確認登記 ▶";
+                  btn.innerText = "確認入場登記 ▶";
                   btn.disabled = false;
+                  // 切換到今天
+                  viewDate = new Date();
+                  updateView();
               })
               .catch((error) => {
                   alert("寫入失敗！\n錯誤：" + error.message);
-                  btn.innerText = "確認登記 ▶";
+                  btn.innerText = "確認入場登記 ▶";
                   btn.disabled = false;
               });
         }
 
+        // 登記出場時間
+        function markLeave(dateStr, id) {
+            if (!confirm("確定登記此車輛出場？")) return;
+            const now = new Date();
+            const leaveTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            db.ref(`vehicleLog/${dateStr}/${id}`).update({ leaveTime });
+        }
+
         function savePlate(plate) {
-            db.ref(`commonPlates/${plate.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}`).set({ plate });
+            const key = plate.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
+            db.ref(`commonPlates/${key}`).set({ plate });
             loadPlates();
         }
 
@@ -270,28 +284,48 @@
             body.innerHTML = "";
 
             if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="py-8 text-gray-400">本日尚無車輛登記記錄</td></tr>`;
+                body.innerHTML = `<tr><td colspan="6" class="py-8 text-gray-400">本日尚無車輛登記記錄</td></tr>`;
                 foot.innerHTML = "";
                 document.getElementById('totalCount').innerText = "";
                 return;
             }
 
+            let stillIn = 0;
             data.forEach((item) => {
                 const row = body.insertRow();
-                row.insertCell(0).innerText = item.enterTime;
-                row.insertCell(1).innerText = item.plate;
-                row.insertCell(2).innerText = item.vendor;
-                row.insertCell(3).innerText = item.driver;
-                const delCell = row.insertCell(4);
-                delCell.innerHTML = `<button onclick="deleteItem('${dateStr}','${item.id}')" class="text-red-500 font-bold px-2">✕</button>`;
+                if (!item.leaveTime) {
+                    row.className = "still-in";
+                    stillIn++;
+                }
+                row.insertCell(0).innerText = item.plate;
+                row.insertCell(1).innerText = item.vendor;
+                row.insertCell(2).innerText = item.driver;
+                row.insertCell(3).innerText = item.enterTime;
+
+                // 出場時間
+                const leaveCell = row.insertCell(4);
+                leaveCell.innerText = item.leaveTime || "---";
+                if (!item.leaveTime) leaveCell.style.color = "#f59e0b";
+
+                // 操作按鈕
+                const opCell = row.insertCell(5);
+                if (!item.leaveTime) {
+                    opCell.innerHTML = `<button onclick="markLeave('${dateStr}','${item.id}')"
+                        class="px-2 py-1 text-xs font-bold text-white rounded"
+                        style="background:#1a56a0;">出場</button>`;
+                } else {
+                    opCell.innerHTML = `<button onclick="deleteItem('${dateStr}','${item.id}')"
+                        class="text-red-400 font-bold px-2">✕</button>`;
+                }
             });
 
             document.getElementById('totalCount').innerText = `共 ${data.length} 筆`;
-            foot.innerHTML = `本日共登記 <span class="font-bold text-blue-700">${data.length}</span> 輛車輛進入`;
+            foot.innerHTML = `今日共 <span class="font-bold text-blue-700">${data.length}</span> 輛進入，
+                尚有 <span class="font-bold text-yellow-600">${stillIn}</span> 輛在場內`;
         }
 
         function deleteItem(date, id) {
-            if (confirm("確定刪除此筆登記記錄？")) {
+            if (confirm("確定刪除此筆記錄？")) {
                 db.ref(`vehicleLog/${date}/${id}`).remove();
             }
         }
