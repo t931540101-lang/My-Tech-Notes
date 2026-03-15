@@ -3,125 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>車輛進出管制 - 黑曜石版</title>
+    <title>車輛進出登記 - 黑曜石 250cc 版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background-color: #121212; color: #e0e0e0; }
-        .obsidian-input { background: #1e1e1e; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; width: 100%; }
+        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, sans-serif; }
+        .obsidian-input { background: #1e1e1e; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; }
         .obsidian-input:focus { border-color: #00adb5; outline: none; }
-        .time-badge { background: #00adb5; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; background: #1e1e1e; border-radius: 8px; overflow: hidden; }
-        th { background: #252525; color: #00adb5; padding: 10px; font-size: 13px; border-bottom: 2px solid #333; }
+        .vendor-btn { background: #333; border: 1px solid #444; color: #00adb5; padding: 6px 12px; border-radius: 20px; font-size: 13px; }
+        .btn-action { background: #00adb5; color: black; padding: 14px; border-radius: 10px; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-action:active { transform: scale(0.95); background: #008c92; }
+        table { width: 100%; background: #1e1e1e; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; }
+        th { background: #252525; color: #00adb5; padding: 10px; font-size: 13px; text-align: center; }
         td { border-bottom: 1px solid #333; padding: 12px 8px; text-align: center; font-size: 14px; }
-        .btn-action { background: #00adb5; color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; width: 100%; }
+        .status-badge { background: #444; color: #aaa; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .status-in { color: #f59e0b; border: 1px solid #f59e0b; }
     </style>
 </head>
 <body class="p-4">
 
-    <div class="mb-6 border-l-4 border-[#00adb5] pl-4">
+    <div class="mb-4">
         <h1 class="text-2xl font-bold text-white">黑曜石車輛管制</h1>
-        <p class="text-xs text-gray-400">專為黑哥手寫簿設計 (Win10 22H2 戰友版)</p>
+        <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+            <span>Win10 22H2 戰友版</span>
+            <span id="statText">載入中...</span>
+        </div>
     </div>
 
-    <div class="space-y-4 bg-[#1e1e1e] p-5 rounded-xl border border-[#333] shadow-2xl">
-        <div class="grid grid-cols-2 gap-3">
-            <div>
-                <label class="text-xs text-[#00adb5] mb-1 block">日期 (月.日)</label>
-                <input type="text" id="customDate" class="obsidian-input" placeholder="3.14">
+    <div class="bg-[#1e1e1e] p-4 rounded-xl border border-[#333] space-y-4 shadow-xl">
+        <div class="flex gap-2">
+            <div class="flex-1">
+                <label class="text-[10px] text-[#00adb5] uppercase font-bold">日期</label>
+                <input type="text" id="date" class="obsidian-input" placeholder="3.14">
             </div>
-            <div>
-                <label class="text-xs text-[#00adb5] mb-1 block">車牌號碼</label>
+            <div class="flex-[2]">
+                <label class="text-[10px] text-[#00adb5] uppercase font-bold">車牌</label>
                 <input type="text" id="plate" class="obsidian-input" placeholder="ABC-1234" oninput="this.value=this.value.toUpperCase()">
             </div>
         </div>
 
         <div>
-            <label class="text-xs text-[#00adb5] mb-1 block">公司行號 (如: 正隆、富盟)</label>
-            <input type="text" id="company" class="obsidian-input" placeholder="請輸入廠商名稱">
+            <label class="text-[10px] text-[#00adb5] uppercase font-bold">廠商 (點擊快速輸入)</label>
+            <div class="flex flex-wrap gap-2 mt-1 mb-2">
+                <button class="vendor-btn" onclick="setVendor('正隆')">正隆</button>
+                <button class="vendor-btn" onclick="setVendor('富盟')">富盟</button>
+                <button class="vendor-btn" onclick="setVendor('俊丰')">俊丰</button>
+                <button class="vendor-btn" onclick="setVendor('祥箐')">祥箐</button>
+            </div>
+            <input type="text" id="company" class="obsidian-input" placeholder="或輸入其他廠商">
         </div>
 
-        <div>
-            <label class="text-xs text-[#00adb5] mb-1 block">司機姓名</label>
-            <input type="text" id="driver" class="obsidian-input" placeholder="照片上的姓名">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-2">
             <div>
-                <label class="text-xs text-[#00adb5] mb-1 block">進貨時間</label>
-                <input type="time" id="inTime" class="obsidian-input">
+                <label class="text-[10px] text-[#00adb5] uppercase font-bold">司機</label>
+                <input type="text" id="driver" class="obsidian-input" placeholder="姓名">
             </div>
             <div>
-                <label class="text-xs text-[#00adb5] mb-1 block">出貨時間</label>
-                <input type="time" id="outTime" class="obsidian-input">
+                <label class="text-[10px] text-[#00adb5] uppercase font-bold">進場時間</label>
+                <div class="flex gap-1">
+                    <input type="text" id="inTime" class="obsidian-input text-center">
+                    <button onclick="setCurrentTime('inTime')" class="bg-[#333] px-2 rounded text-xs">現在</button>
+                </div>
             </div>
         </div>
 
-        <button onclick="saveToLocal()" class="btn-action mt-2">新增登記記錄 (存至手機)</button>
+        <button onclick="addLog()" class="btn-action">確認登記紀錄 ▶</button>
     </div>
 
-    <div class="mt-8">
-        <div class="flex justify-between items-end mb-3">
-            <h2 class="text-lg font-bold">今日進出記錄</h2>
-            <button onclick="clearLocal()" class="text-xs text-red-400 underline">清空暫存</button>
-        </div>
+    <div class="mt-6">
         <div class="overflow-x-auto">
             <table>
                 <thead>
                     <tr>
                         <th>日期</th>
-                        <th>進/出時間</th>
                         <th>公司/車號</th>
+                        <th>時間/狀態</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    </tbody>
+                <tbody id="logBody"></tbody>
             </table>
         </div>
+        <button onclick="clearLogs()" class="w-full text-center text-gray-600 text-xs mt-6 underline">清除所有歷史資料</button>
     </div>
 
     <script>
-        // 初始化日期與時間
         const now = new Date();
-        document.getElementById('customDate').value = (now.getMonth() + 1) + '.' + now.getDate();
-        document.getElementById('inTime').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('date').value = (now.getMonth() + 1) + '.' + now.getDate();
+        setCurrentTime('inTime');
 
-        function saveToLocal() {
-            const entry = {
-                date: document.getElementById('customDate').value,
+        function setVendor(name) { document.getElementById('company').value = name; }
+        function setCurrentTime(id) {
+            const t = new Date();
+            document.getElementById(id).value = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+        }
+
+        function addLog() {
+            const log = {
+                date: document.getElementById('date').value,
                 plate: document.getElementById('plate').value,
                 company: document.getElementById('company').value,
                 driver: document.getElementById('driver').value,
                 inTime: document.getElementById('inTime').value,
-                outTime: document.getElementById('outTime').value
+                outTime: '',
+                id: Date.now()
             };
-            
-            if(!entry.plate || !entry.company) return alert('車牌跟公司要寫喔！');
-
-            let logs = JSON.parse(localStorage.getItem('blackLog_car') || '[]');
-            logs.unshift(entry);
-            localStorage.setItem('blackLog_car', JSON.stringify(logs));
+            if(!log.plate || !log.company) return alert('車牌公司要寫喔！');
+            let data = JSON.parse(localStorage.getItem('carLogs_v2') || '[]');
+            data.unshift(log);
+            localStorage.setItem('carLogs_v2', JSON.stringify(data));
             render();
-            
-            // 清除
-            ['plate', 'company', 'driver', 'outTime'].forEach(id => document.getElementById(id).value = '');
+            ['plate', 'company', 'driver'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function setOut(id) {
+            let data = JSON.parse(localStorage.getItem('carLogs_v2') || '[]');
+            const t = new Date();
+            const timeStr = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+            data = data.map(l => l.id === id ? {...l, outTime: timeStr} : l);
+            localStorage.setItem('carLogs_v2', JSON.stringify(data));
+            render();
         }
 
         function render() {
-            const logs = JSON.parse(localStorage.getItem('blackLog_car') || '[]');
-            const html = logs.map(l => `
+            const data = JSON.parse(localStorage.getItem('carLogs_v2') || '[]');
+            const inCount = data.filter(l => !l.outTime).length;
+            document.getElementById('statText').innerText = `今日共 ${data.length} 筆 / ${inCount} 輛在場內`;
+            
+            document.getElementById('logBody').innerHTML = data.map(l => `
                 <tr>
-                    <td class="text-gray-400">${l.date}</td>
-                    <td><span class="text-[#00adb5]">${l.inTime}</span><br><span class="text-gray-500">${l.outTime || '--:--'}</span></td>
-                    <td class="text-left font-medium">${l.company}<br><span class="text-xs text-gray-500">${l.plate} (${l.driver})</span></td>
+                    <td class="text-gray-500 text-xs">${l.date}</td>
+                    <td class="text-left font-bold text-white">${l.company}<br><span class="text-xs text-gray-500 font-normal">${l.plate} (${l.driver})</span></td>
+                    <td>
+                        ${l.outTime ? `<span class="text-gray-500">${l.inTime}<br>${l.outTime}</span>` : 
+                        `<button onclick="setOut(${l.id})" class="status-badge status-in font-bold">點擊出場</button><br><span class="text-xs">${l.inTime}</span>`}
+                    </td>
                 </tr>
-            `).join('');
-            document.getElementById('tableBody').innerHTML = html || '<tr><td colspan="3" class="py-10 text-gray-600">目前尚無記錄</td></tr>';
+            `).join('') || '<tr><td colspan="3" class="py-10 text-gray-600">目前尚無記錄</td></tr>';
         }
 
-        function clearLocal() {
-            if(confirm('確定要清空嗎？')) { localStorage.removeItem('blackLog_car'); render(); }
-        }
-
+        function clearLogs() { if(confirm('要清空嗎？')) {localStorage.removeItem('carLogs_v2'); render();} }
         window.onload = render;
     </script>
 </body>
