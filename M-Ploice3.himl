@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'M-Police 模擬登入',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFFE3F2FD), // 專業警務淺藍背景
+      ),
+      home: const LoginScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _accountController = TextEditingController();
+  final _passwordController = TextEditingController();
+  
+  // 預設值
+  String _patrolMode = '巡邏';
+  String _vehicleMode = '汽車';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings(); // 啟動時讀取上次存檔
+  }
+
+  // --- Local Storage 邏輯 ---
+  
+  // 讀取設定
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _patrolMode = prefs.getString('patrolMode') ?? '巡邏';
+      _vehicleMode = prefs.getString('vehicleMode') ?? '汽車';
+    });
+  }
+
+  // 儲存設定
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('patrolMode', _patrolMode);
+    await prefs.setString('vehicleMode', _vehicleMode);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: Column(
+            children: [
+              // 1. Logo 區域 (整合 SVG)
+              SvgPicture.asset(
+                'assets/npa_badge.svg', // 確保此路徑有檔案，或使用 placeholder
+                height: 90,
+                placeholderBuilder: (context) => const Icon(Icons.security, size: 90, color: Colors.blueAccent),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '內政部警政署',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 2),
+              ),
+              const Text(
+                'M-Police 整合查詢',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
+              const SizedBox(height: 40),
+
+              // 2. 輸入區域
+              _buildTextField(_accountController, '帳號', Icons.person),
+              const SizedBox(height: 16),
+              _buildTextField(_passwordController, '密碼', Icons.lock, obscure: true),
+              const SizedBox(height: 24),
+
+              // 3. 下拉選單 (具備自動存檔)
+              _buildDropdown('巡邏模式', _patrolMode, ['巡邏', '支援', '其他'], (val) {
+                setState(() => _patrolMode = val!);
+                _saveSettings();
+              }),
+              const SizedBox(height: 16),
+              _buildDropdown('交通工具', _vehicleMode, ['汽車', '機車', '徒步'], (val) {
+                setState(() => _vehicleMode = val!);
+                _saveSettings();
+              }),
+              const SizedBox(height: 32),
+
+              // 4. 功能按鈕 (適配窄螢幕)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _showSnackBar('登入系統中...'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[800],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('登入', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _accountController.clear();
+                        _passwordController.clear();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[600],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('清除', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              
+              // 5. 資料同步
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showSnackBar('同步雲端資料中...'),
+                  icon: const Icon(Icons.sync),
+                  label: const Text('資料同步', style: TextStyle(fontSize: 18)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- 輔助組件 ---
+
+  void _showSnackBar(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Widget _buildTextField(TextEditingController ctrl, String label, IconData icon, {bool obscure = false}) {
+    return TextField(
+      controller: ctrl,
+      obscureText: obscure,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  @override
+  void dispose() {
+    _accountController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+}
