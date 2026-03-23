@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Obsidian Chat v1.7 - Mobile Fix</title>
+    <title>Obsidian Chat v1.8 - The Perfect Fit</title>
     <style>
         :root {
             --obsidian-bg: #1a1a1a; --obsidian-header: #2d2d2d;
@@ -13,62 +13,90 @@
         }
 
         body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: sans-serif; background-color: var(--obsidian-bg);
-            color: var(--text-main); overflow: hidden;
-            display: flex; justify-content: center;
+            margin: 0; padding: 0; 
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--obsidian-bg); color: var(--text-main);
+            overflow: hidden; /* 核心：防止網頁整頁捲動 */
         }
 
-        /* RWD 容器 */
+        /* 💡 核心：利用媒體查詢區分手機與電腦 */
         .chat-app-container {
-            width: 100%; max-width: 600px; height: 100%;
-            background-color: var(--chat-window-bg);
             display: flex; flex-direction: column; position: relative;
         }
 
-        /* 標題列 */
+        /* 🖥️ 電腦端樣式 (大於 600px 螢幕) */
+        @media (min-width: 601px) {
+            body, html { display: flex; justify-content: center; align-items: center; height: 100vh; }
+            .chat-app-container {
+                width: 100%; max-width: 600px; /* 電腦鎖定寬度 */
+                height: 90vh; /* 高度不要全滿，留點邊 */
+                border-radius: 15px; border: 1px solid #444;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+                overflow: hidden; /* 確保內容不會超出半圓角 */
+            }
+        }
+
+        /* 📱 手機端樣式 (小於等於 600px 螢幕) */
+        @media (max-width: 600px) {
+            body, html { height: 100%; }
+            .chat-app-container {
+                width: 100%; height: 100%; /* 手機全螢幕 */
+                border-radius: 0; box-shadow: none; border: none;
+            }
+        }
+
+        /* 頂部標題列 (RWD) */
         .header {
-            background-color: var(--obsidian-header); color: white; padding: 12px;
+            background-color: var(--obsidian-header); color: white; padding: 12px 15px;
             text-align: center; border-bottom: 1px solid #444; z-index: 10;
-            padding-top: env(safe-area-inset-top, 12px); /* 避開瀏海屏 */
         }
+        @media (max-width: 600px) {
+            .header { padding-top: env(safe-area-inset-top, 12px); } /* 避開瀏海屏 */
+        }
+        .header .name { font-size: 16px; font-weight: bold; display: block; }
+        .header .status { font-size: 11px; color: var(--line-green); }
 
-        /* 聊天主區域 - 💡 修正滾動範圍 */
+        /* 聊天主區域 */
         #chat-container {
-            padding: 15px; display: flex; flex-direction: column; gap: 15px;
-            overflow-y: auto; flex: 1;
-            /* 💡 預留底部輸入框 + 手機安全區的高度 */
-            padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)); 
+            padding: 20px 15px; display: flex; flex-direction: column; gap: 15px;
+            overflow-y: auto; flex: 1; /* 彈性填滿 */
+            /* 💡 重要修正：預留底部輸入列的高度，手機電腦都一致 */
+            margin-bottom: 75px; 
+        }
+        @media (max-width: 600px) {
+            #chat-container { margin-bottom: calc(75px + env(safe-area-inset-bottom, 0px)); }
         }
 
-        /* 底部輸入列 - 💡 修正遮擋關鍵 */
-        .input-area {
-            position: absolute; bottom: 0; width: 100%;
-            background: var(--obsidian-header); display: flex; align-items: center;
-            padding: 10px 12px; box-sizing: border-box; border-top: 1px solid #444;
-            /* 💡 自動適應手機底部黑條 (Home Bar) */
-            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-            z-index: 20;
-        }
-
-        /* 訊息與頭像樣式 (整合 v1.5) */
-        .msg-wrapper { display: flex; max-width: 95%; align-items: flex-end; margin-bottom: 5px; }
+        /* 訊息排列維持原本功能 (整合 v1.5) */
+        .msg-wrapper { display: flex; max-width: 90%; align-items: flex-end; margin-bottom: 5px; }
         .me-wrapper { align-self: flex-end; flex-direction: row; justify-content: flex-end; }
         .other-wrapper { align-self: flex-start; flex-direction: row; justify-content: flex-start; }
         .avatar { width: 35px; height: 35px; border-radius: 50%; background-size: cover; margin: 0 8px; flex-shrink: 0; }
         .other-avatar { background-image: url('https://api.dicebear.com/7.x/bottts/svg?seed=Rou'); }
         .me-avatar { background-image: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Black'); }
-        .message { padding: 10px 14px; border-radius: 18px; font-size: 14px; max-width: 70%; line-height: 1.5; }
-        .me { background-color: var(--my-bubble); color: white; border-bottom-right-radius: 4px; }
-        .other { background-color: var(--other-bubble); color: white; border-bottom-left-radius: 4px; }
-        .message img { max-width: 100%; border-radius: 10px; display: block; margin-top: 5px; }
+        .message { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .me { background-color: var(--my-bubble); color: white; border-bottom-right-radius: 4px; max-width: 75%; }
+        .other { background-color: var(--other-bubble); color: white; border-bottom-left-radius: 4px; max-width: 75%; }
+        .message img { max-width: 100%; border-radius: 10px; cursor: pointer; display: block; margin-top: 5px; }
         .status-info { font-size: 10px; color: #888; display: flex; flex-direction: column; justify-content: flex-end; margin: 0 5px; min-width: 35px; }
-        .read-text { color: #4ec9b0; font-weight: bold; }
+        .read-text { color: #4ec9b0; font-weight: bold; margin-bottom: 2px; }
 
-        /* 輸入框與按鈕 */
-        #msg-input { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
-        .btn-icon { font-size: 20px; color: #aaa; cursor: pointer; margin-right: 8px; background: none; border: none; }
-        .send-btn { color: var(--line-green); font-weight: bold; background: none; border: none; margin-left: 10px; cursor: pointer; }
+        /* 底部輸入列 (RWD) */
+        .input-area {
+            position: absolute; bottom: 0; width: 100%; height: 75px;
+            background: var(--obsidian-header); display: flex; align-items: center;
+            padding: 0 12px; box-sizing: border-box; border-top: 1px solid #444; z-index: 20;
+        }
+        @media (max-width: 600px) {
+            .input-area {
+                height: calc(75px + env(safe-area-inset-bottom, 0px)); 
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+        .btn-icon { font-size: 20px; color: #aaa; cursor: pointer; margin-right: 8px; background: none; border: none; padding: 5px; }
+        #file-input { display: none; }
+        #msg-input { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; font-size: 14px; }
+        .send-btn { color: var(--line-green); font-weight: bold; background: none; border: none; cursor: pointer; margin-left: 10px; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -91,10 +119,9 @@
 </div>
 
 <script>
-    /* JavaScript 部分維持 v1.6 邏輯 (省略以節省篇幅，確保儲存 Key 與功能一致) */
     const chatContainer = document.getElementById('chat-container');
     const msgInput = document.getElementById('msg-input');
-    const STORAGE_KEY = 'obsidian_v1_7';
+    const STORAGE_KEY = 'obsidian_v1_8';
 
     window.onload = () => {
         const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -112,9 +139,11 @@
         msgInput.value = '';
         setTimeout(() => {
             const rTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            renderMessage("黑哥，這版修正了底部遮擋，滑起來應該順多了！", 'other', rTime, false, Date.now()+1);
-            saveToLocal("黑哥，這版修正了底部遮擋，滑起來應該順多了！", 'other', rTime, false, Date.now()+1);
-        }, 1000);
+            const replies = ["修正了 RWD 架構，這次應該是Perfect Fit了！", "黑哥，這版滑起來應該不會變成郵票了吧？😂"];
+            const rReply = replies[Math.floor(Math.random() * replies.length)];
+            renderMessage(rReply, 'other', rTime, false, Date.now()+1);
+            saveToLocal(rReply, 'other', rTime, false, Date.now()+1);
+        }, 1200);
     }
 
     function renderMessage(content, type, time, isImage, id) {
