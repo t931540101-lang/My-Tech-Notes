@@ -3,93 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obsidian Chat v1.2</title>
+    <title>Obsidian Chat v1.3</title>
     <style>
         :root {
-            --obsidian-bg: #1a1a1a;       /* 背景深黑 */
-            --obsidian-header: #2d2d2d;   /* 頂部深灰 */
-            --line-green: #00B900;
-            --my-bubble: #005c4b;         /* 我的深綠泡泡 */
-            --other-bubble: #333333;      /* 對方深灰泡泡 */
-            --text-main: #e0e0e0;         /* 淺灰文字 */
-            --input-bg: #2a2a2a;          /* 輸入框背景 */
+            --obsidian-bg: #1a1a1a; --obsidian-header: #2d2d2d;
+            --line-green: #00B900; --my-bubble: #005c4b;
+            --other-bubble: #333333; --text-main: #e0e0e0; --input-bg: #2a2a2a;
         }
-
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--obsidian-bg); color: var(--text-main);
-            overflow: hidden;
-        }
-
-        /* 標題列 */
-        .header {
-            background-color: var(--obsidian-header);
-            color: white; padding: 15px; text-align: center;
-            font-weight: bold; border-bottom: 1px solid #444;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        /* 聊天主區域 */
-        #chat-container {
-            padding: 15px; display: flex; flex-direction: column; gap: 12px;
-            overflow-y: auto; height: calc(100vh - 125px); /* 扣除頭尾高度 */
-            background-attachment: fixed;
-        }
-
-        /* 訊息外層 (處理已讀與對齊) */
-        .msg-wrapper { display: flex; max-width: 85%; align-items: flex-end; }
-        .me-wrapper { align-self: flex-end; flex-direction: row; }
-        .other-wrapper { align-self: flex-start; flex-direction: row-reverse; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background-color: var(--obsidian-bg); color: var(--text-main); overflow: hidden; }
+        .header { background-color: var(--obsidian-header); color: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #444; }
+        #chat-container { padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; height: calc(100vh - 125px); }
+        
+        /* 訊息外層 */
+        .msg-wrapper { display: flex; max-width: 90%; align-items: flex-end; margin-bottom: 5px; }
+        .me-wrapper { align-self: flex-end; flex-direction: row; justify-content: flex-end; }
+        .other-wrapper { align-self: flex-start; flex-direction: row; justify-content: flex-start; }
 
         /* 訊息泡泡 */
-        .message {
-            padding: 10px 14px; border-radius: 15px; font-size: 14px;
-            line-height: 1.5; word-wrap: break-word; position: relative;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3); cursor: pointer;
-        }
+        .message { padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.5; word-wrap: break-word; position: relative; max-width: 70%; }
         .me { background-color: var(--my-bubble); color: white; border-bottom-right-radius: 2px; }
         .other { background-color: var(--other-bubble); color: white; border-bottom-left-radius: 2px; }
+        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; }
 
-        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        /* 狀態標籤 (已讀+時間) */
+        .status-info { font-size: 10px; color: #888; display: flex; flex-direction: column; justify-content: flex-end; margin: 0 8px; min-width: 35px; }
+        .me-status { text-align: right; align-items: flex-end; }
+        .other-status { text-align: left; align-items: flex-start; }
+        .read-text { color: #4ec9b0; font-weight: bold; margin-bottom: 2px; }
 
-        /* 已讀與時間標籤 */
-        .status-info { font-size: 10px; color: #888; margin: 0 5px 2px 5px; min-width: 30px; text-align: right; }
-        .read-text { color: #4ec9b0; font-weight: bold; display: block; }
-
-        /* 底部輸入區域 */
-        .input-area {
-            position: fixed; bottom: 0; width: 100%; height: 70px;
-            background: var(--obsidian-header); display: flex; align-items: center;
-            padding: 0 10px; box-sizing: border-box; border-top: 1px solid #444;
-        }
-
+        /* 輸入區域 */
+        .input-area { position: fixed; bottom: 0; width: 100%; height: 70px; background: var(--obsidian-header); display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; border-top: 1px solid #444; }
         .plugin-btn { font-size: 24px; color: #aaa; cursor: pointer; margin-right: 8px; }
         #file-input { display: none; }
-
         .emoji-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
-
-        #msg-input {
-            flex: 1; background: var(--input-bg); border: none; border-radius: 20px;
-            padding: 10px 15px; color: white; outline: none; margin: 0 5px;
-        }
-
-        .send-btn { color: var(--line-green); font-weight: bold; background: none; border: none; font-size: 16px; cursor: pointer; }
+        #msg-input { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
+        .send-btn { color: var(--line-green); font-weight: bold; background: none; border: none; font-size: 16px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header">黑曜石通訊 - 夥伴：柔</div>
-
-<div id="chat-container" id="chat-box"></div>
+<div id="chat-container"></div>
 
 <div class="input-area">
     <label for="file-input" class="plugin-btn">+</label>
     <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
-    
     <button class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
     <button class="emoji-btn" onclick="addEmoji('💎')">💎</button>
-    
     <input type="text" id="msg-input" placeholder="輸入訊息...">
     <button class="send-btn" onclick="sendMessage()">傳送</button>
 </div>
@@ -97,90 +57,80 @@
 <script>
     const chatContainer = document.getElementById('chat-container');
     const msgInput = document.getElementById('msg-input');
-    const STORAGE_KEY = 'obsidian_v1_2';
+    const STORAGE_KEY = 'obsidian_v1_3';
 
-    // 1. 初始化
     window.onload = () => {
         const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         history.forEach(m => renderMessage(m.content, m.type, m.time, m.isImage, m.id));
         scrollToBottom();
     };
 
-    // 2. 傳送文字
     function sendMessage() {
         const text = msgInput.value.trim();
         if (!text) return;
-        processNewMessage(text, 'me', false);
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const id = Date.now();
+        renderMessage(text, 'me', time, false, id);
+        saveToLocal(text, 'me', time, false, id);
         msgInput.value = '';
-
-        // 柔的自動回覆
         setTimeout(() => {
-            processNewMessage("黑哥，功能整合完畢，隨時待命！", 'other', false);
+            const rTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const rId = Date.now() + 1;
+            renderMessage("黑哥，修正後的位子對了嗎？", 'other', rTime, false, rId);
+            saveToLocal("黑哥，修正後的位子對了嗎？", 'other', rTime, false, rId);
         }, 1000);
     }
 
-    // 3. 處理圖片
-    function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            compressImage(e.target.result, 500, (compressed) => {
-                processNewMessage(compressed, 'me', true);
-            });
-        };
-        reader.readAsDataURL(file);
-        event.target.value = '';
-    }
-
-    // 整合處理邏輯
-    function processNewMessage(content, type, isImage) {
-        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const id = Date.now() + Math.random();
-        renderMessage(content, type, time, isImage, id);
-        saveToLocal(content, type, time, isImage, id);
-    }
-
-    // 4. 渲染畫面
     function renderMessage(content, type, time, isImage, id) {
         const wrapper = document.createElement('div');
         wrapper.className = `msg-wrapper ${type}-wrapper`;
         wrapper.id = `msg-${id}`;
 
-        const statusHtml = `<div class="status-info">${type==='me'?'<span class="read-text">已讀</span>':''} ${time}</div>`;
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-        messageDiv.ondblclick = () => deleteMessage(id);
-        
-        messageDiv.innerHTML = isImage ? `<img src="${content}">` : content;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.ondblclick = () => deleteMessage(id);
+        msgDiv.innerHTML = isImage ? `<img src="${content}">` : content;
+
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `status-info ${type}-status`;
+        statusDiv.innerHTML = `${type === 'me' ? '<span class="read-text">已讀</span>' : ''} <span>${time}</span>`;
 
         if (type === 'me') {
-            wrapper.innerHTML = statusHtml;
-            wrapper.appendChild(messageDiv);
+            wrapper.appendChild(statusDiv); // 已讀在左
+            wrapper.appendChild(msgDiv);    // 泡泡在右
         } else {
-            wrapper.appendChild(messageDiv);
-            wrapper.innerHTML += statusHtml;
+            wrapper.appendChild(msgDiv);    // 泡泡在左
+            wrapper.appendChild(statusDiv); // 時間在右 (不含已讀)
         }
 
         chatContainer.appendChild(wrapper);
         scrollToBottom();
     }
 
-    // 5. 圖片壓縮
-    function compressImage(base64, maxWidth, callback) {
-        const img = new Image();
-        img.src = base64;
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let w = img.width, h = img.height;
-            if (w > maxWidth) { h *= maxWidth / w; w = maxWidth; }
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            callback(canvas.toDataURL('image/jpeg', 0.7));
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > 500) { h *= 500 / w; w = 500; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const id = Date.now();
+                renderMessage(compressed, 'me', time, true, id);
+                saveToLocal(compressed, 'me', time, true, id);
+            };
         };
+        reader.readAsDataURL(file);
+        event.target.value = '';
     }
 
-    // 6. 存檔與刪除
     function saveToLocal(content, type, time, isImage, id) {
         let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         data.push({content, type, time, isImage, id});
