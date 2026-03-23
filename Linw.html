@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obsidian Chat v1.3</title>
+    <title>Obsidian Chat v1.5 - Test Edition</title>
     <style>
         :root {
             --obsidian-bg: #1a1a1a; --obsidian-header: #2d2d2d;
@@ -11,102 +11,140 @@
             --other-bubble: #333333; --text-main: #e0e0e0; --input-bg: #2a2a2a;
         }
         body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background-color: var(--obsidian-bg); color: var(--text-main); overflow: hidden; }
-        .header { background-color: var(--obsidian-header); color: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #444; }
-        #chat-container { padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; height: calc(100vh - 125px); }
         
-        /* 訊息外層 */
+        /* 頂部狀態列優化 */
+        .header {
+            background-color: var(--obsidian-header); color: white; padding: 10px 15px;
+            text-align: center; border-bottom: 1px solid #444; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .header .name { font-size: 16px; font-weight: bold; display: block; }
+        .header .status { font-size: 11px; color: var(--line-green); }
+
+        #chat-container { padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; height: calc(100vh - 135px); }
+        
+        /* 訊息排列邏輯 */
         .msg-wrapper { display: flex; max-width: 90%; align-items: flex-end; margin-bottom: 5px; }
         .me-wrapper { align-self: flex-end; flex-direction: row; justify-content: flex-end; }
         .other-wrapper { align-self: flex-start; flex-direction: row; justify-content: flex-start; }
 
+        /* 頭像系統 */
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background-size: cover; margin: 0 8px; flex-shrink: 0; border: 1px solid #444; }
+        .other-avatar { background-image: url('https://api.dicebear.com/7.x/bottts/svg?seed=Rou'); } /* 柔的頭像 */
+        .me-avatar { background-image: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Black'); } /* 黑哥頭像 (模擬) */
+
         /* 訊息泡泡 */
-        .message { padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.5; word-wrap: break-word; position: relative; max-width: 70%; }
-        .me { background-color: var(--my-bubble); color: white; border-bottom-right-radius: 2px; }
-        .other { background-color: var(--other-bubble); color: white; border-bottom-left-radius: 2px; }
-        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; }
+        .message { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; position: relative; max-width: 70%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .me { background-color: var(--my-bubble); color: white; border-bottom-right-radius: 4px; }
+        .other { background-color: var(--other-bubble); color: white; border-bottom-left-radius: 4px; }
+        .message img { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; cursor: pointer; }
 
         /* 狀態標籤 (已讀+時間) */
-        .status-info { font-size: 10px; color: #888; display: flex; flex-direction: column; justify-content: flex-end; margin: 0 8px; min-width: 35px; }
+        .status-info { font-size: 10px; color: #888; display: flex; flex-direction: column; justify-content: flex-end; margin: 0 5px; min-width: 35px; }
         .me-status { text-align: right; align-items: flex-end; }
         .other-status { text-align: left; align-items: flex-start; }
         .read-text { color: #4ec9b0; font-weight: bold; margin-bottom: 2px; }
 
-        /* 輸入區域 */
-        .input-area { position: fixed; bottom: 0; width: 100%; height: 70px; background: var(--obsidian-header); display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; border-top: 1px solid #444; }
-        .plugin-btn { font-size: 24px; color: #aaa; cursor: pointer; margin-right: 8px; }
+        /* 底部輸入列 */
+        .input-area { position: fixed; bottom: 0; width: 100%; height: 75px; background: var(--obsidian-header); display: flex; align-items: center; padding: 0 12px; box-sizing: border-box; border-top: 1px solid #444; }
+        .btn-icon { font-size: 22px; color: #aaa; cursor: pointer; margin-right: 10px; background: none; border: none; padding: 0; }
         #file-input { display: none; }
-        .emoji-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
-        #msg-input { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
+        #msg-input { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; font-size: 15px; }
         .send-btn { color: var(--line-green); font-weight: bold; background: none; border: none; font-size: 16px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header">黑曜石通訊 - 夥伴：柔</div>
+<div class="header">
+    <span class="name">黑曜石通訊 - 柔</span>
+    <span class="status">● 在線上</span>
+</div>
+
 <div id="chat-container"></div>
 
 <div class="input-area">
-    <label for="file-input" class="plugin-btn">+</label>
+    <label for="file-input" class="btn-icon">+</label>
     <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
-    <button class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
-    <button class="emoji-btn" onclick="addEmoji('💎')">💎</button>
-    <input type="text" id="msg-input" placeholder="輸入訊息...">
+    
+    <button class="btn-icon" onclick="addEmoji('🔥')">🔥</button>
+    <button class="btn-icon" onclick="addEmoji('💎')">💎</button>
+    
+    <input type="text" id="msg-input" placeholder="輸入訊息..." autocomplete="off">
     <button class="send-btn" onclick="sendMessage()">傳送</button>
 </div>
 
 <script>
     const chatContainer = document.getElementById('chat-container');
     const msgInput = document.getElementById('msg-input');
-    const STORAGE_KEY = 'obsidian_v1_3';
+    const STORAGE_KEY = 'obsidian_v1_5';
 
+    // 1. 初始化讀取歷史
     window.onload = () => {
         const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         history.forEach(m => renderMessage(m.content, m.type, m.time, m.isImage, m.id));
         scrollToBottom();
     };
 
+    // 2. 傳送訊息邏輯
     function sendMessage() {
         const text = msgInput.value.trim();
         if (!text) return;
+        
         const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const id = Date.now();
+        
         renderMessage(text, 'me', time, false, id);
         saveToLocal(text, 'me', time, false, id);
         msgInput.value = '';
+
+        // 模擬「柔」的回覆
         setTimeout(() => {
             const rTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const rId = Date.now() + 1;
-            renderMessage("黑哥，修正後的位子對了嗎？", 'other', rTime, false, rId);
-            saveToLocal("黑哥，修正後的位子對了嗎？", 'other', rTime, false, rId);
-        }, 1000);
+            const replies = ["收到了，黑哥！這功能跑起來真順。", "黑曜石計畫 v1.5 測試中...", "這張圖畫質處理得不錯！"];
+            const randomReply = replies[Math.floor(Math.random() * replies.length)];
+            
+            renderMessage(randomReply, 'other', rTime, false, rId);
+            saveToLocal(randomReply, 'other', rTime, false, rId);
+        }, 1200);
     }
 
+    // 3. 渲染訊息到畫面
     function renderMessage(content, type, time, isImage, id) {
         const wrapper = document.createElement('div');
         wrapper.className = `msg-wrapper ${type}-wrapper`;
         wrapper.id = `msg-${id}`;
 
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        msgDiv.ondblclick = () => deleteMessage(id);
-        msgDiv.innerHTML = isImage ? `<img src="${content}">` : content;
-
+        // 狀態資訊 (已讀/時間)
         const statusDiv = document.createElement('div');
         statusDiv.className = `status-info ${type}-status`;
         statusDiv.innerHTML = `${type === 'me' ? '<span class="read-text">已讀</span>' : ''} <span>${time}</span>`;
 
+        // 訊息泡泡
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.ondblclick = () => deleteMessage(id);
+        msgDiv.innerHTML = isImage ? `<img src="${content}" onclick="window.open(this.src)">` : content;
+
+        // 頭像
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = `avatar ${type}-avatar`;
+
+        // 組合順序：[頭像] [泡泡] [狀態] 或 [狀態] [泡泡] [頭像]
         if (type === 'me') {
-            wrapper.appendChild(statusDiv); // 已讀在左
-            wrapper.appendChild(msgDiv);    // 泡泡在右
+            wrapper.appendChild(statusDiv);
+            wrapper.appendChild(msgDiv);
+            wrapper.appendChild(avatarDiv);
         } else {
-            wrapper.appendChild(msgDiv);    // 泡泡在左
-            wrapper.appendChild(statusDiv); // 時間在右 (不含已讀)
+            wrapper.appendChild(avatarDiv);
+            wrapper.appendChild(msgDiv);
+            wrapper.appendChild(statusDiv);
         }
 
         chatContainer.appendChild(wrapper);
         scrollToBottom();
     }
 
+    // 4. 圖片處理 (壓縮至 500px)
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -119,7 +157,8 @@
                 let w = img.width, h = img.height;
                 if (w > 500) { h *= 500 / w; w = 500; }
                 canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
                 const compressed = canvas.toDataURL('image/jpeg', 0.7);
                 const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const id = Date.now();
@@ -131,15 +170,19 @@
         event.target.value = '';
     }
 
+    // 5. 本地儲存與刪除
     function saveToLocal(content, type, time, isImage, id) {
         let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         data.push({content, type, time, isImage, id});
+        // 限制儲存量，防止溢位
+        if (data.length > 100) data.shift();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
     function deleteMessage(id) {
-        if (confirm("要回收這條訊息嗎？")) {
-            document.getElementById(`msg-${id}`).remove();
+        if (confirm("黑哥，要回收這條訊息嗎？")) {
+            const el = document.getElementById(`msg-${id}`);
+            if (el) el.remove();
             let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data.filter(m => m.id !== id)));
         }
