@@ -6,13 +6,78 @@
     <title>Obsidian Chat - Photo Update</title>
     <style>
         /* 原有的 CSS (省略，維持現狀) */
-        :root { --line-green: #00B900; --bg-blue: #7494C0; --white: #ffffff; --gray: #f0f0f0; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background-color: var(--bg-blue); overflow: hidden;}
-        .header { background-color: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        #chat-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; height: calc(100vh - 70px - 60px); }
-        .message { max-width: 75%; padding: 8px 12px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; position: relative;}
-        .me { align-self: flex-end; background-color: #85e085; border-top-right-radius: 2px; }
-        .other { align-self: flex-start; background-color: var(--white); border-top-left-radius: 2px; }
+        :root {
+    --obsidian-bg: #1a1a1a;       /* 深黑背景 */
+    --obsidian-header: #2d2d2d;   /* 頂部深灰色 */
+    --line-green: #00B900;
+    --my-bubble: #005c4b;         /* 深綠色對話泡泡 (仿深色版LINE) */
+    --other-bubble: #333333;      /* 對方深灰泡泡 */
+    --text-main: #e0e0e0;         /* 淺灰文字 */
+    --input-bg: #2a2a2a;          /* 輸入框背景 */
+}
+
+body, html {
+    margin: 0; padding: 0;
+    height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--obsidian-bg);
+    color: var(--text-main);
+}
+
+/* 頂部標題 */
+.header {
+    background-color: var(--obsidian-header);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #444;
+}
+
+/* 訊息區域 */
+#chat-container {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.me {
+    align-self: flex-end;
+    background-color: var(--my-bubble);
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+}
+
+.other {
+    align-self: flex-start;
+    background-color: var(--other-bubble);
+    color: #ffffff;
+    border-bottom-left-radius: 2px;
+}
+
+/* 底部輸入列 */
+.input-area {
+    position: fixed; bottom: 0; width: 100%;
+    background: var(--obsidian-header);
+    display: flex; align-items: center;
+    padding: 10px; border-top: 1px solid #444;
+}
+
+#msg-input {
+    flex: 1; background: var(--input-bg);
+    border: none; border-radius: 20px;
+    padding: 10px 15px; color: white; outline: none;
+}
+
+.plugin-btn { color: #aaa; }
         
         /* 💡 新增/修改的 CSS：圖片顯示與輸入列 */
         .message img {
