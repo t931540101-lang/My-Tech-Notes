@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柔 - HR配套助手 (離線版)</title>
+    <style>
+        body { background-color: #f4f7f6; font-family: -apple-system, sans-serif, "Microsoft JhengHei"; margin: 0; padding: 0; }
+        
+        /* 頂部導覽列克隆 */
+        .navbar { background-color: #333; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 0.9rem; position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box;}
+        .nav-logo { width: 30px; height: 30px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; }
+        .nav-links { display: flex; gap: 20px; font-weight: bold; }
+        .nav-links span { cursor: pointer; }
+        .nav-links .active { border-bottom: 2px solid #5d9cec; padding-bottom: 5px; }
+        .nav-lang { display: flex; gap: 10px; }
+        .nav-lang span { width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
+        .lang-tw { background: #e9573f; }
+        .lang-th { background: #f6bb42; }
+        .lang-id { background: #3bafda; }
+
+        /* 主內容區 */
+        .container { margin-top: 70px; padding: 10px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
+        .form-card { background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; position: relative; margin-bottom: 20px;}
+        .form-card-title { text-align: center; font-size: 1.5rem; font-weight: bold; color: #555; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        
+        /* 視覺裝飾 (手機圖案) */
+        .decoration-phone { position: absolute; bottom: 10px; right: 10px; opacity: 0.2; width: 60px; }
+
+        /* 表單欄位克隆 */
+        .input-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .input-item { flex: 1; min-width: 45%; }
+        label { display: block; font-size: 0.8rem; color: #777; margin-bottom: 3px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.95rem; }
+        textarea { resize: vertical; }
+
+        /* 外掛欄位樣式（加個淡淡的框強調這是我們加的） */
+        .plugin-field { border: 2px solid #ffedb3; border-radius: 6px; padding: 10px; margin-top: 15px; }
+        .plugin-title { font-size: 0.85rem; color: #f6bb42; font-weight: bold; margin-bottom: 10px; }
+
+        /* 按鈕 */
+        .btn { background-color: #5d9cec; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; width: 100%; }
+        .btn:active { background-color: #3bafda; }
+
+        /* 版權宣告區克隆 */
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; color: #888; font-size: 0.7rem; padding: 10px 0; background-color: #f4f7f6;}
+        .copyright-logo { width: 15px; height: 15px; opacity: 0.5; margin-right: 5px;}
+
+        #log { text-align: center; color: #27ae60; font-size: 0.8rem; margin-top: 10px; height: 1.2rem;}
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-logo">G</div>
+    <div class="nav-links">
+        <span>首頁</span>
+        <span class="active">請假單</span>
+        <span>未刷單</span>
+    </div>
+    <div class="nav-lang">
+        <span class="lang-tw">TW</span>
+        <span class="lang-th">TH</span>
+        <span class="lang-id">ID</span>
+    </div>
+</div>
+
+<div class="container">
+    <div class="form-card">
+        <div class="form-card-title">請假配套助手</div>
+        
+        <div class="input-group">
+            <div class="input-item">
+                <label>工號 (如: d01762)</label>
+                <input type="text" id="empId" placeholder="dxxxxx">
+            </div>
+            <div class="input-item">
+                <label>假別</label>
+                <select id="leaveName">
+                    <option value="事假">事假</option>
+                    <option value="特休">特休</option>
+                    <option value="加班補休">加班補休</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-item">
+                <label>開始時間</label>
+                <input type="datetime-local" id="startTime">
+            </div>
+            <div class="input-item">
+                <label>結束時間</label>
+                <input type="datetime-local" id="endTime">
+            </div>
+        </div>
+
+        <div class="plugin-field">
+            <div class="plugin-title">★ 人事配套需求 (系統無欄位) ★</div>
+            
+            <div class="input-group">
+                <div class="input-item">
+                    <label>職務交接人</label>
+                    <input type="text" id="backupPerson" placeholder="請輸入姓名">
+                </div>
+            </div>
+            <div class="input-item">
+                <label>配套說明 (如: 補班、進度)</label>
+                <textarea id="配套說明" rows="3" placeholder="請詳細輸入"></textarea>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="formatAndCopy()">✨ 格式化並複製到剪貼簿</button>
+        </div>
+        <div id="log"></div>
+
+        <img src="https://i.imgur.com/x07K1V2.png" class="decoration-phone" alt="phone">
+    </div>
+</div>
+
+<div class="footer">
+    <img src="https://i.imgur.com/8QO6I4T.png" class="copyright-logo" alt="logo">
+    <span>© APEX DYNAMICS 2026 Designed for IT</span>
+</div>
+
+<script>
+    const keys = ['empId', 'leaveName', 'startTime', 'endTime', 'backupPerson', '配套說明'];
+    
+    // 初始化：讀取 Local Storage
+    window.onload = () => {
+        keys.forEach(key => {
+            const val = localStorage.getItem('apex_helper_' + key);
+            if(val) document.getElementById(key).value = val;
+        });
+    };
+
+    function formatAndCopy() {
+        const d = (id) => document.getElementById(id).value;
+        
+        // 組合文字
+        const text = `=== 請假配套資訊 ===\n工號：${d('empId')}\n假別：${d('leaveName')}\n時間：${d('startTime')} ~ ${d('endTime')}\n--------------------\n【配套交接人】${d('backupPerson')}\n【配套說明】${d('配套說明')}`;
+        
+        // 複製到剪貼簿
+        navigator.clipboard.writeText(text).then(() => {
+            // 保存到 Local Storage
+            keys.forEach(key => localStorage.setItem('apex_helper_' + key, d(key)));
+            
+            showMsg("✅ 複製成功！資料已存至手機空間。請直接貼進系統備註欄。");
+        });
+    }
+
+    function showMsg(txt) {
+        const m = document.getElementById('log');
+        m.innerText = txt;
+        setTimeout(() => m.innerText = "", 3500);
+    }
+</script>
+
+</body>
+</html>
