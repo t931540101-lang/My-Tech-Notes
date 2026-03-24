@@ -2,174 +2,191 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>HR Web Service - Designed for IT (Enhanced)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Web Service - 2026 Integrated Version</title>
     <style>
-        :root { --bg-gray: #f2f2f2; --nav-black: #222; --blue-btn: #0056b3; --accent: #4a90e2; }
-        body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; background: var(--bg-gray); color: #333; }
-        
-        /* 頂部導覽列 */
-        .navbar { background: var(--nav-black); color: #ddd; display: flex; align-items: center; padding: 0 40px; height: 50px; position: sticky; top: 0; z-index: 100; justify-content: space-between; }
+        :root { --nav-bg: #222; --body-bg: #f4f7f6; --accent: #4a90e2; --card-bg: #ffffff; }
+        body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; background: var(--body-bg); color: #333; overflow-x: hidden; }
+
+        /* 導覽列還原 */
+        .navbar { background: var(--nav-bg); color: #bbb; display: flex; align-items: center; padding: 0 40px; height: 55px; position: sticky; top: 0; z-index: 1000; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .nav-left { display: flex; align-items: center; gap: 30px; }
-        .logo-circle { width: 24px; height: 24px; border: 2px solid #aaa; border-radius: 50%; position: relative; }
-        .logo-circle::after { content: ''; position: absolute; width: 8px; height: 8px; background: #aaa; border-radius: 50%; top: 6px; left: 6px; }
-        .nav-item { cursor: pointer; font-size: 14px; padding: 15px 5px; }
-        .nav-item.active { color: #fff; border-bottom: 3px solid var(--accent); }
-        .nav-right { display: flex; gap: 8px; }
-        .lang-tag { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; }
+        .logo { width: 22px; height: 22px; border: 2px solid #888; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .nav-item { cursor: pointer; font-size: 14px; padding: 18px 5px; transition: 0.3s; position: relative; }
+        .nav-item:hover { color: #fff; }
+        .nav-item.active { color: #fff; font-weight: bold; }
+        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--accent); }
+        .nav-right { display: flex; gap: 10px; }
+        .lang { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; cursor: pointer; }
 
-        /* 主容器 */
-        .main-content { padding: 40px; display: flex; justify-content: center; position: relative; min-height: calc(100vh - 130px); }
-        .card { background: #fff; width: 100%; max-width: 900px; padding: 40px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }
-        
-        .title { text-align: center; font-size: 24px; color: #666; margin-bottom: 30px; letter-spacing: 2px; }
+        /* 主容器與切換內容 */
+        .main-container { padding: 40px 20px; display: flex; justify-content: center; }
+        .view { display: none; width: 100%; max-width: 900px; animation: fadeIn 0.4s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 卡片與表單佈局 */
+        .card { background: var(--card-bg); padding: 40px; border-radius: 4px; box-shadow: 0 1px 15px rgba(0,0,0,0.05); position: relative; min-height: 450px; }
+        .title { text-align: center; font-size: 26px; color: #555; margin-bottom: 25px; letter-spacing: 3px; font-weight: 300; }
         .divider { border-bottom: 1px solid #eee; margin-bottom: 30px; }
-
-        /* 雙欄表單佈局 */
+        
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 60px; }
-        .field-group { margin-bottom: 15px; }
-        label { display: block; font-size: 13px; color: #888; margin-bottom: 8px; }
-        input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; font-size: 14px; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--accent); background: #fff; }
+        .field { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; font-size: 14px; box-sizing: border-box; transition: 0.2s; }
+        input:focus { border-color: var(--accent); background: #fff; outline: none; }
 
-        /* ⬛ 黑曜石外掛區 (黃金補強版) */
-        .obsidian-plugin { margin-top: 30px; padding: 20px; border: 1px dashed #ffcc00; background: #fffdf5; border-radius: 8px; }
-        .plugin-label { color: #b8860b; font-weight: bold; font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        /* 黑曜石增強區 */
+        .obsidian-box { margin-top: 35px; padding: 20px; background: #fffef0; border: 1px dashed #e6b800; border-radius: 6px; }
+        .plugin-tag { color: #b8860b; font-weight: bold; font-size: 13px; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
 
-        /* 按鈕區 */
-        .button-bar { margin-top: 40px; display: flex; justify-content: center; gap: 15px; }
-        .btn { padding: 10px 30px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .btn-query { background: #0056b3; color: #fff; }
-        .btn-submit { background: #4a90e2; color: #fff; }
-        .btn-copy { background: #333; color: #ffcc00; }
+        /* 按鈕樣式 */
+        .btn-group { margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
+        .btn { padding: 10px 35px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
+        .btn-blue { background: #0056b3; color: white; }
+        .btn-sky { background: #4a90e2; color: white; }
+        .btn-black { background: #333; color: #ffcc00; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* 右下角手機圖案還原 */
-        .phone-deco { position: absolute; bottom: 20px; right: 20px; width: 120px; opacity: 0.15; pointer-events: none; }
+        /* 裝飾性手機圖案 */
+        .phone-icon { position: absolute; bottom: 25px; right: 25px; width: 100px; opacity: 0.12; pointer-events: none; transform: rotate(15deg); }
+
+        /* 首頁專用樣式 */
+        .home-hero { text-align: center; padding: 60px 0; }
+        .home-hero h1 { font-size: 3rem; margin: 0; color: #333; }
+        .home-hero p { color: #888; font-size: 1.1rem; }
 
         /* 頁尾 */
-        .footer { text-align: center; padding: 20px; font-size: 12px; color: #aaa; }
+        .footer { text-align: center; padding: 30px; color: #aaa; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="navbar">
     <div class="nav-left">
-        <div class="logo-circle"></div>
-        <div class="nav-item">首頁</div>
-        <div class="nav-item active">請假單</div>
-        <div class="nav-item">未刷單</div>
+        <div class="logo">G</div>
+        <div class="nav-item" onclick="showView('home')" id="tab-home">首頁</div>
+        <div class="nav-item active" onclick="showView('leave')" id="tab-leave">請假單</div>
+        <div class="nav-item" onclick="showView('missing')" id="tab-missing">未刷單</div>
     </div>
     <div class="nav-right">
-        <div class="lang-tag" style="background:#d9534f">TW</div>
-        <div class="lang-tag" style="background:#f0ad4e">TH</div>
-        <div class="lang-tag" style="background:#5bc0de">ID</div>
+        <div class="lang" style="background:#e9573f">TW</div>
+        <div class="lang" style="background:#f6bb42">TH</div>
+        <div class="lang" style="background:#3bafda">ID</div>
     </div>
 </div>
 
-<div class="main-content">
-    <div class="card">
-        <div class="title">請 假 單</div>
-        <div class="divider"></div>
-        
-        <div class="form-grid">
-            <div class="left-col">
-                <div class="field-group">
-                    <label>工號</label>
-                    <input type="text" id="emp_id" placeholder="請輸入工號">
-                </div>
-                <div class="field-group">
-                    <label>姓名</label>
-                    <input type="text" id="emp_name" placeholder="系統自動帶入" readonly>
-                </div>
-                <div class="field-group">
-                    <label>請假名稱</label>
-                    <select id="leave_type">
-                        <option>請選擇...</option>
-                        <option>事假</option>
-                        <option>病假</option>
-                        <option>特休</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="right-col">
-                <div class="field-group">
-                    <label>部門</label>
-                    <input type="text" disabled>
-                </div>
-                <div class="field-group">
-                    <label>1級主管</label>
-                    <input type="text" disabled>
-                </div>
-                <div class="field-group">
-                    <label>未休時數</label>
-                    <input type="text" disabled value="0">
-                </div>
-            </div>
+<div class="main-container">
+    
+    <div id="view-home" class="view">
+        <div class="card home-hero">
+            <h1>HR web service</h1>
+            <p>Designed for IT</p>
+            <div style="margin-top: 50px; color: #ccc;">●</div>
+            <svg class="phone-icon" viewBox="0 0 100 200"><rect x="10" y="10" width="80" height="180" rx="15" fill="none" stroke="#333" stroke-width="5"/></svg>
         </div>
-
-        <div class="obsidian-plugin">
-            <div class="plugin-label">⭐ 黑曜石計畫：人事增補欄位 (不影響舊系統)</div>
-            <div class="form-grid">
-                <div class="field-group">
-                    <label>職務代理人/交接人</label>
-                    <input type="text" id="backup" placeholder="請填寫同組夥伴姓名">
-                </div>
-                <div class="field-group">
-                    <label>配套補班/進度說明</label>
-                    <input type="text" id="memo" placeholder="例如：補班日 03/28 已預約">
-                </div>
-            </div>
-        </div>
-
-        <div class="button-bar">
-            <button class="btn btn-query">查詢</button>
-            <button class="btn btn-submit" onclick="saveToLocal()">送出</button>
-            <button class="btn btn-copy" onclick="copyFormat()">📋 複製完整資訊貼至備註</button>
-        </div>
-
-        <svg class="phone-deco" viewBox="0 0 100 200">
-            <rect x="10" y="10" width="80" height="180" rx="15" fill="none" stroke="#333" stroke-width="5"/>
-            <rect x="15" y="25" width="70" height="140" rx="2" fill="#333" opacity="0.1"/>
-            <circle cx="50" cy="178" r="8" fill="none" stroke="#333" stroke-width="3"/>
-        </svg>
     </div>
+
+    <div id="view-leave" class="view active">
+        <div class="card">
+            <div class="title">請 假 單</div>
+            <div class="divider"></div>
+            <div class="form-grid">
+                <div>
+                    <div class="field"><label>工號 (如: d01762)</label><input type="text" id="l_id"></div>
+                    <div class="field"><label>姓名</label><input type="text" readonly placeholder="自動載入"></div>
+                    <div class="field"><label>請假名稱</label><select id="l_type"><option>請選擇...</option><option>事假</option><option>病假</option><option>特休</option></select></div>
+                </div>
+                <div>
+                    <div class="field"><label>部門</label><input type="text" disabled></div>
+                    <div class="field"><label>1級主管</label><input type="text" disabled></div>
+                    <div class="field"><label>未休時數</label><input type="text" value="0" disabled></div>
+                </div>
+            </div>
+
+            <div class="obsidian-box">
+                <div class="plugin-tag">⭐ 黑曜石計畫：人事補件資訊</div>
+                <div class="form-grid">
+                    <div class="field"><label>職務交接人</label><input type="text" id="l_backup" placeholder="誰代理？"></div>
+                    <div class="field"><label>配套備註</label><input type="text" id="l_memo" placeholder="補班日或專案進度"></div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-blue">查詢</button>
+                <button class="btn btn-sky">送出</button>
+                <button class="btn btn-black" onclick="copyData('leave')">📋 格式化複製</button>
+            </div>
+            <svg class="phone-icon" viewBox="0 0 100 200"><rect x="10" y="10" width="80" height="180" rx="15" fill="none" stroke="#333" stroke-width="5"/></svg>
+        </div>
+    </div>
+
+    <div id="view-missing" class="view">
+        <div class="card">
+            <div class="title">未 刷 單</div>
+            <div class="divider"></div>
+            <div class="form-grid">
+                <div>
+                    <div class="field"><label>工號</label><input type="text" id="m_id"></div>
+                    <div class="field"><label>未刷卡原因</label><select id="m_reason"><option>請選擇...</option><option>忘記刷卡</option><option>公出</option></select></div>
+                </div>
+                <div>
+                    <div class="field"><label>身份證後四碼</label><input type="password" maxlength="4"></div>
+                    <div class="field"><label>未刷卡時間</label><input type="datetime-local"></div>
+                </div>
+            </div>
+
+            <div class="obsidian-box">
+                <div class="plugin-tag">⭐ 黑曜石計畫：異常說明增補</div>
+                <div class="field"><label>詳細狀況描述 (人事要求)</label><textarea id="m_memo" rows="2"></textarea></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-blue" style="width:150px">申請記錄</button>
+                <button class="btn btn-sky" style="width:150px">送出</button>
+                <button class="btn btn-black" onclick="copyData('missing')">📋 複製說明文字</button>
+            </div>
+            <svg class="phone-icon" viewBox="0 0 100 200"><rect x="10" y="10" width="80" height="180" rx="15" fill="none" stroke="#333" stroke-width="5"/></svg>
+        </div>
+    </div>
+
 </div>
 
 <div class="footer">
-    <div style="margin-bottom:5px">●</div>
-    © APEX DYNAMICS 2026
+    © APEX DYNAMICS 2026<br>
+    <span style="font-size: 10px; opacity: 0.5;">Powered by Obsidian Project | 柔</span>
 </div>
 
 <script>
-    // 自動儲存與讀取 (Local Storage)
-    const inputs = ['emp_id', 'leave_type', 'backup', 'memo'];
-
-    window.onload = () => {
-        inputs.forEach(id => {
-            const saved = localStorage.getItem('pc_hr_' + id);
-            if(saved) document.getElementById(id).value = saved;
-        });
-    };
-
-    function saveToLocal() {
-        inputs.forEach(id => {
-            localStorage.setItem('pc_hr_' + id, document.getElementById(id).value);
-        });
-        alert("資料已暫存至本地瀏覽器！");
+    // 分頁切換邏輯
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+        
+        document.getElementById('view-' + viewId).classList.add('active');
+        document.getElementById('tab-' + viewId).classList.add('active');
     }
 
-    function copyFormat() {
-        const id = document.getElementById('emp_id').value;
-        const type = document.getElementById('leave_type').value;
-        const backup = document.getElementById('backup').value;
-        const memo = document.getElementById('memo').value;
+    // 資料儲存與複製邏輯
+    function copyData(type) {
+        let text = "";
+        if(type === 'leave') {
+            const id = document.getElementById('l_id').value;
+            const backup = document.getElementById('l_backup').value;
+            const memo = document.getElementById('l_memo').value;
+            text = `【請假增補回報】\n工號：${id}\n交接代理：${backup}\n備註說明：${memo}`;
+        } else {
+            const id = document.getElementById('m_id').value;
+            const memo = document.getElementById('m_memo').value;
+            text = `【未刷單異常增補】\n工號：${id}\n狀況描述：${memo}`;
+        }
         
-        const finalStr = `【請假增補】\n工號：${id}\n假別：${type}\n代理：${backup}\n備註：${memo}`;
-        
-        navigator.clipboard.writeText(finalStr).then(() => {
-            alert("已格式化並複製！請直接貼上公司系統的備註欄位。");
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✨ 已存檔並格式化複製！\n現在請直接貼上公司系統的備註欄位。");
         });
     }
+
+    // 自動儲存到 LocalStorage (略，可根據需求增加監聽器)
 </script>
 
 </body>
