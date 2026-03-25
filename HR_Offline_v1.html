@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Web Service - 單機展示版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* 這裡我手寫了核心樣式，就算沒網路，基本的卡片和佈局也不會亂 */
+        :root { --primary-blue: #0d6efd; --dark-bg: #222; }
+        body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; min-height: 100vh; }
+        
+        /* 基礎佈局補強 (防止斷網時 Bootstrap 失效) */
+        .navbar-custom { background-color: var(--dark-bg); padding: 10px 20px; display: flex; align-items: center; color: white; }
+        .nav-link { color: #888; text-decoration: none; margin: 0 15px; cursor: pointer; font-size: 0.9rem; }
+        .nav-link.active { color: #fff; font-weight: bold; border-bottom: 2px solid white; }
+        
+        .main-card { 
+            max-width: 1000px; margin: 40px auto; padding: 40px; 
+            background: white; border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        }
+        
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        
+        .lang-btn { 
+            width: 35px; height: 35px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-left: 5px; font-size: 10px; font-weight: bold; color: white; cursor: pointer;
+        }
+
+        /* 針對列印優化：人事如果想印出來看 */
+        @media print {
+            .navbar-custom, .theme-toggle, .btn, .lang-btn, .input-group-text { display: none !important; }
+            .main-card { box-shadow: none; border: 1px solid #ccc; width: 100%; margin: 0; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-custom">
+    <div style="font-weight: bold; margin-right: auto;">HR Service</div>
+    <div style="display: flex;">
+        <a class="nav-link active" onclick="showPage('home')" data-i18n="nav_home">首頁</a>
+        <a class="nav-link" onclick="showPage('leave')" data-i18n="nav_leave">請假單</a>
+        <a class="nav-link" onclick="showPage('unclocked')" data-i18n="nav_unclocked">未刷單</a>
+    </div>
+    <div style="margin-left: 20px;">
+        <div class="lang-btn" style="background:#e67e22" onclick="changeLang('zh')">TW</div>
+        <div class="lang-btn" style="background:#d35400" onclick="changeLang('en')">TH</div>
+        <div class="lang-btn" style="background:#e74c3c" onclick="changeLang('en')">ID</div>
+    </div>
+</nav>
+
+<section id="home" class="page-section active">
+    <div style="height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h1 style="font-size: 4rem;">HR web service</h1>
+        <p style="color: #888;">Designed for IT Team</p>
+    </div>
+</section>
+
+<section id="leave" class="page-section">
+    <div class="main-card">
+        <h2 class="text-center mb-4" data-i18n="nav_leave">請假單</h2>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">工號 (Staff ID)</label>
+                <input type="text" id="emp-id" class="form-control" placeholder="d01762">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">姓名 (Name)</label>
+                <input type="text" id="emp-name" class="form-control" disabled>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-primary px-5" onclick="mockQuery()">查詢並模擬存檔</button>
+        </div>
+    </div>
+</section>
+
+<script>
+    // 頁面切換
+    function showPage(id) {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('active');
+            if(l.getAttribute('onclick').includes(id)) l.classList.add('active');
+        });
+    }
+
+    // 模擬功能
+    function mockQuery() {
+        const id = document.getElementById('emp-id').value;
+        if(id === 'd01762') {
+            document.getElementById('emp-name').value = '王大明';
+            alert('【單機展示測試】\n工號：d01762 驗證成功！\n資料已模擬寫入。');
+        } else {
+            alert('請輸入 d01762 進行測試');
+        }
+    }
+</script>
+
+</body>
+</html>
