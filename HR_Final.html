@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Web Service 整合版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-blue: #0d6efd; --dark-bg: #222; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8f9fa; margin: 0; min-height: 100vh; transition: 0.3s; }
+
+        /* 導覽列 */
+        .navbar-custom { background-color: var(--dark-bg); padding: 10px 20px; }
+        .nav-link { color: #888 !important; cursor: pointer; transition: 0.3s; margin: 0 10px; }
+        .nav-link.active { color: #fff !important; font-weight: bold; border-bottom: 2px solid #fff; }
+        .lang-btn { width: 35px; height: 35px; border-radius: 50%; border: none; margin-left: 8px; font-size: 0.7rem; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; }
+        .lang-btn:hover { transform: scale(1.1); }
+        
+        /* 頁面切換動畫 */
+        .page-section { display: none; padding-top: 40px; position: relative; }
+        .page-section.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 卡片與表單樣式 */
+        .main-card { max-width: 1000px; margin: 0 auto 40px; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .section-title { text-align: center; font-size: 2rem; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; color: #444; }
+        .form-label { font-size: 0.9rem; color: #555; font-weight: 500; }
+        .form-control:disabled { background-color: #f4f4f4; border-color: #ddd; }
+
+        /* 首頁 Hero 區域 */
+        .home-hero { height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .home-title { font-size: 4.5rem; font-weight: 700; color: #333; letter-spacing: -1px; }
+        .home-subtitle { font-size: 1.6rem; color: #999; font-weight: 300; }
+        .deco-img { position: absolute; z-index: -1; opacity: 0.12; filter: grayscale(1); width: 280px; }
+
+        /* 頁尾與 Toggle Theme */
+        .footer-info { font-size: 0.75rem; color: #bbb; text-align: center; margin-top: 40px; }
+        .theme-toggle { position: fixed; bottom: 15px; right: 15px; background-color: #4b39d7; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; z-index: 1000; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container-fluid">
+        <div class="navbar-brand"><img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" style="width:26px; filter:invert(1);"></div>
+        <div class="collapse navbar-collapse justify-content-center">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link active" onclick="showPage('home')" data-i18n="nav_home">首頁</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="showPage('leave')" data-i18n="nav_leave">請假單</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="showPage('unclocked')" data-i18n="nav_unclocked">未刷單</a></li>
+            </ul>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="lang-btn" style="background:#e67e22" onclick="changeLang('zh')">TW</div>
+            <div class="lang-btn" style="background:#d35400" onclick="changeLang('en')">TH</div>
+            <div class="lang-btn" style="background:#e74c3c" onclick="changeLang('en')">ID</div>
+        </div>
+    </div>
+</nav>
+
+<section id="home" class="page-section active">
+    <img src="https://cdn-icons-png.flaticon.com/512/0/191.png" class="deco-img" style="top:15%; left:8%;">
+    <img src="https://cdn-icons-png.flaticon.com/512/0/191.png" class="deco-img" style="bottom:15%; right:8%;">
+    <div class="home-hero">
+        <h1 class="home-title">HR web service</h1>
+        <p class="home-subtitle" data-i18n="home_sub">Designed for IT</p>
+        <div class="footer-info" style="margin-top: 120px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" style="width:20px; opacity:0.4; margin-bottom:10px;"><br>
+            © APEX DYNAMICS 2026
+        </div>
+    </div>
+</section>
+
+<section id="leave" class="page-section">
+    <div class="container">
+        <div class="main-card">
+            <h2 class="section-title" data-i18n="nav_leave">請假單</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label" data-i18n="label_id4">身分證號後四碼</label>
+                    <div class="input-group mb-3"><input type="password" class="form-control" value="1234"><span class="input-group-text bg-transparent" style="cursor:pointer;">👁️</span></div>
+                    <label class="form-label" data-i18n="label_emp">工號</label><input type="text" id="leave-emp-id" class="form-control mb-3" placeholder="d01762">
+                    <label class="form-label" data-i18n="label_name">姓名</label><input type="text" class="form-control mb-3" disabled id="mock-name">
+                    <label class="form-label" data-i18n="label_type">請假名稱</label><select class="form-select mb-3"><option data-i18n="opt_select">請選擇...</option></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" data-i18n="label_dept">部門</label><input type="text" class="form-control mb-3" disabled id="mock-dept">
+                    <label class="form-label" data-i18n="label_m1">1級主管</label><input type="text" class="form-control mb-3" disabled id="mock-m1">
+                    <label class="form-label" data-i18n="label_m2">2級主管</label><input type="text" class="form-control mb-3" disabled id="mock-m2">
+                    <label class="form-label" data-i18n="label_hours">未休時數</label><input type="text" class="form-control mb-3" disabled id="mock-hours">
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary px-4 me-2" style="background:#0044cc" onclick="mockQuery()" data-i18n="btn_query">查詢</button>
+                <button class="btn btn-primary px-4" style="background:#4488ff" onclick="submitForm()" data-i18n="btn_submit">送出</button>
+            </div>
+            <div class="footer-info">© APEX DYNAMICS 2026</div>
+        </div>
+    </div>
+</section>
+
+<section id="unclocked" class="page-section">
+    <div class="container">
+        <div class="main-card" style="max-width: 900px;">
+            <button class="btn btn-primary mb-4" data-i18n="btn_record">申請紀錄</button>
+            <h2 class="section-title" data-i18n="nav_unclocked">未刷單</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label" data-i18n="label_emp">工號</label><input type="text" class="form-control mb-3">
+                    <label class="form-label" data-i18n="label_reason">未刷卡原因</label>
+                    <select class="form-select mb-3"><option data-i18n="opt_forget">未帶卡</option></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" data-i18n="label_id4">身分證號後四碼</label>
+                    <div class="input-group mb-3"><input type="password" class="form-control"><span class="input-group-text bg-transparent" style="cursor:pointer;">👁️</span></div>
+                    <label class="form-label" data-i18n="label_time">未刷卡時間</label><input type="date" class="form-control mb-3">
+                </div>
+            </div>
+            <button class="btn btn-primary px-5 mt-4" onclick="submitForm()" data-i18n="btn_submit">送出</button>
+            <div class="footer-info">© APEX DYNAMICS 2026</div>
+        </div>
+    </div>
+</section>
+
+<button class="theme-toggle" onclick="toggleTheme()">Toggle theme ▾</button>
+
+<script>
+    // 1. 多國語言字典
+    const i18n = {
+        'zh': {
+            'nav_home': '首頁', 'nav_leave': '請假單', 'nav_unclocked': '未刷單',
+            'home_sub': 'Designed for IT', 'btn_query': '查詢', 'btn_submit': '送出',
+            'btn_record': '申請紀錄', 'label_id4': '身分證號後四碼', 'label_emp': '工號',
+            'label_name': '姓名', 'label_type': '請假名稱', 'label_dept': '部門',
+            'label_m1': '1級主管', 'label_m2': '2級主管', 'label_hours': '未休時數',
+            'opt_select': '請選擇...', 'label_reason': '未刷卡原因', 'label_time': '未刷卡時間', 'opt_forget': '未帶卡'
+        },
+        'en': {
+            'nav_home': 'Home', 'nav_leave': 'Leave Form', 'nav_unclocked': 'Clock Error',
+            'home_sub': 'HR Solution for IT', 'btn_query': 'Query', 'btn_submit': 'Submit',
+            'btn_record': 'History', 'label_id4': 'ID Last 4 Digits', 'label_emp': 'Staff ID',
+            'label_name': 'Name', 'label_type': 'Leave Type', 'label_dept': 'Dept.',
+            'label_m1': 'Manager L1', 'label_m2': 'Manager L2', 'label_hours': 'Remaining Hours',
+            'opt_select': 'Please Select...', 'label_reason': 'Reason', 'label_time': 'Clock Time', 'opt_forget': 'Forgot Card'
+        }
+    };
+
+    // 2. 切換語言
+    function changeLang(lang) {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+    }
+
+    // 3. 頁面切換
+    function showPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('active');
+            if(l.getAttribute('onclick').includes(pageId)) l.classList.add('active');
+        });
+    }
+
+    // 4. 眼睛功能
+    document.querySelectorAll('.input-group-text').forEach(btn => {
+        btn.onclick = function() {
+            let input = this.parentElement.querySelector('input');
+            input.type = input.type === 'password' ? 'text' : 'password';
+            this.innerText = input.type === 'password' ? '👁️' : '👁️‍🗨️';
+        };
+    });
+
+    // 5. 模擬查詢與送出
+    function mockQuery() {
+        let id = document.getElementById('leave-emp-id').value;
+        if(id === 'd01762') {
+            document.getElementById('mock-name').value = '王大明';
+            document.getElementById('mock-dept').value = '資訊部';
+            document.getElementById('mock-m1').value = '主管A';
+            document.getElementById('mock-m2').value = '主管B';
+            document.getElementById('mock-hours').value = '16.0';
+        } else {
+            alert('請輸入測試工號 d01762');
+        }
+    }
+
+    function submitForm() {
+        alert('表單已成功送出！');
+    }
+
+    // 6. 主題切換
+    function toggleTheme() {
+        document.body.style.filter = document.body.style.filter === 'invert(0.9) hue-rotate(180deg)' ? 'none' : 'invert(0.9) hue-rotate(180deg)';
+    }
+</script>
+</body>
+</html>
