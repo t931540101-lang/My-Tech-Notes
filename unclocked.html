@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Web Service - 未刷單</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+        }
+
+        /* 導覽列 (風格統一) */
+        .navbar-custom {
+            background-color: #222;
+            padding: 10px 20px;
+        }
+        .lang-btn {
+            width: 35px; height: 35px; border-radius: 50%;
+            border: none; margin-left: 8px; font-size: 0.7rem;
+            font-weight: bold; color: white;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .bg-tw { background-color: #e67e22; }
+        .bg-th { background-color: #d35400; }
+        .bg-id { background-color: #e74c3c; }
+
+        /* 主容器 */
+        .main-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 500px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        /* 申請紀錄按鈕樣式 */
+        .btn-record {
+            background-color: #0d6efd;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            padding: 10px;
+        }
+
+        /* 送出按鈕樣式 */
+        .btn-submit-wide {
+            background-color: #0d6efd;
+            color: white;
+            width: 150px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+
+        /* 底部 Toggle Theme */
+        .theme-toggle {
+            position: fixed; bottom: 10px; right: 10px;
+            background-color: #4b39d7; color: white; border: none;
+            padding: 5px 15px; border-radius: 5px; font-size: 0.8rem;
+        }
+
+        .footer-text {
+            margin-top: 50px;
+            font-size: 0.7rem;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" style="width:24px; filter:invert(1);" alt="logo"></a>
+        <div class="collapse navbar-collapse justify-content-center">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="home.html">首頁</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html">請假單</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="#">未刷單</a></li>
+            </ul>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="lang-btn bg-tw">TW</div>
+            <div class="lang-btn bg-th">TH</div>
+            <div class="lang-btn bg-id">ID</div>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="main-container">
+        <button class="btn-record">申請紀錄</button>
+        
+        <h2 class="section-title">未刷單</h2>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">工號</label>
+                    <input type="text" class="form-control" placeholder="">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">未刷卡原因</label>
+                    <select class="form-select">
+                        <option selected>未帶卡</option>
+                        <option>忘記刷卡</option>
+                        <option>卡片損壞</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">身分證號後四碼</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control">
+                        <span class="input-group-text bg-transparent border-start-0">👁️</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">未刷卡時間</label>
+                    <input type="date" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div class="text-start">
+            <button class="btn btn-submit-wide">送出</button>
+        </div>
+
+        <div class="footer-text">
+            <img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" style="width:12px; opacity: 0.5; margin-bottom: 3px;" alt="logo"><br>
+            © APEX DYNAMICS 2026
+        </div>
+    </div>
+</div>
+
+<button class="theme-toggle">Toggle theme ▾</button>
+
+</body>
+</html>
