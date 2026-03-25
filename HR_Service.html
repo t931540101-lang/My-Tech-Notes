@@ -127,15 +127,13 @@
 <button class="theme-toggle">Toggle theme ▾</button>
 
 <script>
+    // 1. 頁面切換邏輯
     function showPage(pageId) {
-        // 1. 隱藏所有頁面
         document.querySelectorAll('.page-section').forEach(section => {
             section.classList.remove('active');
         });
-        // 2. 顯示點選的頁面
         document.getElementById(pageId).classList.add('active');
         
-        // 3. 更新導覽列狀態
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
             if(link.getAttribute('onclick').includes(pageId)) {
@@ -143,6 +141,56 @@
             }
         });
     }
+
+    // 2. 密碼顯示/隱藏切換
+    document.querySelectorAll('.input-group-text').forEach(eyeBtn => {
+        eyeBtn.style.cursor = 'pointer'; // 讓滑鼠移上去變手指
+        eyeBtn.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.innerText = '👁️‍🗨️'; // 切換圖示
+            } else {
+                input.type = 'password';
+                this.innerText = '👁️';
+            }
+        });
+    });
+
+    // 3. 模擬查詢功能
+    document.querySelector('.btn-query')?.addEventListener('click', function() {
+        const empId = document.querySelector('input[placeholder="d01762"]').value;
+        if(empId === 'd01762') {
+            alert('查詢成功！');
+            // 模擬自動填入
+            document.querySelectorAll('input[disabled]').forEach((el, index) => {
+                const mockData = ['王小明', '資訊部', '主管A', '主管B', '16 小時'];
+                el.value = mockData[index] || '';
+            });
+        } else {
+            alert('請輸入正確的工號 (例如: d01762)');
+        }
+    });
+
+    // 4. 送出按鈕提示
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+        if(btn.innerText === '送出') {
+            btn.addEventListener('click', function() {
+                alert('表單已送出！正在等待主管審核...');
+            });
+        }
+    });
+
+    // 5. 主題切換 (簡單版)
+    document.querySelector('.theme-toggle').addEventListener('click', function() {
+        const body = document.body;
+        if(body.style.filter === 'invert(1)') {
+            body.style.filter = 'none';
+        } else {
+            body.style.filter = 'invert(1)';
+        }
+    });
+</script>
 </script>
 
 </body>
