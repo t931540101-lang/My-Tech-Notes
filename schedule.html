@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑曜石排班表</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 10px; margin: 0; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.2rem; color: #333; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 60%; }
+        button { background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>今日排班設定</h2>
+    <div id="scheduleContainer">
+        </div>
+    <button onclick="saveData()">儲存排班</button>
+</div>
+
+<script>
+    const shifts = ['早班 (07-15)', '中班 (15-23)', '晚班 (23-07)'];
+    
+    function init() {
+        const container = document.getElementById('scheduleContainer');
+        const saved = JSON.parse(localStorage.getItem('mySchedule')) || {};
+        
+        ['週一', '週二', '週四', '週五', '週六'].forEach(day => {
+            container.innerHTML += `
+                <div class="row">
+                    <span>${day}</span>
+                    <select id="${day}">
+                        ${shifts.map(s => `<option ${saved[day] === s ? 'selected' : ''}>${s}</option>}`).join('')}
+                    </select>
+                </div>`;
+        });
+    }
+
+    function saveData() {
+        const data = {};
+        document.querySelectorAll('select').forEach(sel => data[sel.id] = sel.value);
+        localStorage.setItem('mySchedule', JSON.stringify(data));
+        alert('排班已儲存！');
+    }
+
+    init();
+</script>
+</body>
+</html>
