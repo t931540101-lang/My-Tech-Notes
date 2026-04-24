@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>線上排班系統 v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #151820;
+    --border:    #252a35;
+    --border2:   #1e2330;
+    --text:      #c8cdd8;
+    --text-dim:  #5a6175;
+    --accent:    #e8a020;
+
+```
+--early-bg:  #1a2a1a;
+--early-txt: #5dcc6e;
+--early-bdr: #2a4a2a;
+
+--mid-bg:    #1a1f2e;
+--mid-txt:   #5b9cf6;
+--mid-bdr:   #243050;
+
+--night-bg:  #221a2e;
+--night-txt: #b07ef0;
+--night-bdr: #3a2550;
+
+--off-bg:    #131518;
+--off-txt:   #3a3f50;
+
+--today-glow: rgba(232,160,32,0.15);
+```
+
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Noto Sans TC’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── TOP BAR ── */
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 16px 24px;
+border-bottom: 1px solid var(–border);
+background: var(–surface);
+position: sticky;
+top: 0;
+z-index: 100;
+}
+
+.logo {
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 20px;
+font-weight: 700;
+letter-spacing: 3px;
+color: var(–accent);
+text-transform: uppercase;
+}
+.logo span { color: var(–text-dim); font-weight: 500; }
+
+.nav-month {
+display: flex;
+align-items: center;
+gap: 16px;
+}
+.nav-btn {
+background: var(–border);
+border: none;
+color: var(–text);
+width: 32px; height: 32px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 16px;
+display: flex; align-items: center; justify-content: center;
+transition: background .2s;
+}
+.nav-btn:hover { background: var(–border2); color: var(–accent); }
+
+.month-label {
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 22px;
+font-weight: 700;
+letter-spacing: 2px;
+color: #fff;
+min-width: 160px;
+text-align: center;
+}
+
+.header-right {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.badge-role {
+font-size: 11px;
+letter-spacing: 1px;
+padding: 4px 10px;
+border-radius: 4px;
+background: rgba(232,160,32,0.12);
+color: var(–accent);
+border: 1px solid rgba(232,160,32,0.3);
+text-transform: uppercase;
+}
+
+/* ── LEGEND ── */
+.legend-bar {
+display: flex;
+gap: 20px;
+padding: 10px 24px;
+border-bottom: 1px solid var(–border2);
+background: rgba(21,24,32,0.8);
+flex-wrap: wrap;
+}
+.legend-item {
+display: flex;
+align-items: center;
+gap: 8px;
+font-size: 12px;
+color: var(–text-dim);
+}
+.legend-chip {
+width: 36px; height: 20px;
+border-radius: 4px;
+display: flex; align-items: center; justify-content: center;
+font-size: 10px;
+font-weight: 700;
+font-family: ‘Rajdhani’, sans-serif;
+letter-spacing: 1px;
+}
+
+/* ── MAIN TABLE WRAPPER ── */
+.table-wrap {
+overflow-x: auto;
+padding: 16px;
+}
+
+table {
+border-collapse: collapse;
+min-width: 900px;
+width: 100%;
+}
+
+/* sticky first column */
+th.emp-col, td.emp-col {
+position: sticky;
+left: 0;
+z-index: 10;
+background: var(–surface);
+min-width: 100px;
+max-width: 120px;
+}
+th.emp-col { background: #10121a; }
+
+th {
+background: #10121a;
+padding: 8px 6px;
+font-size: 11px;
+font-weight: 500;
+color: var(–text-dim);
+text-align: center;
+border: 1px solid var(–border2);
+letter-spacing: .5px;
+}
+
+th .day-num {
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 16px;
+font-weight: 700;
+color: var(–text);
+display: block;
+}
+th.today-col .day-num { color: var(–accent); }
+th.today-col { background: rgba(232,160,32,0.06); }
+
+th .day-name { font-size: 10px; color: var(–text-dim); }
+th.weekend .day-name { color: #c04040; }
+
+td {
+border: 1px solid var(–border2);
+padding: 4px;
+text-align: center;
+min-width: 46px;
+height: 48px;
+vertical-align: middle;
+transition: background .15s;
+}
+
+td.emp-col {
+padding: 8px 12px;
+text-align: left;
+}
+.emp-name {
+font-size: 13px;
+font-weight: 500;
+color: var(–text);
+white-space: nowrap;
+}
+.emp-pos {
+font-size: 10px;
+color: var(–text-dim);
+margin-top: 2px;
+}
+
+/* shift chips */
+.chip {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 38px; height: 32px;
+border-radius: 6px;
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: .5px;
+cursor: pointer;
+transition: filter .15s, transform .1s;
+border-width: 1px;
+border-style: solid;
+user-select: none;
+}
+.chip:hover { filter: brightness(1.3); transform: scale(1.08); }
+
+.chip-E { background: var(–early-bg); color: var(–early-txt); border-color: var(–early-bdr); }
+.chip-M { background: var(–mid-bg);   color: var(–mid-txt);   border-color: var(–mid-bdr); }
+.chip-N { background: var(–night-bg); color: var(–night-txt); border-color: var(–night-bdr); }
+.chip-O { background: var(–off-bg);   color: var(–off-txt);   border-color: transparent; font-size:11px; }
+
+td.today-col { background: var(–today-glow) !important; }
+
+/* row hover */
+tr:hover td { background: rgba(255,255,255,0.02); }
+tr:hover td.emp-col { background: #1a1e28; }
+
+/* stats column */
+td.stats {
+min-width: 80px;
+padding: 6px 10px;
+text-align: left;
+}
+.stats-grid { display: flex; flex-direction: column; gap: 2px; }
+.stat-row { display: flex; justify-content: space-between; font-size: 10px; }
+.stat-label { color: var(–text-dim); }
+.stat-val { font-family: ‘Rajdhani’, sans-serif; font-weight: 700; font-size: 12px; }
+.val-E { color: var(–early-txt); }
+.val-M { color: var(–mid-txt); }
+.val-N { color: var(–night-txt); }
+
+/* ── SHIFT PICKER MODAL ── */
+.overlay {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,.6);
+z-index: 200;
+align-items: center;
+justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+background: #1a1e28;
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 24px;
+min-width: 240px;
+box-shadow: 0 24px 60px rgba(0,0,0,.6);
+animation: popIn .18s ease;
+}
+@keyframes popIn {
+from { transform: scale(.92); opacity: 0; }
+to   { transform: scale(1);   opacity: 1; }
+}
+
+.modal-title {
+font-size: 12px;
+color: var(–text-dim);
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 4px;
+}
+.modal-sub {
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 18px;
+font-weight: 700;
+color: #fff;
+margin-bottom: 20px;
+}
+.modal-options {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+.modal-option {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 10px 14px;
+border-radius: 8px;
+cursor: pointer;
+transition: background .15s;
+border: 1px solid transparent;
+}
+.modal-option:hover { border-color: var(–border); background: rgba(255,255,255,.04); }
+.opt-chip {
+width: 40px; height: 34px;
+border-radius: 6px;
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 14px; font-weight: 700;
+border: 1px solid;
+flex-shrink: 0;
+}
+.opt-info { text-align: left; }
+.opt-name { font-size: 13px; font-weight: 500; color: var(–text); }
+.opt-time { font-size: 11px; color: var(–text-dim); margin-top: 2px; }
+
+.modal-cancel {
+margin-top: 16px;
+width: 100%;
+background: none;
+border: 1px solid var(–border);
+color: var(–text-dim);
+padding: 8px;
+border-radius: 8px;
+cursor: pointer;
+font-size: 13px;
+transition: background .15s;
+}
+.modal-cancel:hover { background: rgba(255,255,255,.04); }
+
+/* ── SUMMARY BAR ── */
+.summary {
+display: flex;
+gap: 20px;
+padding: 12px 24px;
+border-top: 1px solid var(–border2);
+background: var(–surface);
+flex-wrap: wrap;
+}
+.sum-card {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 8px 16px;
+background: var(–bg);
+border: 1px solid var(–border2);
+border-radius: 8px;
+}
+.sum-dot { width: 8px; height: 8px; border-radius: 50%; }
+.sum-label { font-size: 11px; color: var(–text-dim); }
+.sum-val {
+font-family: ‘Rajdhani’, sans-serif;
+font-size: 22px;
+font-weight: 700;
+line-height: 1;
+margin-left: 4px;
+}
+
+@media (max-width: 600px) {
+header { padding: 12px 14px; }
+.logo { font-size: 15px; }
+.legend-bar { padding: 8px 14px; gap: 12px; }
+.table-wrap { padding: 8px; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<header>
+  <div class="logo">APEX<span> SCHEDULE</span></div>
+  <div class="nav-month">
+    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="header-right">
+    <span class="badge-role">排班長</span>
+  </div>
+</header>
+
+<!-- LEGEND -->
+
+<div class="legend-bar">
+  <div class="legend-item">
+    <div class="legend-chip chip-E">早</div>
+    <span>早班 06:00–14:00</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-chip chip-M">中</div>
+    <span>中班 14:00–22:00</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-chip chip-N">夜</div>
+    <span>夜班 22:00–06:00</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-chip chip-O">休</div>
+    <span>休假</span>
+  </div>
+</div>
+
+<!-- TABLE -->
+
+<div class="table-wrap">
+  <table id="scheduleTable"></table>
+</div>
+
+<!-- SUMMARY -->
+
+<div class="summary" id="summary"></div>
+
+<!-- MODAL -->
+
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">選擇班別</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-options">
+      <div class="modal-option" onclick="selectShift('E')">
+        <div class="opt-chip chip-E">早</div>
+        <div class="opt-info">
+          <div class="opt-name">早班</div>
+          <div class="opt-time">06:00 – 14:00</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="selectShift('M')">
+        <div class="opt-chip chip-M">中</div>
+        <div class="opt-info">
+          <div class="opt-name">中班</div>
+          <div class="opt-time">14:00 – 22:00</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="selectShift('N')">
+        <div class="opt-chip chip-N">夜</div>
+        <div class="opt-info">
+          <div class="opt-name">夜班</div>
+          <div class="opt-time">22:00 – 06:00</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="selectShift('O')">
+        <div class="opt-chip chip-O">休</div>
+        <div class="opt-info">
+          <div class="opt-name">休假</div>
+          <div class="opt-time">當日休息</div>
+        </div>
+      </div>
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">取消</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const employees = [
+  { id:'e01', name:'王志明', pos:'組長' },
+  { id:'e02', name:'陳建宏', pos:'隊員' },
+  { id:'e03', name:'林淑芬', pos:'隊員' },
+  { id:'e04', name:'黃俊傑', pos:'隊員' },
+  { id:'e05', name:'吳雅婷', pos:'隊員' },
+  { id:'e06', name:'張文凱', pos:'隊員' },
+];
+
+const SHIFTS = {
+  E: { label:'早', cls:'chip-E' },
+  M: { label:'中', cls:'chip-M' },
+  N: { label:'夜', cls:'chip-N' },
+  O: { label:'休', cls:'chip-O' },
+};
+
+const DAYS_TW = ['日','一','二','三','四','五','六'];
+
+// schedule: { empId_YYYY-MM-DD: 'E'|'M'|'N'|'O' }
+let schedule = {};
+
+// seed random data
+function seedSchedule(year, month) {
+  const days = new Date(year, month, 0).getDate();
+  const pool = ['E','M','N','O'];
+  employees.forEach(emp => {
+    for (let d = 1; d <= days; d++) {
+      const key = `${emp.id}_${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (!(key in schedule)) {
+        schedule[key] = pool[Math.floor(Math.random() * pool.length)];
+      }
+    }
+  });
+}
+
+// ── STATE ─────────────────────────────────────────────
+const today = new Date();
+let curYear  = today.getFullYear();
+let curMonth = today.getMonth() + 1; // 1-based
+
+let pendingCell = null; // { empId, dateStr }
+
+// ── RENDER ────────────────────────────────────────────
+function render() {
+  seedSchedule(curYear, curMonth);
+
+  const days  = new Date(curYear, curMonth, 0).getDate();
+  const table = document.getElementById('scheduleTable');
+
+  // month label
+  document.getElementById('monthLabel').textContent =
+    `${curYear} / ${String(curMonth).padStart(2,'0')}`;
+
+  // build header
+  let thead = `<thead><tr>
+    <th class="emp-col">人員</th>`;
+  for (let d = 1; d <= days; d++) {
+    const dt  = new Date(curYear, curMonth-1, d);
+    const dow = dt.getDay();
+    const isToday = (curYear === today.getFullYear() &&
+                     curMonth === today.getMonth()+1 &&
+                     d === today.getDate());
+    const cls = [
+      isToday ? 'today-col' : '',
+      (dow===0||dow===6) ? 'weekend' : ''
+    ].join(' ').trim();
+    thead += `<th class="${cls}">
+      <span class="day-num">${d}</span>
+      <span class="day-name">${DAYS_TW[dow]}</span>
+    </th>`;
+  }
+  thead += `<th>統計</th></tr></thead>`;
+
+  // build body
+  let tbody = '<tbody>';
+  employees.forEach(emp => {
+    let cntE=0, cntM=0, cntN=0;
+    let row = `<tr>
+      <td class="emp-col">
+        <div class="emp-name">${emp.name}</div>
+        <div class="emp-pos">${emp.pos}</div>
+      </td>`;
+    for (let d = 1; d <= days; d++) {
+      const dateStr = `${curYear}-${String(curMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const key     = `${emp.id}_${dateStr}`;
+      const s       = schedule[key] || 'O';
+      const dt      = new Date(curYear, curMonth-1, d);
+      const dow     = dt.getDay();
+      const isToday = (curYear === today.getFullYear() &&
+                       curMonth === today.getMonth()+1 &&
+                       d === today.getDate());
+      const tdCls = isToday ? 'today-col' : '';
+      if (s==='E') cntE++;
+      else if (s==='M') cntM++;
+      else if (s==='N') cntN++;
+      row += `<td class="${tdCls}">
+        <div class="chip ${SHIFTS[s].cls}"
+             onclick="openModal('${emp.id}','${emp.name}','${dateStr}')">
+          ${SHIFTS[s].label}
+        </div>
+      </td>`;
+    }
+    row += `<td class="stats">
+      <div class="stats-grid">
+        <div class="stat-row"><span class="stat-label">早</span><span class="stat-val val-E">${cntE}</span></div>
+        <div class="stat-row"><span class="stat-label">中</span><span class="stat-val val-M">${cntM}</span></div>
+        <div class="stat-row"><span class="stat-label">夜</span><span class="stat-val val-N">${cntN}</span></div>
+      </div>
+    </td></tr>`;
+    tbody += row;
+  });
+  tbody += '</tbody>';
+
+  table.innerHTML = thead + tbody;
+  renderSummary(days);
+}
+
+function renderSummary(days) {
+  let totE=0, totM=0, totN=0, totO=0;
+  Object.values(schedule).forEach(v => {
+    if (v==='E') totE++;
+    else if (v==='M') totM++;
+    else if (v==='N') totN++;
+    else totO++;
+  });
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card">
+      <div class="sum-dot" style="background:var(--early-txt)"></div>
+      <span class="sum-label">早班</span>
+      <span class="sum-val val-E">${totE}</span>
+    </div>
+    <div class="sum-card">
+      <div class="sum-dot" style="background:var(--mid-txt)"></div>
+      <span class="sum-label">中班</span>
+      <span class="sum-val val-M">${totM}</span>
+    </div>
+    <div class="sum-card">
+      <div class="sum-dot" style="background:var(--night-txt)"></div>
+      <span class="sum-label">夜班</span>
+      <span class="sum-val val-N">${totN}</span>
+    </div>
+    <div class="sum-card">
+      <div class="sum-dot" style="background:var(--text-dim)"></div>
+      <span class="sum-label">休假</span>
+      <span class="sum-val" style="color:var(--text-dim)">${totO}</span>
+    </div>
+  `;
+}
+
+// ── MONTH NAV ────────────────────────────────────────
+function changeMonth(dir) {
+  curMonth += dir;
+  if (curMonth > 12) { curMonth = 1; curYear++; }
+  if (curMonth < 1)  { curMonth = 12; curYear--; }
+  render();
+}
+
+// ── MODAL ────────────────────────────────────────────
+function openModal(empId, empName, dateStr) {
+  pendingCell = { empId, dateStr };
+  document.getElementById('modalSub').textContent =
+    `${empName}・${dateStr}`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target.id === 'overlay') {
+    document.getElementById('overlay').classList.remove('open');
+    pendingCell = null;
+  }
+}
+
+function selectShift(type) {
+  if (!pendingCell) return;
+  const key = `${pendingCell.empId}_${pendingCell.dateStr}`;
+  schedule[key] = type;
+  document.getElementById('overlay').classList.remove('open');
+  pendingCell = null;
+  render();
+}
+
+// ── INIT ─────────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
