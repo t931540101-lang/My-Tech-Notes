@@ -44,6 +44,10 @@
         .cell-input:focus { background: #e8f4f8; outline: none; border-radius: 4px; }
         .cell-input::placeholder { color: #ccc; font-weight: normal; font-size: 0.85rem; }
         
+        /* 表頭廠商名輸入框調整 */
+        .vendor-input { width: 100%; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 0.95rem; color: var(--primary-color); resize: none; outline: none; }
+        .vendor-input:focus { background: #d5dbdb; border-radius: 4px; }
+
         /* 底部小計列 */
         .total-row { background: #eaeded; font-weight: bold; height: 45px; font-size: 1rem; }
         .total-val { color: #c0392b; }
@@ -62,7 +66,7 @@
     </div>
 
     <div class="action-bar">
-        <button class="btn btn-save" onclick="saveData()">💾 儲存本月資料</button>
+        <button class="btn btn-save" onclick="saveData()">💾 儲存本月與廠商資料</button>
         <button class="btn btn-export" onclick="exportCSV()">📊 匯出本月 Excel (CSV)</button>
         <button class="btn btn-clear" id="clearBtn" onclick="clearCurrentMonth()">⚠️ 清空本月</button>
     </div>
@@ -73,12 +77,13 @@
                 <tr>
                     <th style="width: 50px;">日期</th>
                     <th style="width: 50px;">星期</th>
-                    <th>(祥萬)<br>林大哥</th>
-                    <th>(祥萬)<br>傅大哥</th>
-                    <th>俊丰</th>
-                    <th>廠商 4</th>
-                    <th>廠商 5</th>
-                    <th>廠商 6</th>
+                    <!-- 廠商欄位變成可編輯的輸入框 -->
+                    <th><input type="text" id="v_name_0" class="vendor-input" value="(祥萬)林大哥"></th>
+                    <th><input type="text" id="v_name_1" class="vendor-input" value="(祥萬)傅大哥"></th>
+                    <th><input type="text" id="v_name_2" class="vendor-input" value="俊丰"></th>
+                    <th><input type="text" id="v_name_3" class="vendor-input" value="廠商 4"></th>
+                    <th><input type="text" id="v_name_4" class="vendor-input" value="廠商 5"></th>
+                    <th><input type="text" id="v_name_5" class="vendor-input" value="廠商 6"></th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -102,8 +107,6 @@
         const totalVendors = 6;
         const year = 2026;
         const weekDaysArr = ["日", "一", "二", "三", "四", "五", "六"];
-        
-        // 2026年每個月的天數
         const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
         // 初始化月份下拉選單
@@ -115,40 +118,56 @@
             monthSelect.appendChild(opt);
         }
         
-        // 預設載入當前月份（以 2026 年 5 月為例，若要抓系統當前月可改為 new Date().getMonth() + 1）
-        // 這裡我們預設幫你停留在你剛剛拍的 5 月
-        monthSelect.value = 5;
+        // 預設停留在你圖中的 6 月份
+        monthSelect.value = 6;
+
+        // 載入廠商名字
+        function loadVendorNames() {
+            let savedNames = JSON.parse(localStorage.getItem('vendor_names_config'));
+            if (savedNames) {
+                for (let v = 0; v < totalVendors; v++) {
+                    if (savedNames[v]) {
+                        document.getElementById(`v_name_${v}`).value = savedNames[v];
+                    }
+                }
+            }
+        }
+
+        // 獲取當前畫面上的廠商名稱陣列
+        function getVendorNamesArr() {
+            let names = [];
+            for (let v = 0; v < totalVendors; v++) {
+                names.push(document.getElementById(`v_name_${v}`).value.trim() || `廠商 ${v+1}`);
+            }
+            return names;
+        }
 
         // 生成表格主功能
         function renderTable(month) {
+            loadVendorNames(); // 生成前先載入最新的廠商名
+            
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
             const totalDays = daysInMonths[month - 1];
-            
-            // 讀取該月份在 Local Storage 的資料
             let savedData = JSON.parse(localStorage.getItem(`meal_data_${year}_${month}`)) || {};
 
             for (let d = 1; d <= totalDays; d++) {
                 const tr = document.createElement('tr');
                 
-                // 精準計算 2026 年每天是星期幾
                 const dateObj = new Date(year, month - 1, d);
-                const wdayNum = dateObj.getDay(); // 0 是禮拜天，1 是禮拜一...
+                const wdayNum = dateObj.getDay(); 
                 const wdayStr = weekDaysArr[wdayNum];
-                const isWeekend = (wdayNum === 0 || wdayNum === 6); // 0(日) 或 6(六)
+                const isWeekend = (wdayNum === 0 || wdayNum === 6); 
                 const weekendClass = isWeekend ? 'weekend' : '';
 
-                // 日期與星期
                 tr.innerHTML += `<td class="col-date ${weekendClass}">${d}</td>`;
                 tr.innerHTML += `<td class="col-wday ${weekendClass}">${wdayStr}</td>`;
 
-                // 廠商輸入格
                 for (let v = 0; v < totalVendors; v++) {
                     const cellId = `cell_${d}_${v}`;
                     const val = savedData[cellId] || '';
                     
-                    // 特殊節日提示（例如 5/1 勞動節）
                     let placeholder = "";
                     if (month === 5 && d === 1 && v === 0 && val === "") {
                         placeholder = "勞動節";
@@ -166,13 +185,11 @@
             calculateTotals();
         }
 
-        // 切換月份
         function switchMonth() {
             const currentMonth = document.getElementById('monthSelect').value;
             renderTable(currentMonth);
         }
 
-        // 解析並計算混合儲存格 (例如: "65x4", "260元")
         function parseValue(str) {
             if (!str) return 0;
             let cleanStr = str.replace(/[元小計收：:]/g, '').replace(/×/g, '*').replace(/x/g, '*').trim();
@@ -185,7 +202,6 @@
             return parseFloat(cleanStr) || 0;
         }
 
-        // 即時計算小計
         function calculateTotals() {
             const month = document.getElementById('monthSelect').value;
             const totalDays = daysInMonths[month - 1];
@@ -203,12 +219,20 @@
             }
         }
 
-        // 儲存當前月份資料
+        // 儲存資料（包含格子內容與廠商名稱）
         function saveData() {
             const month = document.getElementById('monthSelect').value;
             const totalDays = daysInMonths[month - 1];
-            let dataToSave = {};
+            
+            // 1. 儲存廠商名字
+            let vendorNames = [];
+            for (let v = 0; v < totalVendors; v++) {
+                vendorNames.push(document.getElementById(`v_name_${v}`).value);
+            }
+            localStorage.setItem('vendor_names_config', JSON.stringify(vendorNames));
 
+            // 2. 儲存格子數字
+            let dataToSave = {};
             for (let d = 1; d <= totalDays; d++) {
                 for (let v = 0; v < totalVendors; v++) {
                     const cellId = `cell_${d}_${v}`;
@@ -217,24 +241,24 @@
                 }
             }
             localStorage.setItem(`meal_data_${year}_${month}`, JSON.stringify(dataToSave));
-            alert(`💾 2026年${month}月的餐費資料已成功鎖定存檔！`);
+            alert(`💾 2026年${month}月的餐費資料與廠商名單已同步儲存！`);
         }
 
-        // 清空當前月份
         function clearCurrentMonth() {
             const month = document.getElementById('monthSelect').value;
-            if (confirm(`確定要清空 2026年${month}月 的整張表嗎？其他月份不會受影響。`)) {
+            if (confirm(`確定要清空 2026年${month}月 的整張表嗎？廠商名字不會被清空。`)) {
                 localStorage.removeItem(`meal_data_${year}_${month}`);
                 renderTable(month);
             }
         }
 
-        // 匯出 CSV
         function exportCSV() {
             const month = document.getElementById('monthSelect').value;
             const totalDays = daysInMonths[month - 1];
+            const vNames = getVendorNamesArr();
             
-            let csvContent = "\uFEFF日期,星期,(祥萬)林大哥,(祥萬)傅大哥,俊丰,廠商4,廠商5,廠商6\n";
+            // 標頭自動帶入自訂的廠商名字
+            let csvContent = `\uFEFF日期,星期,${vNames.join(',')}\n`;
             
             for (let d = 1; d <= totalDays; d++) {
                 const dateObj = new Date(year, month - 1, d);
