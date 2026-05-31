@@ -3,70 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>廠商餐費登記表</title>
+    <title>2026全年份廠商餐費登記表</title>
     <style>
         :root {
             --primary-color: #2c3e50;
             --weekend-bg: #f39c12;
             --border-color: #444;
+            --select-bg: #34495e;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { padding: 15px; background: #fafafa; color: #333; }
         
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; max-width: 1200px; margin-inline: auto; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto 15px; flex-wrap: wrap; gap: 10px; }
         h2 { color: var(--primary-color); letter-spacing: 2px; }
-        .month-label { font-size: 1.2rem; font-weight: bold; }
         
-        .action-bar { max-width: 1200px; margin: 0 auto 15px; display: flex; gap: 10px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        /* 月份選擇器優化 */
+        .month-selector-wrapper { display: flex; align-items: center; gap: 8px; }
+        .month-select { background: var(--select-bg); color: white; border: none; padding: 8px 16px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; outline: none; }
+        
+        .action-bar { max-width: 1200px; margin: 0 auto 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; font-size: 0.95rem; }
         .btn-save { background: #16a085; }
         .btn-export { background: #2980b9; }
-        .btn-clear { background: #e74c3c; float: right; }
+        .btn-clear { background: #e74c3c; margin-left: auto; }
 
-        /* 表格樣式調整 - 模仿紙本 */
-        .table-container { width: 100%; overflow-x: auto; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: center; }
-        th, td { border: 1px solid var(--border-color); padding: 6px 4px; font-size: 0.95rem; }
+        /* 表格樣式調整 - 完美還原紙本矩陣 */
+        .table-container { width: 100%; overflow-x: auto; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: center; }
+        th, td { border: 1px solid var(--border-color); padding: 8px 4px; font-size: 0.95rem; }
         
-        /* 表頭廠商欄 */
-        th { background-color: #f8f9fa; height: 45px; }
-        .diagonal-th { position: relative; width: 120px; }
+        th { background-color: #f8f9fa; height: 50px; font-weight: bold; }
+        .col-date { width: 50px; font-weight: bold; background: #eee; }
+        .col-wday { width: 40px; font-weight: bold; background: #eee; }
         
-        /* 日期與星期欄 */
-        .col-date { width: 50px; font-weight: bold; }
-        .col-wday { width: 40px; font-weight: bold; }
-        
-        /* 週末顏色（模仿紙本橘黃色） */
-        .weekend { background-color: var(--weekend-bg) !important; color: white; }
+        /* 週末顏色（橘黃色底） */
+        .weekend { background-color: var(--weekend-bg) !important; color: white !important; }
         
         /* 輸入框優化 */
-        .cell-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.95rem; color: #222; padding: 4px 0; }
-        .cell-input:focus { background: #e8f4f8; outline: none; }
-        /* 讓有寫字的格子稍微明顯一點 */
-        .cell-input:not(:placeholder-shown) { font-weight: 500; }
+        .cell-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 1rem; color: #222; padding: 4px 0; font-weight: 500; }
+        .cell-input:focus { background: #e8f4f8; outline: none; border-radius: 4px; }
+        .cell-input::placeholder { color: #ccc; font-weight: normal; font-size: 0.85rem; }
         
         /* 底部小計列 */
-        .total-row { background: #eaeded; font-weight: bold; }
+        .total-row { background: #eaeded; font-weight: bold; height: 45px; font-size: 1rem; }
+        .total-val { color: #c0392b; }
     </style>
 </head>
 <body>
 
     <div class="header-container">
         <h2>廠 商 餐 費 登 記 表</h2>
-        <div class="month-label">2026年05月</div>
+        <div class="month-selector-wrapper">
+            <label for="monthSelect" style="font-weight: bold; color: var(--primary-color);">切換月份：</label>
+            <select id="monthSelect" class="month-select" onchange="switchMonth()">
+                <!-- JS 自動生成 1~12 月 -->
+            </select>
+        </div>
     </div>
 
     <div class="action-bar">
-        <button class="btn btn-save" onclick="saveData()">💾 儲存資料</button>
-        <button class="btn btn-export" onclick="exportCSV()">📊 匯出 Excel (CSV)</button>
-        <button class="btn btn-clear" onclick="clearAll()" style="margin-left: auto;">⚠️ 清空重來</button>
+        <button class="btn btn-save" onclick="saveData()">💾 儲存本月資料</button>
+        <button class="btn btn-export" onclick="exportCSV()">📊 匯出本月 Excel (CSV)</button>
+        <button class="btn btn-clear" id="clearBtn" onclick="clearCurrentMonth()">⚠️ 清空本月</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th class="diagonal-th">日期</th>
+                    <th style="width: 50px;">日期</th>
                     <th style="width: 50px;">星期</th>
                     <th>(祥萬)<br>林大哥</th>
                     <th>(祥萬)<br>傅大哥</th>
@@ -77,128 +82,163 @@
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <!-- 由 JavaScript 自動生成 1~31 號 -->
+                <!-- 由 JavaScript 根據月份動態生成 -->
             </tbody>
             <tfoot>
                 <tr class="total-row">
                     <td colspan="2">總金額小計</td>
-                    <td id="total-0">$0</td>
-                    <td id="total-1">$0</td>
-                    <td id="total-2">$0</td>
-                    <td id="total-3">$0</td>
-                    <td id="total-4">$0</td>
-                    <td id="total-5">$0</td>
+                    <td id="total-0" class="total-val">$0</td>
+                    <td id="total-1" class="total-val">$0</td>
+                    <td id="total-2" class="total-val">$0</td>
+                    <td id="total-3" class="total-val">$0</td>
+                    <td id="total-4" class="total-val">$0</td>
+                    <td id="total-5" class="total-val">$0</td>
                 </tr>
             </tfoot>
         </table>
     </div>
 
     <script>
-        const totalVendors = 6; // 總共有幾欄廠商
-        const totalDays = 31;   // 5月份有31天
+        const totalVendors = 6;
+        const year = 2026;
+        const weekDaysArr = ["日", "一", "二", "三", "四", "五", "六"];
         
-        // 星期對照表 (2026年5月1日是星期五)
-        const weekDays = ["五", "六", "日", "一", "二", "三", "四"];
+        // 2026年每個月的天數
+        const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-        // 讀取舊資料
-        let savedData = JSON.parse(localStorage.getItem('meal_tracker_data')) || {};
+        // 初始化月份下拉選單
+        const monthSelect = document.getElementById('monthSelect');
+        for (let m = 1; m <= 12; m++) {
+            let opt = document.createElement('option');
+            opt.value = m;
+            opt.innerText = `2026年 ${String(m).padStart(2, '0')}月`;
+            monthSelect.appendChild(opt);
+        }
+        
+        // 預設載入當前月份（以 2026 年 5 月為例，若要抓系統當前月可改為 new Date().getMonth() + 1）
+        // 這裡我們預設幫你停留在你剛剛拍的 5 月
+        monthSelect.value = 5;
 
-        // 初始化表格
-        const tbody = document.getElementById('tableBody');
-        for (let d = 1; d <= totalDays; d++) {
-            const tr = document.createElement('tr');
+        // 生成表格主功能
+        function renderTable(month) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
             
-            // 計算星期幾
-            const wdayStr = weekDays[(d - 1) % 7];
-            const isWeekend = (wdayStr === "六" || wdayStr === "日");
-            const weekendClass = isWeekend ? 'weekend' : '';
+            const totalDays = daysInMonths[month - 1];
+            
+            // 讀取該月份在 Local Storage 的資料
+            let savedData = JSON.parse(localStorage.getItem(`meal_data_${year}_${month}`)) || {};
 
-            // 日期欄
-            tr.innerHTML += `<td class="col-date ${weekendClass}">${d}</td>`;
-            // 星期欄
-            tr.innerHTML += `<td class="col-wday ${weekendClass}">${wdayStr}</td>`;
-
-            // 廠商輸入格
-            for (let v = 0; v < totalVendors; v++) {
-                const cellId = `cell_${d}_${v}`;
-                const val = savedData[cellId] || '';
+            for (let d = 1; d <= totalDays; d++) {
+                const tr = document.createElement('tr');
                 
-                // 5月1日勞動節預設字樣
-                let placeholder = "";
-                if (d === 1 && v === 0 && val === "") {
-                    placeholder = "勞動節";
-                }
+                // 精準計算 2026 年每天是星期幾
+                const dateObj = new Date(year, month - 1, d);
+                const wdayNum = dateObj.getDay(); // 0 是禮拜天，1 是禮拜一...
+                const wdayStr = weekDaysArr[wdayNum];
+                const isWeekend = (wdayNum === 0 || wdayNum === 6); // 0(日) 或 6(六)
+                const weekendClass = isWeekend ? 'weekend' : '';
 
-                tr.innerHTML += `
-                    <td>
-                        <input type="text" id="${cellId}" class="cell-input" 
-                               value="${val}" placeholder="${placeholder}" oninput="calculateTotals()">
-                    </td>
-                `;
+                // 日期與星期
+                tr.innerHTML += `<td class="col-date ${weekendClass}">${d}</td>`;
+                tr.innerHTML += `<td class="col-wday ${weekendClass}">${wdayStr}</td>`;
+
+                // 廠商輸入格
+                for (let v = 0; v < totalVendors; v++) {
+                    const cellId = `cell_${d}_${v}`;
+                    const val = savedData[cellId] || '';
+                    
+                    // 特殊節日提示（例如 5/1 勞動節）
+                    let placeholder = "";
+                    if (month === 5 && d === 1 && v === 0 && val === "") {
+                        placeholder = "勞動節";
+                    }
+
+                    tr.innerHTML += `
+                        <td class="${weekendClass}">
+                            <input type="text" id="${cellId}" class="cell-input" 
+                                   value="${val}" placeholder="${placeholder}" oninput="calculateTotals()">
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
             }
-            tbody.appendChild(tr);
+            calculateTotals();
         }
 
-        // 解析儲存格內的數學公式並計算總金額 (例如: "65x4" 或 "65元" 或 "260")
+        // 切換月份
+        function switchMonth() {
+            const currentMonth = document.getElementById('monthSelect').value;
+            renderTable(currentMonth);
+        }
+
+        // 解析並計算混合儲存格 (例如: "65x4", "260元")
         function parseValue(str) {
             if (!str) return 0;
-            // 移除「元」、「小計:」、「收:」等中文字，只留下數字跟運算符號
-            let cleanStr = str.replace(/[元小計收：:]/g, '').replace(/×/g, '*').trim();
-            
-            // 如果包含乘號 (如 260*4)
+            let cleanStr = str.replace(/[元小計收：:]/g, '').replace(/×/g, '*').replace(/x/g, '*').trim();
             if (cleanStr.includes('*')) {
                 let parts = cleanStr.split('*');
                 let num1 = parseFloat(parts[0]) || 0;
                 let num2 = parseFloat(parts[1]) || 0;
                 return num1 * num2;
             }
-            
-            // 如果是一般純數字
             return parseFloat(cleanStr) || 0;
         }
 
-        // 計算每位廠商的小計總額
+        // 即時計算小計
         function calculateTotals() {
-            let currentData = {};
+            const month = document.getElementById('monthSelect').value;
+            const totalDays = daysInMonths[month - 1];
+
             for (let v = 0; v < totalVendors; v++) {
                 let vendorTotal = 0;
                 for (let d = 1; d <= totalDays; d++) {
                     const cellId = `cell_${d}_${v}`;
-                    const val = document.getElementById(cellId).value;
-                    vendorTotal += parseValue(val);
+                    const inputEl = document.getElementById(cellId);
+                    if (inputEl) {
+                        vendorTotal += parseValue(inputEl.value);
+                    }
                 }
                 document.getElementById(`total-${v}`).innerText = `$${vendorTotal.toLocaleString()}`;
             }
         }
 
-        // 儲存至 Local Storage
+        // 儲存當前月份資料
         function saveData() {
+            const month = document.getElementById('monthSelect').value;
+            const totalDays = daysInMonths[month - 1];
             let dataToSave = {};
+
             for (let d = 1; d <= totalDays; d++) {
                 for (let v = 0; v < totalVendors; v++) {
                     const cellId = `cell_${d}_${v}`;
-                    const val = document.getElementById(cellId).value;
+                    const val = document.getElementById(cellId).value.trim();
                     if (val) dataToSave[cellId] = val;
                 }
             }
-            localStorage.setItem('meal_tracker_data', JSON.stringify(dataToSave));
-            alert('💾 資料已成功儲存至瀏覽器！');
+            localStorage.setItem(`meal_data_${year}_${month}`, JSON.stringify(dataToSave));
+            alert(`💾 2026年${month}月的餐費資料已成功鎖定存檔！`);
         }
 
-        // 清空重來
-        function clearAll() {
-            if (confirm('確定要清空整張表嗎？（此動作無法復原）')) {
-                localStorage.removeItem('meal_tracker_data');
-                location.reload();
+        // 清空當前月份
+        function clearCurrentMonth() {
+            const month = document.getElementById('monthSelect').value;
+            if (confirm(`確定要清空 2026年${month}月 的整張表嗎？其他月份不會受影響。`)) {
+                localStorage.removeItem(`meal_data_${year}_${month}`);
+                renderTable(month);
             }
         }
 
-        // 匯出 CSV 報表
+        // 匯出 CSV
         function exportCSV() {
+            const month = document.getElementById('monthSelect').value;
+            const totalDays = daysInMonths[month - 1];
+            
             let csvContent = "\uFEFF日期,星期,(祥萬)林大哥,(祥萬)傅大哥,俊丰,廠商4,廠商5,廠商6\n";
             
             for (let d = 1; d <= totalDays; d++) {
-                const wdayStr = weekDays[(d - 1) % 7];
+                const dateObj = new Date(year, month - 1, d);
+                const wdayStr = weekDaysArr[dateObj.getDay()];
                 let rowStr = `${d},${wdayStr}`;
                 
                 for (let v = 0; v < totalVendors; v++) {
@@ -209,7 +249,6 @@
                 csvContent += rowStr + "\n";
             }
             
-            // 加上最後一列的小計
             let totalRowStr = "總計,";
             for (let v = 0; v < totalVendors; v++) {
                 totalRowStr += `,${document.getElementById(`total-${v}`).innerText}`;
@@ -219,14 +258,14 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", "2026年05月_廠商餐費登記表.csv");
+            link.setAttribute("download", `2026年${String(month).padStart(2, '0')}月_廠商餐費登記表.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // 首次載入計算初始總金額
-        calculateTotals();
+        // 網頁開啟時首次載入
+        renderTable(monthSelect.value);
     </script>
 </body>
 </html>
