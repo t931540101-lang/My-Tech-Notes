@@ -2,269 +2,231 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>廠商餐費 | 雙結點穩定版</title>
-    <link rel="icon" href="IMG_0968.png">
-    <link rel="apple-touch-icon" href="IMG_0968.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廠商餐費登記表</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; padding: 15px; }
-        .card { background: white; border: 2px solid #1e293b; border-radius: 12px; box-shadow: 4px 4px 0px #cbd5e1; margin-bottom: 20px; }
-        input, select { border: 2px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 18px; font-weight: bold; width: 100%; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 2px solid #1e293b; padding: 12px 8px; text-align: center; font-size: 16px; font-weight: bold; }
-        th { background-color: #e2e8f0; }
-        .period-header { background-color: #1e293b; color: #f8fafc; font-size: 14px; padding: 4px; }
-        .vendor-junfeng { background-color: #dbeafe; }
-        .vendor-xiangqing { background-color: #dcfce7; }
-        .vendor-custom { background-color: #fef9c3; }
-        .nav-btn { touch-action: manipulation; transition: transform 0.1s; }
-        .nav-btn:active { transform: scale(0.8); }
-        .success-flash { animation: flashGreen 0.5s ease-out; }
-        @keyframes flashGreen { 0% { background-color: #10b981; transform: scale(0.95); } 100% { background-color: #059669; transform: scale(1); } }
+        :root {
+            --primary-color: #2c3e50;
+            --weekend-bg: #f39c12;
+            --border-color: #444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { padding: 15px; background: #fafafa; color: #333; }
+        
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; max-width: 1200px; margin-inline: auto; }
+        h2 { color: var(--primary-color); letter-spacing: 2px; }
+        .month-label { font-size: 1.2rem; font-weight: bold; }
+        
+        .action-bar { max-width: 1200px; margin: 0 auto 15px; display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-save { background: #16a085; }
+        .btn-export { background: #2980b9; }
+        .btn-clear { background: #e74c3c; float: right; }
+
+        /* 表格樣式調整 - 模仿紙本 */
+        .table-container { width: 100%; overflow-x: auto; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: center; }
+        th, td { border: 1px solid var(--border-color); padding: 6px 4px; font-size: 0.95rem; }
+        
+        /* 表頭廠商欄 */
+        th { background-color: #f8f9fa; height: 45px; }
+        .diagonal-th { position: relative; width: 120px; }
+        
+        /* 日期與星期欄 */
+        .col-date { width: 50px; font-weight: bold; }
+        .col-wday { width: 40px; font-weight: bold; }
+        
+        /* 週末顏色（模仿紙本橘黃色） */
+        .weekend { background-color: var(--weekend-bg) !important; color: white; }
+        
+        /* 輸入框優化 */
+        .cell-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.95rem; color: #222; padding: 4px 0; }
+        .cell-input:focus { background: #e8f4f8; outline: none; }
+        /* 讓有寫字的格子稍微明顯一點 */
+        .cell-input:not(:placeholder-shown) { font-weight: 500; }
+        
+        /* 底部小計列 */
+        .total-row { background: #eaeded; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- 輸入區 -->
-    <div class="card overflow-hidden">
-        <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
-            <button onclick="changeMonth(-1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">◀</button>
-            <div class="text-center">
-                <div class="text-xs text-slate-400 font-bold tracking-widest mb-1">PRECISION LEDGER</div>
-                <h2 id="monthDisplay" class="text-3xl font-black tracking-wider">2026 / 03</h2>
-            </div>
-            <button onclick="changeMonth(1)" class="nav-btn text-3xl px-4 py-2 bg-slate-700 rounded-lg shadow-inner">▶</button>
-        </div>
-
-        <div class="p-5 space-y-4">
-            <div class="flex items-center gap-2">
-                <input type="date" id="entryDate" onchange="updatePeriodHint()">
-                <span id="periodHint" class="whitespace-nowrap px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">前期</span>
-            </div>
-
-            <div class="flex gap-2">
-                <select id="vendorSelect" onchange="handleVendorChange(this.value)">
-                    <option value="俊丰">俊丰</option>
-                    <option value="祥箐">祥箐</option>
-                    <option value="CUSTOM">➕ 自定義</option>
-                </select>
-                <div class="flex items-center border-2 border-slate-200 rounded-lg px-2">
-                    <span class="text-slate-400 font-bold mr-1">份</span>
-                    <input type="number" id="quantity" value="1" class="w-16 border-none p-2 text-center">
-                </div>
-            </div>
-
-            <input type="text" id="customVendor" placeholder="請輸入廠商名稱" class="hidden">
-
-            <!-- 單價顯示+可修改 -->
-            <div class="flex items-center gap-2">
-                <span class="text-slate-500 font-bold whitespace-nowrap">單價 $</span>
-                <input type="number" id="unitPrice" value="65" class="text-center">
-                <span class="text-slate-400 text-sm whitespace-nowrap">元／份</span>
-            </div>
-
-            <button id="submitBtn" onclick="addEntry()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-200">
-                寫入帳單 ✍️
-            </button>
-        </div>
+    <div class="header-container">
+        <h2>廠 商 餐 費 登 記 表</h2>
+        <div class="month-label">2026年05月</div>
     </div>
 
-    <!-- 表格區 -->
-    <div class="card overflow-hidden">
-        <div class="bg-slate-100 p-2 text-center border-b-2 border-slate-800 font-bold text-slate-600" id="tableHeader">載入中...</div>
+    <div class="action-bar">
+        <button class="btn btn-save" onclick="saveData()">💾 儲存資料</button>
+        <button class="btn btn-export" onclick="exportCSV()">📊 匯出 Excel (CSV)</button>
+        <button class="btn btn-clear" onclick="clearAll()" style="margin-left: auto;">⚠️ 清空重來</button>
+    </div>
 
-        <!-- 廠商顏色說明 -->
-        <div class="flex gap-3 p-3 border-b-2 border-slate-200 flex-wrap">
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-700">🔵 俊丰</span>
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">🟢 祥箐</span>
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700">🟡 其他</span>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table id="mainTable">
-                <thead>
-                    <tr>
-                        <th style="width: 20%;">日期</th>
-                        <th>廠商</th>
-                        <th style="width: 25%;">金額</th>
-                        <th style="width: 15%;">🗑️</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-                <tfoot id="tableFoot"></tfoot>
-            </table>
-        </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="diagonal-th">日期</th>
+                    <th style="width: 50px;">星期</th>
+                    <th>(祥萬)<br>林大哥</th>
+                    <th>(祥萬)<br>傅大哥</th>
+                    <th>俊丰</th>
+                    <th>廠商 4</th>
+                    <th>廠商 5</th>
+                    <th>廠商 6</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 由 JavaScript 自動生成 1~31 號 -->
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2">總金額小計</td>
+                    <td id="total-0">$0</td>
+                    <td id="total-1">$0</td>
+                    <td id="total-2">$0</td>
+                    <td id="total-3">$0</td>
+                    <td id="total-4">$0</td>
+                    <td id="total-5">$0</td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyB2_tKKsVT4kdW7PPkJgI907S1YdCWor48",
-            authDomain: "factor-security-d1965.firebaseapp.com",
-            databaseURL: "https://factor-security-d1965-default-rtdb.firebaseio.com",
-            projectId: "factor-security-d1965",
-            storageBucket: "factor-security-d1965.firebasestorage.app",
-            messagingSenderId: "864846943143",
-            appId: "1:864846943143:web:4cfa18cd20d2f712225c82"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let currentListenerRef = null;
-        let viewYear = new Date().getFullYear();
-        let viewMonth = new Date().getMonth() + 1;
+        const totalVendors = 6; // 總共有幾欄廠商
+        const totalDays = 31;   // 5月份有31天
+        
+        // 星期對照表 (2026年5月1日是星期五)
+        const weekDays = ["五", "六", "日", "一", "二", "三", "四"];
 
-        // 廠商預設單價
-        const vendorPrices = { "俊丰": 65, "祥箐": 65 };
+        // 讀取舊資料
+        let savedData = JSON.parse(localStorage.getItem('meal_tracker_data')) || {};
 
-        // 廠商顏色對應
-        function getVendorClass(vendor) {
-            if (vendor === "俊丰") return "vendor-junfeng";
-            if (vendor === "祥箐") return "vendor-xiangqing";
-            return "vendor-custom";
-        }
+        // 初始化表格
+        const tbody = document.getElementById('tableBody');
+        for (let d = 1; d <= totalDays; d++) {
+            const tr = document.createElement('tr');
+            
+            // 計算星期幾
+            const wdayStr = weekDays[(d - 1) % 7];
+            const isWeekend = (wdayStr === "六" || wdayStr === "日");
+            const weekendClass = isWeekend ? 'weekend' : '';
 
-        window.onload = () => { updateView(); };
+            // 日期欄
+            tr.innerHTML += `<td class="col-date ${weekendClass}">${d}</td>`;
+            // 星期欄
+            tr.innerHTML += `<td class="col-wday ${weekendClass}">${wdayStr}</td>`;
 
-        function updatePeriodHint() {
-            const dateStr = document.getElementById('entryDate').value;
-            if (!dateStr) return;
-            const d = parseInt(dateStr.split('-')[2]);
-            const hint = document.getElementById('periodHint');
-            if (d <= 20) {
-                hint.innerText = "前期 (1-20)";
-                hint.className = "whitespace-nowrap px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold";
-            } else {
-                hint.innerText = "後期 (21-末)";
-                hint.className = "whitespace-nowrap px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold";
-            }
-        }
-
-        function handleVendorChange(val) {
-            document.getElementById('customVendor').classList.toggle('hidden', val !== 'CUSTOM');
-            // 自動帶入該廠商的預設單價
-            if (vendorPrices[val] !== undefined) {
-                document.getElementById('unitPrice').value = vendorPrices[val];
-            } else {
-                document.getElementById('unitPrice').value = 65;
-            }
-        }
-
-        function changeMonth(offset) {
-            viewMonth += offset;
-            if (viewMonth > 12) { viewMonth = 1; viewYear++; }
-            if (viewMonth < 1) { viewMonth = 12; viewYear--; }
-            updateView();
-        }
-
-        function updateView() {
-            const mm = String(viewMonth).padStart(2, '0');
-            document.getElementById('monthDisplay').innerText = `${viewYear} / ${mm}`;
-            document.getElementById('tableHeader').innerText = `▼ ${viewYear}年 ${viewMonth}月 明細 ▼`;
-            const dateInput = document.getElementById('entryDate');
-            const today = new Date();
-            if (today.getFullYear() === viewYear && (today.getMonth() + 1) === viewMonth) {
-                dateInput.valueAsDate = today;
-            } else {
-                dateInput.value = `${viewYear}-${mm}-01`;
-            }
-            updatePeriodHint();
-            listenToMonth(`${viewYear}-${mm}`);
-        }
-
-        function listenToMonth(monthStr) {
-            if (currentListenerRef) currentListenerRef.off();
-            currentListenerRef = db.ref(`cashierData/${monthStr}`);
-            currentListenerRef.on('value', (snapshot) => {
-                const dataObj = snapshot.val();
-                const list = dataObj ? Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] })) : [];
-                list.sort((a, b) => new Date(a.date) - new Date(b.date));
-                renderTable(list);
-            });
-        }
-
-        function addEntry() {
-            const date = document.getElementById('entryDate').value;
-            const select = document.getElementById('vendorSelect');
-            let vendor = select.value === 'CUSTOM' ? document.getElementById('customVendor').value.trim() : select.value;
-            if (!vendor) return alert("請輸入廠商！");
-            if (!date) return alert("日期錯誤，請重新選擇！");
-
-            const qty = parseInt(document.getElementById('quantity').value) || 0;
-            const unitPrice = parseInt(document.getElementById('unitPrice').value) || 65;
-            if (qty <= 0) return alert("份數必須大於 0");
-
-            const entryMonth = date.slice(0, 7);
-            const day = parseInt(date.split('-')[2]);
-            const period = day <= 20 ? "A" : "B";
-
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "寫入中...";
-            btn.disabled = true;
-
-            db.ref(`cashierData/${entryMonth}`).push({ date, vendor, qty, price: qty * unitPrice, unitPrice, period })
-              .then(() => {
-                  document.getElementById('quantity').value = "1";
-                  btn.innerText = "寫入帳單 ✍️";
-                  btn.disabled = false;
-                  btn.classList.add('success-flash');
-                  setTimeout(() => btn.classList.remove('success-flash'), 500);
-              })
-              .catch((error) => {
-                  alert("寫入失敗！\n錯誤：" + error.message);
-                  btn.innerText = "寫入帳單 ✍️";
-                  btn.disabled = false;
-              });
-        }
-
-        function renderTable(data) {
-            const body = document.getElementById('tableBody');
-            const foot = document.getElementById('tableFoot');
-            body.innerHTML = "";
-            let sumA = 0, sumB = 0;
-            let vendorTotals = {};
-
-            if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="py-10 text-slate-400 font-normal">尚無紀錄</td></tr>`;
-                foot.innerHTML = ""; return;
-            }
-
-            let lastPeriod = "";
-            data.forEach((item) => {
-                if (item.period === 'A') sumA += item.price; else sumB += item.price;
-                vendorTotals[item.vendor] = (vendorTotals[item.vendor] || 0) + item.price;
-
-                if (lastPeriod !== "" && lastPeriod !== item.period) {
-                    const sep = body.insertRow();
-                    sep.innerHTML = `<td colspan="4" class="period-header">--- 21 號後（後期帳）---</td>`;
+            // 廠商輸入格
+            for (let v = 0; v < totalVendors; v++) {
+                const cellId = `cell_${d}_${v}`;
+                const val = savedData[cellId] || '';
+                
+                // 5月1日勞動節預設字樣
+                let placeholder = "";
+                if (d === 1 && v === 0 && val === "") {
+                    placeholder = "勞動節";
                 }
-                lastPeriod = item.period;
 
-                const row = body.insertRow();
-                row.className = getVendorClass(item.vendor);
-                row.insertCell(0).innerText = item.date.split('-')[2] + "日";
-                row.insertCell(1).innerText = item.vendor;
-                row.insertCell(2).innerText = `$${item.price}`;
-                const mm = String(viewMonth).padStart(2, '0');
-                row.insertCell(3).innerHTML = `<button onclick="deleteItem('${viewYear}-${mm}', '${item.id}')">❌</button>`;
-            });
-
-            // 廠商分開小計
-            let vendorRows = Object.entries(vendorTotals).map(([v, total]) =>
-                `<tr class="${getVendorClass(v)}"><td colspan="2">　${v} 小計</td><td colspan="2">$${total}</td></tr>`
-            ).join('');
-
-            foot.innerHTML = `
-                ${vendorRows}
-                <tr class="bg-slate-100"><td colspan="2">前期小計</td><td colspan="2">$${sumA}</td></tr>
-                <tr class="bg-slate-100"><td colspan="2">後期小計</td><td colspan="2">$${sumB}</td></tr>
-                <tr class="bg-slate-800 text-white text-lg"><td colspan="2">本月總帳</td><td colspan="2">$${sumA + sumB}</td></tr>
-            `;
+                tr.innerHTML += `
+                    <td>
+                        <input type="text" id="${cellId}" class="cell-input" 
+                               value="${val}" placeholder="${placeholder}" oninput="calculateTotals()">
+                    </td>
+                `;
+            }
+            tbody.appendChild(tr);
         }
 
-        function deleteItem(month, id) { if(confirm("刪除？")) db.ref(`cashierData/${month}/${id}`).remove(); }
+        // 解析儲存格內的數學公式並計算總金額 (例如: "65x4" 或 "65元" 或 "260")
+        function parseValue(str) {
+            if (!str) return 0;
+            // 移除「元」、「小計:」、「收:」等中文字，只留下數字跟運算符號
+            let cleanStr = str.replace(/[元小計收：:]/g, '').replace(/×/g, '*').trim();
+            
+            // 如果包含乘號 (如 260*4)
+            if (cleanStr.includes('*')) {
+                let parts = cleanStr.split('*');
+                let num1 = parseFloat(parts[0]) || 0;
+                let num2 = parseFloat(parts[1]) || 0;
+                return num1 * num2;
+            }
+            
+            // 如果是一般純數字
+            return parseFloat(cleanStr) || 0;
+        }
+
+        // 計算每位廠商的小計總額
+        function calculateTotals() {
+            let currentData = {};
+            for (let v = 0; v < totalVendors; v++) {
+                let vendorTotal = 0;
+                for (let d = 1; d <= totalDays; d++) {
+                    const cellId = `cell_${d}_${v}`;
+                    const val = document.getElementById(cellId).value;
+                    vendorTotal += parseValue(val);
+                }
+                document.getElementById(`total-${v}`).innerText = `$${vendorTotal.toLocaleString()}`;
+            }
+        }
+
+        // 儲存至 Local Storage
+        function saveData() {
+            let dataToSave = {};
+            for (let d = 1; d <= totalDays; d++) {
+                for (let v = 0; v < totalVendors; v++) {
+                    const cellId = `cell_${d}_${v}`;
+                    const val = document.getElementById(cellId).value;
+                    if (val) dataToSave[cellId] = val;
+                }
+            }
+            localStorage.setItem('meal_tracker_data', JSON.stringify(dataToSave));
+            alert('💾 資料已成功儲存至瀏覽器！');
+        }
+
+        // 清空重來
+        function clearAll() {
+            if (confirm('確定要清空整張表嗎？（此動作無法復原）')) {
+                localStorage.removeItem('meal_tracker_data');
+                location.reload();
+            }
+        }
+
+        // 匯出 CSV 報表
+        function exportCSV() {
+            let csvContent = "\uFEFF日期,星期,(祥萬)林大哥,(祥萬)傅大哥,俊丰,廠商4,廠商5,廠商6\n";
+            
+            for (let d = 1; d <= totalDays; d++) {
+                const wdayStr = weekDays[(d - 1) % 7];
+                let rowStr = `${d},${wdayStr}`;
+                
+                for (let v = 0; v < totalVendors; v++) {
+                    const cellId = `cell_${d}_${v}`;
+                    const val = document.getElementById(cellId).value || "";
+                    rowStr += `,"${val.replace(/"/g, '""')}"`;
+                }
+                csvContent += rowStr + "\n";
+            }
+            
+            // 加上最後一列的小計
+            let totalRowStr = "總計,";
+            for (let v = 0; v < totalVendors; v++) {
+                totalRowStr += `,${document.getElementById(`total-${v}`).innerText}`;
+            }
+            csvContent += totalRowStr + "\n";
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "2026年05月_廠商餐費登記表.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 首次載入計算初始總金額
+        calculateTotals();
     </script>
 </body>
 </html>
