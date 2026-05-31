@@ -19,7 +19,7 @@ body {
   font-family: 'Noto Sans TC', sans-serif;
   font-size: 13px;
   min-height: 100vh;
-  padding: 16px;
+  padding: 8px;
 }
 
 /* ── 紙張容器 ── */
@@ -29,14 +29,14 @@ body {
   margin: 0 auto;
   border: 1px solid #bbb;
   box-shadow: 3px 4px 16px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.6);
-  padding: 20px 24px 28px;
+  padding: 12px 10px 20px;
   position: relative;
 }
 /* 左側裝訂線 */
 .paper::before {
   content: '';
   position: absolute;
-  left: 36px; top: 0; bottom: 0;
+  left: 28px; top: 0; bottom: 0;
   width: 1px;
   background: rgba(200,160,160,.5);
 }
@@ -60,15 +60,15 @@ body {
   gap: 8px;
 }
 .doc-title {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   color: #1a1a1a;
   text-align: center;
   flex: 1;
 }
 .month-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #333;
   white-space: nowrap;
@@ -78,21 +78,22 @@ body {
 .ctrl-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 2px solid #333;
 }
 .ctrl-bar select, .ctrl-bar .btn {
   background: #fff;
   border: 1px solid #aaa;
   border-radius: 4px;
-  padding: 5px 10px;
+  padding: 7px 10px;
   font-family: 'Noto Sans TC', sans-serif;
   font-size: 13px;
   cursor: pointer;
   color: #222;
+  min-height: 36px;
 }
 .ctrl-bar select:focus, .ctrl-bar .btn:focus { outline: none; border-color: #555; }
 .btn:hover { background: #f0ece4; }
@@ -121,13 +122,13 @@ body {
 .edit-link:hover { color: #1a5f7a; }
 
 /* ── 主表格 ── */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 520px;
   background: #faf8f3;
+  table-layout: fixed;
 }
 
 /* 外框粗線 */
@@ -135,21 +136,21 @@ table { border: 2px solid #333; }
 
 thead th {
   border: 1px solid #555;
-  padding: 6px 8px;
+  padding: 5px 4px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   background: #f0ece4;
   color: #111;
   white-space: nowrap;
   vertical-align: middle;
 }
-thead th.col-date { width: 72px; }
-thead th.col-week { width: 32px; }
+thead th.col-date { width: 36px; }
+thead th.col-week { width: 26px; }
 
 /* 廠商欄頭：分兩行（公司／姓名）*/
-.th-vendor-top { font-size: 11px; font-weight: 400; color: #555; }
-.th-vendor-bot { font-size: 13px; font-weight: 700; color: #111; }
+.th-vendor-top { font-size: 10px; font-weight: 400; color: #555; }
+.th-vendor-bot { font-size: 12px; font-weight: 700; color: #111; }
 
 tbody tr { border-bottom: 1px solid #ccc; }
 tbody tr:last-child { border-bottom: 2px solid #333; }
@@ -157,18 +158,18 @@ tbody tr:last-child { border-bottom: 2px solid #333; }
 tbody td {
   border-right: 1px solid #ccc;
   border-left: 1px solid #ccc;
-  padding: 4px 6px;
+  padding: 3px 3px;
   text-align: center;
   vertical-align: middle;
-  min-height: 28px;
-  height: 28px;
+  min-height: 32px;
+  height: 32px;
 }
 tbody td:last-child { border-right: 2px solid #333; }
 tbody td:first-child { border-left: 2px solid #333; }
 
 /* 日期欄 */
-td.td-date { text-align: center; font-weight: 500; font-size: 14px; color: #111; }
-td.td-week { text-align: center; font-size: 13px; font-weight: 700; color: #333; padding: 4px 2px; }
+td.td-date { text-align: center; font-weight: 500; font-size: 13px; color: #111; }
+td.td-week { text-align: center; font-size: 12px; font-weight: 700; color: #333; padding: 3px 1px; }
 
 /* 星期色 */
 .week-sat { color: #1a5276; }
@@ -185,13 +186,13 @@ tr.row-settle-top td { border-top: 2px solid #c0392b !important; }
 tr.row-subtotal td {
   background: #f5f0e4 !important;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   border-top: 2px solid #888;
   border-bottom: 2px solid #888;
   color: #111;
 }
-tr.row-subtotal td.sub-label { text-align: left; color: #555; font-size: 12px; padding-left: 8px; }
-tr.row-subtotal td.sub-val { color: #c0392b; font-size: 14px; }
+tr.row-subtotal td.sub-label { text-align: left; color: #555; font-size: 11px; padding-left: 4px; }
+tr.row-subtotal td.sub-val { color: #c0392b; font-size: 13px; }
 
 /* 月底小計列 */
 tr.row-final td {
@@ -200,21 +201,21 @@ tr.row-final td {
   border-top: 2px solid #333;
   border-bottom: 2px solid #333;
 }
-tr.row-final td.sub-val { color: #c0392b; font-size: 15px; }
+tr.row-final td.sub-val { color: #c0392b; font-size: 13px; }
 
 /* 金額格 */
 td.td-amount {
   cursor: pointer;
-  min-width: 90px;
   transition: background .12s;
-  padding: 2px 4px;
+  padding: 2px 2px;
+  word-break: break-all;
 }
 td.td-amount:hover { background: #fff8e8 !important; }
-td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
+td.td-amount:empty::after { content: ''; display: block; min-height: 28px; }
 
 .amount-line {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -222,7 +223,7 @@ td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
 .amount-line.color-red   { color: #c0392b; }
 .amount-note {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   color: #888;
   margin-top: 1px;
 }
@@ -271,9 +272,11 @@ td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
 .modal {
   background: #faf8f3;
   border: 1px solid #aaa;
-  border-radius: 8px;
-  padding: 22px 24px;
-  width: 92%; max-width: 380px;
+  border-radius: 10px;
+  padding: 18px 16px;
+  width: 96%; max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0,0,0,.25);
   animation: modalIn .18s ease;
 }
@@ -291,19 +294,20 @@ td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
 .mrow input, .mrow select {
   width: 100%; background: #fff;
   border: 1px solid #aaa; border-radius: 4px;
-  padding: 8px 10px;
-  font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #111;
+  padding: 10px 12px;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 15px; color: #111;
+  min-height: 44px;
 }
 .mrow input:focus, .mrow select:focus { outline: none; border-color: #555; }
 
 .entry-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
 .entry-row { display: flex; gap: 6px; align-items: center; }
-.entry-row input { flex: 1; background: #fff; border: 1px solid #aaa; border-radius: 4px; padding: 7px 10px; font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #111; }
+.entry-row input { flex: 1; background: #fff; border: 1px solid #aaa; border-radius: 4px; padding: 10px 12px; font-family: 'Noto Sans TC', sans-serif; font-size: 15px; color: #111; min-height: 44px; }
 .entry-row input:focus { outline: none; border-color: #555; }
-.entry-del { background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+.entry-del { background: none; border: none; color: #aaa; cursor: pointer; font-size: 20px; padding: 4px 8px; min-width: 36px; }
 .entry-del:hover { color: #c0392b; }
 
-.add-btn { width: 100%; background: none; border: 1px dashed #aaa; color: #888; border-radius: 4px; padding: 6px; font-size: 12px; cursor: pointer; }
+.add-btn { width: 100%; background: none; border: 1px dashed #aaa; color: #888; border-radius: 4px; padding: 10px; font-size: 13px; cursor: pointer; min-height: 44px; }
 .add-btn:hover { border-color: #555; color: #333; }
 
 /* 顏色選擇（金額用）*/
@@ -313,9 +317,10 @@ td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
 
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 .modal-actions .btn {
-  background: #fff; border: 1px solid #aaa; border-radius: 4px;
-  padding: 7px 16px; font-family: 'Noto Sans TC', sans-serif;
-  font-size: 13px; cursor: pointer; color: #222;
+  background: #fff; border: 1px solid #aaa; border-radius: 6px;
+  padding: 10px 18px; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 14px; cursor: pointer; color: #222;
+  min-height: 44px;
 }
 .modal-actions .btn:hover { background: #f0ece4; }
 .modal-actions .btn-save { background: #1a5276; color: #fff; border-color: #1a5276; font-weight: 700; }
@@ -352,10 +357,16 @@ input[type=color] { width: 30px; height: 30px; border: 1px solid #aaa; border-ra
   .ctrl-bar, .vendor-bar, .edit-link { display: none !important; }
 }
 
-@media (max-width: 600px) {
-  body { padding: 8px; }
-  .paper { padding: 12px 10px 16px; }
-  .doc-title { font-size: 16px; letter-spacing: 2px; }
+/* 手機專屬微調 */
+@media (max-width: 480px) {
+  .top-info { font-size: 11px; }
+  .doc-title { font-size: 15px; letter-spacing: 2px; }
+  .month-label { font-size: 12px; }
+  .settle-mark { font-size: 8px; padding: 0 3px; }
+  .holiday-mark { font-size: 9px; }
+  .month-total-bar { flex-direction: column; gap: 6px; }
+  .ctrl-bar { gap: 5px; }
+  .ctrl-bar select { font-size: 14px; }
 }
 </style>
 </head>
