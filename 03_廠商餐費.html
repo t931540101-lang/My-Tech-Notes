@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026全年份廠商餐費登記表</title>
     <style>
         :root {
@@ -12,86 +12,89 @@
             --select-bg: #34495e;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { padding: 15px; background: #fafafa; color: #333; }
+        body { padding: 8px; background: #fafafa; color: #333; font-size: 14px; }
         
-        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto 15px; flex-wrap: wrap; gap: 10px; }
-        h2 { color: var(--primary-color); letter-spacing: 2px; }
+        /* 頂部固定面板，避免手機滑動錯位 */
+        .top-panel { position: sticky; top: 0; background: #fafafa; z-index: 100; padding-bottom: 8px; border-bottom: 1px solid #ddd; }
         
-        /* 月份選擇器優化 */
-        .month-selector-wrapper { display: flex; align-items: center; gap: 8px; }
-        .month-select { background: var(--select-bg); color: white; border: none; padding: 8px 16px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; outline: none; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin: 5px 0 10px; }
+        h2 { color: var(--primary-color); letter-spacing: 1px; font-size: 1.2rem; }
         
-        .action-bar { max-width: 1200px; margin: 0 auto 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; font-size: 0.95rem; }
+        .month-select { background: var(--select-bg); color: white; border: none; padding: 6px 12px; font-size: 0.95rem; font-weight: bold; border-radius: 6px; outline: none; }
+        
+        /* 按鈕群組在手機上自動縮小、排成一橫列或兩列 */
+        .action-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+        .btn { flex: 1; min-width: 100px; padding: 10px 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem; text-align: center; }
         .btn-save { background: #16a085; }
         .btn-export { background: #2980b9; }
-        .btn-clear { background: #e74c3c; margin-left: auto; }
+        .btn-clear { background: #e74c3c; }
 
-        /* 表格樣式調整 - 完美還原紙本矩陣 */
-        .table-container { width: 100%; overflow-x: auto; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: center; }
-        th, td { border: 1px solid var(--border-color); padding: 8px 4px; font-size: 0.95rem; }
+        /* 🔥 RWD 手機版滾動容器優化 */
+        .table-container { width: 100%; overflow-x: auto; max-width: 1200px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background: white; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; text-align: center; table-layout: fixed; }
         
-        th { background-color: #f8f9fa; height: 50px; font-weight: bold; }
-        .col-date { width: 50px; font-weight: bold; background: #eee; }
-        .col-wday { width: 40px; font-weight: bold; background: #eee; }
+        /* 欄位寬度固定，防止手機上被擠壓 */
+        th, td { border: 1px solid var(--border-color); padding: 6px 2px; font-size: 0.9rem; }
+        .th-date-wday { width: 45px; }
+        .th-vendor { width: 95px; }
+
+        /* 🔥 關鍵核心：凍結左側日期與星期欄位，左右滑動時固定在最左邊 */
+        .sticky-col-1 { position: sticky; left: 0; z-index: 10; background: #eee !important; font-weight: bold; width: 35px; border-right: 1px solid var(--border-color); }
+        .sticky-col-2 { position: sticky; left: 35px; z-index: 10; background: #eee !important; font-weight: bold; width: 35px; border-right: 2px solid var(--border-color); }
         
         /* 週末顏色（橘黃色底） */
         .weekend { background-color: var(--weekend-bg) !important; color: white !important; }
         
-        /* 輸入框優化 */
-        .cell-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 1rem; color: #222; padding: 4px 0; font-weight: 500; }
-        .cell-input:focus { background: #e8f4f8; outline: none; border-radius: 4px; }
-        .cell-input::placeholder { color: #ccc; font-weight: normal; font-size: 0.85rem; }
+        /* 輸入框優化 - 更適合手機手指點擊 */
+        .cell-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.95rem; color: #222; padding: 6px 0; font-weight: 500; -webkit-appearance: none; }
+        .cell-input:focus { background: #e8f4f8; outline: none; }
+        .cell-input::placeholder { color: #ccc; font-weight: normal; font-size: 0.8rem; }
         
         /* 表頭廠商名輸入框調整 */
-        .vendor-input { width: 100%; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 0.95rem; color: var(--primary-color); resize: none; outline: none; }
+        .vendor-input { width: 100%; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 0.85rem; color: var(--primary-color); outline: none; }
         .vendor-input:focus { background: #d5dbdb; border-radius: 4px; }
 
         /* 底部小計列 */
-        .total-row { background: #eaeded; font-weight: bold; height: 45px; font-size: 1rem; }
-        .total-val { color: #c0392b; }
+        .total-row { background: #eaeded; font-weight: bold; height: 40px; font-size: 0.9rem; }
+        .total-row td:first-child { position: sticky; left: 0; z-index: 10; background: #eaeded; border-right: 2px solid var(--border-color); }
+        .total-val { color: #c0392b; font-size: 0.85rem; word-break: break-all; }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <h2>廠 商 餐 費 登 記 表</h2>
-        <div class="month-selector-wrapper">
-            <label for="monthSelect" style="font-weight: bold; color: var(--primary-color);">切換月份：</label>
+    <div class="top-panel">
+        <div class="header-container">
+            <h2>廠商餐費登記表</h2>
             <select id="monthSelect" class="month-select" onchange="switchMonth()">
-                <!-- JS 自動生成 1~12 月 -->
-            </select>
+                </select>
         </div>
-    </div>
 
-    <div class="action-bar">
-        <button class="btn btn-save" onclick="saveData()">💾 儲存本月與廠商資料</button>
-        <button class="btn btn-export" onclick="exportCSV()">📊 匯出本月 Excel (CSV)</button>
-        <button class="btn btn-clear" id="clearBtn" onclick="clearCurrentMonth()">⚠️ 清空本月</button>
+        <div class="action-bar">
+            <button class="btn btn-save" onclick="saveData()">💾 儲存資料</button>
+            <button class="btn btn-export" onclick="exportCSV()">📊 匯出 Excel</button>
+            <button class="btn btn-clear" onclick="clearCurrentMonth()">⚠️ 清空本月</button>
+        </div>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50px;">日期</th>
-                    <th style="width: 50px;">星期</th>
-                    <!-- 廠商欄位變成可編輯的輸入框 -->
-                    <th><input type="text" id="v_name_0" class="vendor-input" value=(祥菁)大哥"></th>
-                    <th><input type="text" id="v_name_1" class="vendor-input" value="(祥菁)傅大哥"></th>
-                    <th><input type="text" id="v_name_2" class="vendor-input" value="俊丰"></th>
-                    <th><input type="text" id="v_name_3" class="vendor-input" value="廠商 4"></th>
-                    <th><input type="text" id="v_name_4" class="vendor-input" value="廠商 5"></th>
-                    <th><input type="text" id="v_name_5" class="vendor-input" value="廠商 6"></th>
+                    <th class="sticky-col-1 th-date-wday">日期</th>
+                    <th class="sticky-col-2 th-date-wday">星期</th>
+                    <th class="th-vendor"><input type="text" id="v_name_0" class="vendor-input" value="(祥萬)林大哥"></th>
+                    <th class="th-vendor"><input type="text" id="v_name_1" class="vendor-input" value="(祥萬)傅大哥"></th>
+                    <th class="th-vendor"><input type="text" id="v_name_2" class="vendor-input" value="俊丰"></th>
+                    <th class="th-vendor"><input type="text" id="v_name_3" class="vendor-input" value="廠商 4"></th>
+                    <th class="th-vendor"><input type="text" id="v_name_4" class="vendor-input" value="廠商 5"></th>
+                    <th class="th-vendor"><input type="text" id="v_name_5" class="vendor-input" value="廠商 6"></th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <!-- 由 JavaScript 根據月份動態生成 -->
-            </tbody>
+                </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="2">總金額小計</td>
+                    <td colspan="2">小計</td>
                     <td id="total-0" class="total-val">$0</td>
                     <td id="total-1" class="total-val">$0</td>
                     <td id="total-2" class="total-val">$0</td>
@@ -109,7 +112,6 @@
         const weekDaysArr = ["日", "一", "二", "三", "四", "五", "六"];
         const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-        // 初始化月份下拉選單
         const monthSelect = document.getElementById('monthSelect');
         for (let m = 1; m <= 12; m++) {
             let opt = document.createElement('option');
@@ -118,10 +120,9 @@
             monthSelect.appendChild(opt);
         }
         
-        // 預設停留在你圖中的 6 月份
-        monthSelect.value = 6;
+        // 預設停留在當前的 5 月份
+        monthSelect.value = 5;
 
-        // 載入廠商名字
         function loadVendorNames() {
             let savedNames = JSON.parse(localStorage.getItem('vendor_names_config'));
             if (savedNames) {
@@ -133,7 +134,6 @@
             }
         }
 
-        // 獲取當前畫面上的廠商名稱陣列
         function getVendorNamesArr() {
             let names = [];
             for (let v = 0; v < totalVendors; v++) {
@@ -142,9 +142,8 @@
             return names;
         }
 
-        // 生成表格主功能
         function renderTable(month) {
-            loadVendorNames(); // 生成前先載入最新的廠商名
+            loadVendorNames();
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -161,8 +160,9 @@
                 const isWeekend = (wdayNum === 0 || wdayNum === 6); 
                 const weekendClass = isWeekend ? 'weekend' : '';
 
-                tr.innerHTML += `<td class="col-date ${weekendClass}">${d}</td>`;
-                tr.innerHTML += `<td class="col-wday ${weekendClass}">${wdayStr}</td>`;
+                // 加上凍結類別 sticky-col-1 和 sticky-col-2
+                tr.innerHTML += `<td class="sticky-col-1 ${weekendClass}">${d}</td>`;
+                tr.innerHTML += `<td class="sticky-col-2 ${weekendClass}">${wdayStr}</td>`;
 
                 for (let v = 0; v < totalVendors; v++) {
                     const cellId = `cell_${d}_${v}`;
@@ -219,19 +219,16 @@
             }
         }
 
-        // 儲存資料（包含格子內容與廠商名稱）
         function saveData() {
             const month = document.getElementById('monthSelect').value;
             const totalDays = daysInMonths[month - 1];
             
-            // 1. 儲存廠商名字
             let vendorNames = [];
             for (let v = 0; v < totalVendors; v++) {
                 vendorNames.push(document.getElementById(`v_name_${v}`).value);
             }
             localStorage.setItem('vendor_names_config', JSON.stringify(vendorNames));
 
-            // 2. 儲存格子數字
             let dataToSave = {};
             for (let d = 1; d <= totalDays; d++) {
                 for (let v = 0; v < totalVendors; v++) {
@@ -241,12 +238,12 @@
                 }
             }
             localStorage.setItem(`meal_data_${year}_${month}`, JSON.stringify(dataToSave));
-            alert(`💾 2026年${month}月的餐費資料與廠商名單已同步儲存！`);
+            alert(`💾 資料已同步儲存！`);
         }
 
         function clearCurrentMonth() {
             const month = document.getElementById('monthSelect').value;
-            if (confirm(`確定要清空 2026年${month}月 的整張表嗎？廠商名字不會被清空。`)) {
+            if (confirm(`確定要清空 2026年${month}月 的整張表嗎？`)) {
                 localStorage.removeItem(`meal_data_${year}_${month}`);
                 renderTable(month);
             }
@@ -257,7 +254,6 @@
             const totalDays = daysInMonths[month - 1];
             const vNames = getVendorNamesArr();
             
-            // 標頭自動帶入自訂的廠商名字
             let csvContent = `\uFEFF日期,星期,${vNames.join(',')}\n`;
             
             for (let d = 1; d <= totalDays; d++) {
@@ -288,7 +284,6 @@
             document.body.removeChild(link);
         }
 
-        // 網頁開啟時首次載入
         renderTable(monthSelect.value);
     </script>
 </body>
