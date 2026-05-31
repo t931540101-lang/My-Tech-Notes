@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>廠商餐費登記表</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #e8e0d0;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* ── 紙張容器 ── */
+.paper {
+  background: #faf8f3;
+  max-width: 780px;
+  margin: 0 auto;
+  border: 1px solid #bbb;
+  box-shadow: 3px 4px 16px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.6);
+  padding: 20px 24px 28px;
+  position: relative;
+}
+/* 左側裝訂線 */
+.paper::before {
+  content: '';
+  position: absolute;
+  left: 36px; top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(200,160,160,.5);
+}
+
+/* ── 頂部資訊 ── */
+.top-info {
+  text-align: right;
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 4px;
+  letter-spacing: .5px;
+}
+
+/* ── 標題列 ── */
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.doc-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #1a1a1a;
+  text-align: center;
+  flex: 1;
+}
+.month-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+}
+
+/* ── 控制列（年月切換、按鈕）── */
+.ctrl-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #333;
+}
+.ctrl-bar select, .ctrl-bar .btn {
+  background: #fff;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  color: #222;
+}
+.ctrl-bar select:focus, .ctrl-bar .btn:focus { outline: none; border-color: #555; }
+.btn:hover { background: #f0ece4; }
+.btn-red { background: #c0392b; color: #fff; border-color: #c0392b; font-weight: 700; }
+.btn-red:hover { background: #a93226; }
+.btn-blue { background: #2980b9; color: #fff; border-color: #2980b9; font-weight: 700; }
+.btn-blue:hover { background: #216a94; }
+.spacer { flex: 1; }
+
+/* ── 廠商設定列 ── */
+.vendor-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 12px; color: #555;
+}
+.vendor-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 12px;
+  background: #fff;
+}
+.vendor-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.edit-link { color: #2980b9; cursor: pointer; font-size: 12px; text-decoration: underline; }
+.edit-link:hover { color: #1a5f7a; }
+
+/* ── 主表格 ── */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+  background: #faf8f3;
+}
+
+/* 外框粗線 */
+table { border: 2px solid #333; }
+
+thead th {
+  border: 1px solid #555;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f0ece4;
+  color: #111;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+thead th.col-date { width: 72px; }
+thead th.col-week { width: 32px; }
+
+/* 廠商欄頭：分兩行（公司／姓名）*/
+.th-vendor-top { font-size: 11px; font-weight: 400; color: #555; }
+.th-vendor-bot { font-size: 13px; font-weight: 700; color: #111; }
+
+tbody tr { border-bottom: 1px solid #ccc; }
+tbody tr:last-child { border-bottom: 2px solid #333; }
+
+tbody td {
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  padding: 4px 6px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 28px;
+  height: 28px;
+}
+tbody td:last-child { border-right: 2px solid #333; }
+tbody td:first-child { border-left: 2px solid #333; }
+
+/* 日期欄 */
+td.td-date { text-align: center; font-weight: 500; font-size: 14px; color: #111; }
+td.td-week { text-align: center; font-size: 13px; font-weight: 700; color: #333; padding: 4px 2px; }
+
+/* 星期色 */
+.week-sat { color: #1a5276; }
+.week-sun { color: #922b21; }
+
+/* 假日/週末 row 底色 */
+tr.row-sat td { background: #eef4fb; }
+tr.row-sun td, tr.row-holiday td { background: #fdf0ef; }
+
+/* 20號結帳線 */
+tr.row-settle-top td { border-top: 2px solid #c0392b !important; }
+
+/* 小計列 */
+tr.row-subtotal td {
+  background: #f5f0e4 !important;
+  font-weight: 700;
+  font-size: 13px;
+  border-top: 2px solid #888;
+  border-bottom: 2px solid #888;
+  color: #111;
+}
+tr.row-subtotal td.sub-label { text-align: left; color: #555; font-size: 12px; padding-left: 8px; }
+tr.row-subtotal td.sub-val { color: #c0392b; font-size: 14px; }
+
+/* 月底小計列 */
+tr.row-final td {
+  background: #faf0e4 !important;
+  font-weight: 700;
+  border-top: 2px solid #333;
+  border-bottom: 2px solid #333;
+}
+tr.row-final td.sub-val { color: #c0392b; font-size: 15px; }
+
+/* 金額格 */
+td.td-amount {
+  cursor: pointer;
+  min-width: 90px;
+  transition: background .12s;
+  padding: 2px 4px;
+}
+td.td-amount:hover { background: #fff8e8 !important; }
+td.td-amount:empty::after { content: ''; display: block; min-height: 20px; }
+
+.amount-line {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.amount-line.color-black { color: #111; }
+.amount-line.color-red   { color: #c0392b; }
+.amount-note {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  margin-top: 1px;
+}
+
+/* 結帳標記 */
+.settle-mark {
+  display: inline-block;
+  background: #c0392b;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 0px 5px;
+  border-radius: 3px;
+  letter-spacing: .5px;
+  vertical-align: middle;
+  margin-left: 3px;
+}
+
+/* 假日標記 */
+.holiday-mark {
+  font-size: 10px;
+  color: #922b21;
+  font-weight: 500;
+}
+
+/* ── 月合計列 ── */
+.month-total-bar {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f0ece4;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+.mt-item { font-size: 13px; color: #333; }
+.mt-val { font-weight: 700; color: #c0392b; font-size: 15px; }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: #faf8f3;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  padding: 22px 24px;
+  width: 92%; max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  animation: modalIn .18s ease;
+}
+@keyframes modalIn { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.modal-title {
+  font-size: 15px; font-weight: 700; color: #111;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #333; padding-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.mrow { margin-bottom: 12px; }
+.mrow label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
+.mrow input, .mrow select {
+  width: 100%; background: #fff;
+  border: 1px solid #aaa; border-radius: 4px;
+  padding: 8px 10px;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #111;
+}
+.mrow input:focus, .mrow select:focus { outline: none; border-color: #555; }
+
+.entry-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.entry-row { display: flex; gap: 6px; align-items: center; }
+.entry-row input { flex: 1; background: #fff; border: 1px solid #aaa; border-radius: 4px; padding: 7px 10px; font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #111; }
+.entry-row input:focus { outline: none; border-color: #555; }
+.entry-del { background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+.entry-del:hover { color: #c0392b; }
+
+.add-btn { width: 100%; background: none; border: 1px dashed #aaa; color: #888; border-radius: 4px; padding: 6px; font-size: 12px; cursor: pointer; }
+.add-btn:hover { border-color: #555; color: #333; }
+
+/* 顏色選擇（金額用）*/
+.color-sel { display: flex; gap: 8px; margin-top: 4px; }
+.color-opt { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: border-color .15s; }
+.color-opt.active { border-color: #333; }
+
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-actions .btn {
+  background: #fff; border: 1px solid #aaa; border-radius: 4px;
+  padding: 7px 16px; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px; cursor: pointer; color: #222;
+}
+.modal-actions .btn:hover { background: #f0ece4; }
+.modal-actions .btn-save { background: #1a5276; color: #fff; border-color: #1a5276; font-weight: 700; }
+.modal-actions .btn-save:hover { background: #154360; }
+.modal-actions .btn-del { background: #c0392b; color: #fff; border-color: #c0392b; }
+.modal-actions .btn-del:hover { background: #a93226; }
+
+/* Vendor Edit */
+.vedrow { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.vedrow input[type=text] { flex: 1; background: #fff; border: 1px solid #aaa; border-radius: 4px; padding: 7px 10px; font-family: 'Noto Sans TC', sans-serif; font-size: 13px; }
+.vedrow input[type=text]:focus { outline: none; border-color: #555; }
+input[type=color] { width: 30px; height: 30px; border: 1px solid #aaa; border-radius: 4px; padding: 2px; cursor: pointer; background: none; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(50px);
+  background: #1a5276; color: #fff;
+  padding: 9px 22px; border-radius: 20px;
+  font-size: 13px; z-index: 999;
+  transition: transform .3s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.err { background: #c0392b; }
+
+/* Loading */
+.loading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 300; align-items: center; justify-content: center; }
+.loading.active { display: flex; }
+.spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a5276; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  body { background: #fff; padding: 0; }
+  .paper { box-shadow: none; border: none; padding: 10px; }
+  .ctrl-bar, .vendor-bar, .edit-link { display: none !important; }
+}
+
+@media (max-width: 600px) {
+  body { padding: 8px; }
+  .paper { padding: 12px 10px 16px; }
+  .doc-title { font-size: 16px; letter-spacing: 2px; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="paper">
+  <!-- 頂部電話 -->
+  <div class="top-info">豐園餐飲：04-25691108</div>
+
+  <!-- 標題 -->
+  <div class="title-row">
+    <div class="doc-title">廠商餐費登記表</div>
+    <div class="month-label" id="monthLabel"></div>
+  </div>
+
+  <!-- 控制列 -->
+  <div class="ctrl-bar">
+    <select id="yearSel"></select>
+    <select id="monthSel"></select>
+    <button class="btn btn-blue" onclick="exportCSV()">📤 匯出CSV</button>
+    <button class="btn" onclick="window.print()">🖨 列印</button>
+  </div>
+
+  <!-- 廠商列 -->
+  <div class="vendor-bar">
+    <span>廠商欄位：</span>
+    <div id="vendorChips"></div>
+    <span class="edit-link" onclick="openVendorModal()">⚙ 編輯廠商</span>
+  </div>
+
+  <!-- 表格 -->
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 月合計 -->
+  <div class="month-total-bar" id="totalBar"></div>
+</div>
+
+<!-- ── 登記 Modal ── -->
+<div class="modal-overlay" id="entryModal">
+  <div class="modal">
+    <div class="modal-title" id="mTitle">登記餐費</div>
+    <div class="mrow">
+      <label>日期</label>
+      <input type="text" id="mDate" disabled>
+    </div>
+    <div class="mrow">
+      <label>廠商</label>
+      <select id="mVendor"></select>
+    </div>
+    <div class="mrow">
+      <label>費用（可多筆，支援：65元、260元x4）</label>
+      <div class="entry-list" id="entryList"></div>
+      <button class="add-btn" onclick="addEntry()">＋ 新增一筆</button>
+    </div>
+    <div class="mrow">
+      <label>字色</label>
+      <div class="color-sel">
+        <div class="color-opt active" style="background:#111" data-color="black" onclick="pickColor(this)"></div>
+        <div class="color-opt" style="background:#c0392b" data-color="red" onclick="pickColor(this)"></div>
+      </div>
+    </div>
+    <div class="mrow">
+      <label>備註（選填）</label>
+      <input type="text" id="mNote" placeholder="如：小計845、收1495…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEntry()">取消</button>
+      <button class="btn btn-del" id="mDelBtn" onclick="doDelete()">刪除</button>
+      <button class="btn btn-save" onclick="doSave()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 廠商設定 Modal ── -->
+<div class="modal-overlay" id="vendorModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">⚙ 廠商欄位設定</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">「固定」廠商不可刪除，名稱可修改。</p>
+    <div id="vendorEditList"></div>
+    <button class="add-btn" style="margin-top:8px" onclick="addVendorRow()">＋ 新增廠商</button>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeVendorModal()">取消</button>
+      <button class="btn btn-save" onclick="saveVendors()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// 🔥 Firebase 設定（請填入您的 factor-security-d1965 設定）
+// ════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "factor-security-d1965.firebaseapp.com",
+  projectId: "factor-security-d1965",
+  storageBucket: "factor-security-d1965.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ════════════════════════════════════════════
+// 狀態
+// ════════════════════════════════════════════
+const WEEK = ['日','一','二','三','四','五','六'];
+// 台灣 2026 國定假日（可自行增減）
+const HOLIDAYS = new Set([
+  '2026-01-01','2026-02-28','2026-04-04','2026-04-05',
+  '2026-05-01','2026-06-19','2026-09-19','2026-10-09','2026-10-10'
+]);
+
+let S = {
+  year:  new Date().getFullYear(),
+  month: new Date().getMonth()+1,
+  vendors: [
+    { id:'v1', name:'祥箐：林大哥', color:'#1a5276', fixed:true },
+    { id:'v2', name:'祥箐：傅大哥', color:'#922b21', fixed:true },
+  ],
+  records: {},   // key = "YYYY-MM-DD_vID"
+  editDate: '',
+  editVid:  '',
+  entryColor: 'black',
+};
+
+// ════════════════════════════════════════════
+// 初始化
+// ════════════════════════════════════════════
+async function init() {
+  buildYearMonth();
+  await loadVendors();
+  await loadRecords();
+}
+
+function buildYearMonth() {
+  const ySel = document.getElementById('yearSel');
+  const mSel = document.getElementById('monthSel');
+  for (let y=2024;y<=2030;y++)
+    ySel.innerHTML += `<option value="${y}"${y===S.year?' selected':''}>${y}年</option>`;
+  for (let m=1;m<=12;m++)
+    mSel.innerHTML += `<option value="${m}"${m===S.month?' selected':''}>${m}月</option>`;
+  ySel.onchange = ()=>{ S.year=+ySel.value; loadRecords(); };
+  mSel.onchange = ()=>{ S.month=+mSel.value; loadRecords(); };
+}
+
+// ════════════════════════════════════════════
+// Firebase
+// ════════════════════════════════════════════
+async function loadVendors() {
+  try {
+    const d = await db.collection('meal_settings').doc('vendors').get();
+    if (d.exists) S.vendors = d.data().list;
+  } catch(e){}
+}
+
+async function loadRecords() {
+  loading(true);
+  const prefix = ym();
+  try {
+    const snap = await db.collection('meal_records').where('month','==',prefix).get();
+    S.records = {};
+    snap.forEach(d => S.records[d.id] = d.data());
+  } catch(e){ toast('讀取失敗：'+e.message,true); }
+  loading(false);
+  render();
+}
+
+async function putRecord(key, data) {
+  await db.collection('meal_records').doc(key).set(data);
+  S.records[key] = data;
+}
+
+async function delRecord(key) {
+  await db.collection('meal_records').doc(key).delete();
+  delete S.records[key];
+}
+
+// ════════════════════════════════════════════
+// Render
+// ════════════════════════════════════════════
+function render() {
+  document.getElementById('monthLabel').textContent = `${S.year}年${String(S.month).padStart(2,'0')}月`;
+  renderVendorChips();
+  renderTable();
+  renderTotalBar();
+}
+
+function renderVendorChips() {
+  document.getElementById('vendorChips').innerHTML =
+    S.vendors.map(v=>`<span class="vendor-chip"><span class="dot" style="background:${v.color}"></span>${v.name}</span>`).join('');
+}
+
+function renderTable() {
+  const yr=S.year, mo=S.month;
+  const days = new Date(yr, mo, 0).getDate();
+
+  // thead
+  let th = `<tr>
+    <th class="col-date">日期</th>
+    <th class="col-week">星期</th>`;
+  S.vendors.forEach(v => {
+    const parts = v.name.split('：');
+    th += `<th style="color:${v.color}">
+      ${parts.length>1 ? `<div class="th-vendor-top">${parts[0]}</div><div class="th-vendor-bot">${parts[1]}</div>` : `<div class="th-vendor-bot">${v.name}</div>`}
+    </th>`;
+  });
+  th += '</tr>';
+  document.getElementById('thead').innerHTML = th;
+
+  // tbody
+  let tb = '';
+  for (let d=1; d<=days; d++) {
+    const ds = dateStr(yr,mo,d);
+    const dow = new Date(yr,mo-1,d).getDay();
+    const isSat = dow===6, isSun = dow===0;
+    const isHol = HOLIDAYS.has(ds);
+    const isSettle20 = d===20;
+    const isEnd = d===days;
+
+    let rowCls = '';
+    if (isHol) rowCls='row-holiday';
+    else if (isSun) rowCls='row-sun';
+    else if (isSat) rowCls='row-sat';
+    if (isSettle20) rowCls += ' row-settle-top';  // 紅線在20號上方
+
+    const weekCls = (isSun||isHol)?'week-sun':(isSat?'week-sat':'');
+
+    tb += `<tr class="${rowCls.trim()}">`;
+    tb += `<td class="td-date">${d}${isHol?'<br><span class="holiday-mark">假</span>':''}${isSettle20?'<br><span class="settle-mark">結帳</span>':''}${isEnd&&!isSettle20?'<br><span class="settle-mark">月結</span>':''}</td>`;
+    tb += `<td class="td-week ${weekCls}">${WEEK[dow]}</td>`;
+
+    S.vendors.forEach(v => {
+      const key = `${ds}_${v.id}`;
+      const rec = S.records[key];
+      tb += `<td class="td-amount" onclick="openEntry('${ds}','${v.id}')">${rec ? renderCell(rec) : ''}</td>`;
+    });
+    tb += '</tr>';
+
+    // 20號後小計列
+    if (isSettle20) tb += subtotalRow('前半月小計', yr, mo, 1, 20);
+    // 月底總計列
+    if (isEnd) tb += subtotalRow('後半月小計', yr, mo, 21, days, true);
+  }
+
+  // 最末行：月小計
+  tb += `<tr class="row-final"><td class="sub-label" colspan="2">月　小　計</td>`;
+  S.vendors.forEach(v => {
+    const total = vendorTotal(v.id, 1, days);
+    tb += `<td class="sub-val">${total>0? '$'+total.toLocaleString() : ''}</td>`;
+  });
+  tb += '</tr>';
+
+  document.getElementById('tbody').innerHTML = tb;
+}
+
+function renderCell(rec) {
+  const colorCls = rec.color==='red' ? 'color-red' : 'color-black';
+  let html = (rec.amounts||[]).map(a => `<span class="amount-line ${colorCls}">${a}</span>`).join('');
+  if (rec.note) html += `<span class="amount-note">${rec.note}</span>`;
+  return html;
+}
+
+function subtotalRow(label, yr, mo, s, e, isFinal=false) {
+  const cls = isFinal ? 'row-subtotal row-final' : 'row-subtotal';
+  let row = `<tr class="${cls}"><td class="sub-label" colspan="2">📊 ${label}</td>`;
+  S.vendors.forEach(v => {
+    const t = vendorTotal(v.id, s, e);
+    row += `<td class="sub-val">${t>0? '$'+t.toLocaleString() : '—'}</td>`;
+  });
+  return row + '</tr>';
+}
+
+function renderTotalBar() {
+  const days = new Date(S.year, S.month, 0).getDate();
+  let html = '<span style="font-weight:700;color:#333;margin-right:4px">本月合計：</span>';
+  let grand = 0;
+  S.vendors.forEach(v => {
+    const t = vendorTotal(v.id, 1, days);
+    grand += t;
+    html += `<span class="mt-item">${v.name}：<span class="mt-val">$${t.toLocaleString()}</span></span>`;
+  });
+  html += `<span class="mt-item" style="margin-left:12px;border-left:1px solid #aaa;padding-left:12px">全部：<span class="mt-val" style="font-size:16px">$${grand.toLocaleString()}</span></span>`;
+  document.getElementById('totalBar').innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// 登記 Modal
+// ════════════════════════════════════════════
+function openEntry(ds, vid) {
+  S.editDate = ds; S.editVid = vid;
+  const [yr,,mo,,d] = ds.split(/(-)/);
+  const dow = new Date(+yr,+mo-1,+d).getDay();
+  const key = `${ds}_${vid}`;
+  const rec = S.records[key];
+  const v = S.vendors.find(x=>x.id===vid);
+
+  document.getElementById('mTitle').textContent = `登記餐費 ─ ${v?.name||''}`;
+  document.getElementById('mDate').value = `${ds}（${WEEK[dow]}）`;
+  document.getElementById('mNote').value = rec?.note||'';
+  document.getElementById('mDelBtn').style.display = rec ? 'inline-block' : 'none';
+
+  // vendor select
+  document.getElementById('mVendor').innerHTML =
+    S.vendors.map(vv=>`<option value="${vv.id}"${vv.id===vid?' selected':''}>${vv.name}</option>`).join('');
+
+  // color
+  S.entryColor = rec?.color||'black';
+  document.querySelectorAll('.color-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.color===S.entryColor);
+  });
+
+  // entries
+  const list = document.getElementById('entryList');
+  list.innerHTML = '';
+  (rec?.amounts?.length ? rec.amounts : ['']).forEach(v => addEntry(v));
+
+  document.getElementById('entryModal').classList.add('active');
+}
+
+function closeEntry() { document.getElementById('entryModal').classList.remove('active'); }
+
+function addEntry(val='') {
+  const list = document.getElementById('entryList');
+  const row = document.createElement('div');
+  row.className = 'entry-row';
+  row.innerHTML = `<input type="text" placeholder="如：65元 或 260元x4" value="${val}">
+    <button class="entry-del" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function pickColor(el) {
+  document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  S.entryColor = el.dataset.color;
+}
+
+async function doSave() {
+  const vid = document.getElementById('mVendor').value;
+  const note = document.getElementById('mNote').value.trim();
+  const amounts = Array.from(document.querySelectorAll('#entryList input'))
+    .map(i=>i.value.trim()).filter(Boolean);
+  if (!amounts.length) { toast('請輸入至少一筆金額', true); return; }
+
+  const key = `${S.editDate}_${vid}`;
+  const prefix = ym();
+  loading(true);
+  try {
+    await putRecord(key, { amounts, note, color: S.entryColor, date: S.editDate, vendorId: vid, month: prefix });
+    toast('已儲存 ✓');
+    closeEntry();
+    render();
+  } catch(e){ toast('儲存失敗：'+e.message,true); }
+  loading(false);
+}
+
+async function doDelete() {
+  if (!confirm('確定要刪除這筆記錄？')) return;
+  const key = `${S.editDate}_${S.editVid}`;
+  loading(true);
+  try {
+    await delRecord(key);
+    toast('已刪除');
+    closeEntry();
+    render();
+  } catch(e){ toast('刪除失敗：'+e.message,true); }
+  loading(false);
+}
+
+// ════════════════════════════════════════════
+// 廠商設定
+// ════════════════════════════════════════════
+function openVendorModal() {
+  renderVendorEdit();
+  document.getElementById('vendorModal').classList.add('active');
+}
+function closeVendorModal() { document.getElementById('vendorModal').classList.remove('active'); }
+
+function renderVendorEdit() {
+  document.getElementById('vendorEditList').innerHTML = S.vendors.map((v,i)=>`
+    <div class="vedrow">
+      <input type="color" value="${v.color}" data-i="${i}">
+      <input type="text" value="${v.name}" data-i="${i}" placeholder="廠商名稱">
+      ${v.fixed
+        ? '<span style="font-size:11px;color:#aaa;white-space:nowrap">固定</span>'
+        : `<button class="entry-del" onclick="rmVendor(${i})">✕</button>`}
+    </div>`).join('');
+}
+
+function addVendorRow() {
+  const COLORS=['#1a5276','#922b21','#1d6a39','#6c3483','#784212','#0e6655'];
+  S.vendors.push({ id:'v'+Date.now(), name:'', color: COLORS[S.vendors.length%COLORS.length], fixed:false });
+  renderVendorEdit();
+}
+
+function rmVendor(i) {
+  if (S.vendors[i].fixed) { toast('固定廠商不可刪除',true); return; }
+  S.vendors.splice(i,1); renderVendorEdit();
+}
+
+async function saveVendors() {
+  document.querySelectorAll('#vendorEditList .vedrow').forEach((row,i) => {
+    const txt = row.querySelector('input[type=text]');
+    const col = row.querySelector('input[type=color]');
+    if (txt && S.vendors[i]) S.vendors[i].name = txt.value.trim()||S.vendors[i].name;
+    if (col && S.vendors[i]) S.vendors[i].color = col.value;
+  });
+  loading(true);
+  try {
+    await db.collection('meal_settings').doc('vendors').set({ list: S.vendors });
+    toast('廠商設定已儲存 ✓');
+    closeVendorModal(); render();
+  } catch(e){ toast('儲存失敗：'+e.message,true); }
+  loading(false);
+}
+
+// ════════════════════════════════════════════
+// CSV 匯出
+// ════════════════════════════════════════════
+function exportCSV() {
+  const yr=S.year, mo=S.month;
+  const days = new Date(yr,mo,0).getDate();
+  const head = ['日期','星期',...S.vendors.map(v=>v.name),'合計'];
+  const rows = [head];
+  for (let d=1;d<=days;d++) {
+    const ds = dateStr(yr,mo,d);
+    const dow = new Date(yr,mo-1,d).getDay();
+    let tot=0;
+    const cols=[ds, WEEK[dow]];
+    S.vendors.forEach(v=>{
+      const rec = S.records[`${ds}_${v.id}`];
+      const t = rec?.amounts ? rec.amounts.reduce((s,a)=>s+parseAmt(a),0):0;
+      tot+=t;
+      cols.push(rec?.amounts ? rec.amounts.join(' / ')+(rec.note?' ('+rec.note+')':''):'');
+    });
+    cols.push(tot||'');
+    rows.push(cols);
+  }
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = `廠商餐費_${yr}年${mo}月.csv`;
+  a.click();
+}
+
+// ════════════════════════════════════════════
+// 工具函式
+// ════════════════════════════════════════════
+function ym() { return `${S.year}-${String(S.month).padStart(2,'0')}`; }
+function dateStr(y,m,d) { return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+function parseAmt(str) {
+  if (!str) return 0;
+  str = str.toLowerCase();
+  const m = str.match(/([\d.]+)[元$]?\s*[x×*xX]\s*([\d.]+)/);
+  if (m) return parseFloat(m[1])*parseFloat(m[2]);
+  const s = str.match(/([\d.]+)/);
+  return s ? parseFloat(s[1]) : 0;
+}
+
+function vendorTotal(vid, s, e) {
+  let total = 0;
+  for (let d=s; d<=e; d++) {
+    const ds = dateStr(S.year, S.month, d);
+    const rec = S.records[`${ds}_${vid}`];
+    if (rec?.amounts) rec.amounts.forEach(a=>{ total+=parseAmt(a); });
+  }
+  return total;
+}
+
+function loading(v) { document.getElementById('loading').classList.toggle('active',v); }
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' err':'');
+  void t.offsetWidth; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// 點擊遮罩關閉
+['entryModal','vendorModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){ if(e.target===this) this.classList.remove('active'); });
+});
+
+init();
+</script>
+</body>
+</html>
